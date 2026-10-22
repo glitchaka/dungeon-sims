@@ -1,0 +1,7 @@
+﻿.godot/
+*.log
+inspect-*.png
+verification.png
+verification-night.png
+inspection/
+verification-*.png

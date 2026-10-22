@@ -1,0 +1,23 @@
+config_version=5
+
+[application]
+boot_splash/show_image=false
+config/name="DUNGEON SIMS · Isla viva"
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+window/size/borderless=true
+window/size/viewport_width=1120
+window/size/viewport_height=960
+window/size/window_width_override=1120
+window/size/window_height_override=960
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+textures/canvas_textures/default_texture_filter=0
+environment/defaults/default_clear_color=Color(0.161, 0.678, 1, 1)
