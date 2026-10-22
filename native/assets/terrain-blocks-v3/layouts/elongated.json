@@ -1,0 +1,521 @@
+﻿{
+    "format":  "IslaViva modular layout",
+    "pattern":  "elongated",
+    "seed":  1749,
+    "width":  24,
+    "height":  20,
+    "catalog":  "../manifest.json",
+    "status":  "logical_composition_not_runtime_island",
+    "placements":  [
+                       {
+                           "block":  "cape-northwest",
+                           "x":  7,
+                           "y":  5
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  8,
+                           "y":  5
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  9,
+                           "y":  5
+                       },
+                       {
+                           "block":  "cape-northeast",
+                           "x":  10,
+                           "y":  5
+                       },
+                       {
+                           "block":  "cape-northwest",
+                           "x":  12,
+                           "y":  5
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  13,
+                           "y":  5
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  14,
+                           "y":  5
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  15,
+                           "y":  5
+                       },
+                       {
+                           "block":  "cape-northeast",
+                           "x":  16,
+                           "y":  5
+                       },
+                       {
+                           "block":  "cape-northwest",
+                           "x":  5,
+                           "y":  6
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  6,
+                           "y":  6
+                       },
+                       {
+                           "block":  "bay-northwest",
+                           "x":  7,
+                           "y":  6
+                       },
+                       {
+                           "block":  "plateau-ramp",
+                           "x":  8,
+                           "y":  6
+                       },
+                       {
+                           "block":  "bay-northeast",
+                           "x":  10,
+                           "y":  6
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  11,
+                           "y":  6
+                       },
+                       {
+                           "block":  "bay-northwest",
+                           "x":  12,
+                           "y":  6
+                       },
+                       {
+                           "block":  "meadow-elbow",
+                           "x":  13,
+                           "y":  6
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  15,
+                           "y":  6
+                       },
+                       {
+                           "block":  "bay-northeast",
+                           "x":  16,
+                           "y":  6
+                       },
+                       {
+                           "block":  "cape-northeast",
+                           "x":  17,
+                           "y":  6
+                       },
+                       {
+                           "block":  "shore-west",
+                           "x":  5,
+                           "y":  7
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  6,
+                           "y":  7
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  7,
+                           "y":  7
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  10,
+                           "y":  7
+                       },
+                       {
+                           "block":  "meadow-elbow",
+                           "x":  11,
+                           "y":  7
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  14,
+                           "y":  7
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  16,
+                           "y":  7
+                       },
+                       {
+                           "block":  "bay-northeast",
+                           "x":  17,
+                           "y":  7
+                       },
+                       {
+                           "block":  "cape-northeast",
+                           "x":  18,
+                           "y":  7
+                       },
+                       {
+                           "block":  "cape-northwest",
+                           "x":  4,
+                           "y":  8
+                       },
+                       {
+                           "block":  "bay-northwest",
+                           "x":  5,
+                           "y":  8
+                       },
+                       {
+                           "block":  "meadow-elbow",
+                           "x":  6,
+                           "y":  8
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  8,
+                           "y":  8
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  9,
+                           "y":  8
+                       },
+                       {
+                           "block":  "rolling-hill",
+                           "x":  12,
+                           "y":  8
+                       },
+                       {
+                           "block":  "meadow-long-ew",
+                           "x":  15,
+                           "y":  8
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  17,
+                           "y":  8
+                       },
+                       {
+                           "block":  "bay-northeast",
+                           "x":  18,
+                           "y":  8
+                       },
+                       {
+                           "block":  "shore-north",
+                           "x":  19,
+                           "y":  8
+                       },
+                       {
+                           "block":  "cape-northeast",
+                           "x":  20,
+                           "y":  8
+                       },
+                       {
+                           "block":  "cape-northwest",
+                           "x":  3,
+                           "y":  9
+                       },
+                       {
+                           "block":  "bay-northwest",
+                           "x":  4,
+                           "y":  9
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  5,
+                           "y":  9
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  7,
+                           "y":  9
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  10,
+                           "y":  9
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  11,
+                           "y":  9
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  14,
+                           "y":  9
+                       },
+                       {
+                           "block":  "meadow-elbow",
+                           "x":  15,
+                           "y":  9
+                       },
+                       {
+                           "block":  "plateau-ramp",
+                           "x":  17,
+                           "y":  9
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  19,
+                           "y":  9
+                       },
+                       {
+                           "block":  "shore-east",
+                           "x":  20,
+                           "y":  9
+                       },
+                       {
+                           "block":  "shore-west",
+                           "x":  3,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  4,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  5,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  6,
+                           "y":  10
+                       },
+                       {
+                           "block":  "plateau-ramp",
+                           "x":  8,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  11,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  12,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  13,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  14,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  16,
+                           "y":  10
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  19,
+                           "y":  10
+                       },
+                       {
+                           "block":  "shore-east",
+                           "x":  20,
+                           "y":  10
+                       },
+                       {
+                           "block":  "shore-west",
+                           "x":  3,
+                           "y":  11
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  6,
+                           "y":  11
+                       },
+                       {
+                           "block":  "meadow-long-ns",
+                           "x":  7,
+                           "y":  11
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  10,
+                           "y":  11
+                       },
+                       {
+                           "block":  "meadow-long-ew",
+                           "x":  12,
+                           "y":  11
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  15,
+                           "y":  11
+                       },
+                       {
+                           "block":  "meadow-elbow",
+                           "x":  17,
+                           "y":  11
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  19,
+                           "y":  11
+                       },
+                       {
+                           "block":  "shore-east",
+                           "x":  20,
+                           "y":  11
+                       },
+                       {
+                           "block":  "cape-southwest",
+                           "x":  3,
+                           "y":  12
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  4,
+                           "y":  12
+                       },
+                       {
+                           "block":  "bay-southwest",
+                           "x":  5,
+                           "y":  12
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  8,
+                           "y":  12
+                       },
+                       {
+                           "block":  "meadow-long-ew",
+                           "x":  9,
+                           "y":  12
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  11,
+                           "y":  12
+                       },
+                       {
+                           "block":  "rolling-hill",
+                           "x":  12,
+                           "y":  12
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  14,
+                           "y":  12
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  15,
+                           "y":  12
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  16,
+                           "y":  12
+                       },
+                       {
+                           "block":  "bay-southeast",
+                           "x":  18,
+                           "y":  12
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  19,
+                           "y":  12
+                       },
+                       {
+                           "block":  "cape-southeast",
+                           "x":  20,
+                           "y":  12
+                       },
+                       {
+                           "block":  "cape-southwest",
+                           "x":  5,
+                           "y":  13
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  6,
+                           "y":  13
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  7,
+                           "y":  13
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  8,
+                           "y":  13
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  9,
+                           "y":  13
+                       },
+                       {
+                           "block":  "bay-southwest",
+                           "x":  10,
+                           "y":  13
+                       },
+                       {
+                           "block":  "meadow-small",
+                           "x":  11,
+                           "y":  13
+                       },
+                       {
+                           "block":  "bay-southeast",
+                           "x":  14,
+                           "y":  13
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  15,
+                           "y":  13
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  16,
+                           "y":  13
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  17,
+                           "y":  13
+                       },
+                       {
+                           "block":  "cape-southeast",
+                           "x":  18,
+                           "y":  13
+                       },
+                       {
+                           "block":  "cape-southwest",
+                           "x":  10,
+                           "y":  14
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  11,
+                           "y":  14
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  12,
+                           "y":  14
+                       },
+                       {
+                           "block":  "shore-south",
+                           "x":  13,
+                           "y":  14
+                       },
+                       {
+                           "block":  "cape-southeast",
+                           "x":  14,
+                           "y":  14
+                       }
+                   ]
+}

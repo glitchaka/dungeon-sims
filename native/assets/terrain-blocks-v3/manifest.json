@@ -1,0 +1,1057 @@
+﻿{
+    "format":  "IslaViva Modular Terrain Blocks",
+    "version":  3,
+    "status":  "new_modular_art_set_not_integrated",
+    "camera":  {
+                   "projection":  "oblique_three_quarter",
+                   "elevation_degrees":  35,
+                   "north":  "upper-right",
+                   "east":  "lower-right",
+                   "light":  "upper-left",
+                   "rotate_pixels":  false
+               },
+    "atlasLayout":  {
+                        "columns":  3,
+                        "rows":  2,
+                        "sourceRectsAreAuthoritative":  true
+                    },
+    "cornerOrder":  [
+                        "northwest",
+                        "northeast",
+                        "southeast",
+                        "southwest"
+                    ],
+    "sheets":  [
+                   "coast-straights.png",
+                   "coast-corners.png",
+                   "ground-shapes.png",
+                   "relief-and-water.png"
+               ],
+    "blocks":  [
+                   {
+                       "id":  "shore-north",
+                       "sheet":  "coast-straights.png",
+                       "slot":  0,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       0,
+                                       0,
+                                       1,
+                                       1
+                                   ],
+                       "cornerMask":  12,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   0,
+                                                   0
+                                               ],
+                                     "east":  [
+                                                  0,
+                                                  1
+                                              ],
+                                     "south":  [
+                                                   1,
+                                                   1
+                                               ],
+                                     "west":  [
+                                                  0,
+                                                  1
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          28,
+                                          142,
+                                          483,
+                                          333
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "shore-east",
+                       "sheet":  "coast-straights.png",
+                       "slot":  1,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       1,
+                                       0,
+                                       0,
+                                       1
+                                   ],
+                       "cornerMask":  9,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   1,
+                                                   0
+                                               ],
+                                     "east":  [
+                                                  0,
+                                                  0
+                                              ],
+                                     "south":  [
+                                                   1,
+                                                   0
+                                               ],
+                                     "west":  [
+                                                  1,
+                                                  1
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          552,
+                                          66,
+                                          471,
+                                          413
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "shore-south",
+                       "sheet":  "coast-straights.png",
+                       "slot":  2,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       1,
+                                       1,
+                                       0,
+                                       0
+                                   ],
+                       "cornerMask":  3,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   1,
+                                                   1
+                                               ],
+                                     "east":  [
+                                                  1,
+                                                  0
+                                              ],
+                                     "south":  [
+                                                   0,
+                                                   0
+                                               ],
+                                     "west":  [
+                                                  1,
+                                                  0
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          1024,
+                                          64,
+                                          491,
+                                          415
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "shore-west",
+                       "sheet":  "coast-straights.png",
+                       "slot":  3,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       0,
+                                       1,
+                                       1,
+                                       0
+                                   ],
+                       "cornerMask":  6,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   0,
+                                                   1
+                                               ],
+                                     "east":  [
+                                                  1,
+                                                  1
+                                              ],
+                                     "south":  [
+                                                   0,
+                                                   1
+                                               ],
+                                     "west":  [
+                                                  0,
+                                                  0
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          44,
+                                          524,
+                                          443,
+                                          429
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "cape-southeast",
+                       "sheet":  "coast-straights.png",
+                       "slot":  4,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       1,
+                                       0,
+                                       0,
+                                       0
+                                   ],
+                       "cornerMask":  1,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   1,
+                                                   0
+                                               ],
+                                     "east":  [
+                                                  0,
+                                                  0
+                                              ],
+                                     "south":  [
+                                                   0,
+                                                   0
+                                               ],
+                                     "west":  [
+                                                  1,
+                                                  0
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          528,
+                                          518,
+                                          455,
+                                          423
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "cape-southwest",
+                       "sheet":  "coast-straights.png",
+                       "slot":  5,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       0,
+                                       1,
+                                       0,
+                                       0
+                                   ],
+                       "cornerMask":  2,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   0,
+                                                   1
+                                               ],
+                                     "east":  [
+                                                  1,
+                                                  0
+                                              ],
+                                     "south":  [
+                                                   0,
+                                                   0
+                                               ],
+                                     "west":  [
+                                                  0,
+                                                  0
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          1044,
+                                          524,
+                                          471,
+                                          423
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "cape-northeast",
+                       "sheet":  "coast-corners.png",
+                       "slot":  0,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       0,
+                                       0,
+                                       0,
+                                       1
+                                   ],
+                       "cornerMask":  8,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   0,
+                                                   0
+                                               ],
+                                     "east":  [
+                                                  0,
+                                                  0
+                                              ],
+                                     "south":  [
+                                                   1,
+                                                   0
+                                               ],
+                                     "west":  [
+                                                  0,
+                                                  1
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          40,
+                                          72,
+                                          467,
+                                          393
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "cape-northwest",
+                       "sheet":  "coast-corners.png",
+                       "slot":  1,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       0,
+                                       0,
+                                       1,
+                                       0
+                                   ],
+                       "cornerMask":  4,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   0,
+                                                   0
+                                               ],
+                                     "east":  [
+                                                  0,
+                                                  1
+                                              ],
+                                     "south":  [
+                                                   0,
+                                                   1
+                                               ],
+                                     "west":  [
+                                                  0,
+                                                  0
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          544,
+                                          74,
+                                          447,
+                                          401
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "bay-northeast",
+                       "sheet":  "coast-corners.png",
+                       "slot":  2,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       1,
+                                       0,
+                                       1,
+                                       1
+                                   ],
+                       "cornerMask":  13,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   1,
+                                                   0
+                                               ],
+                                     "east":  [
+                                                  0,
+                                                  1
+                                              ],
+                                     "south":  [
+                                                   1,
+                                                   1
+                                               ],
+                                     "west":  [
+                                                  1,
+                                                  1
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          1038,
+                                          82,
+                                          459,
+                                          391
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "bay-northwest",
+                       "sheet":  "coast-corners.png",
+                       "slot":  3,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       0,
+                                       1,
+                                       1,
+                                       1
+                                   ],
+                       "cornerMask":  14,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   0,
+                                                   1
+                                               ],
+                                     "east":  [
+                                                  1,
+                                                  1
+                                              ],
+                                     "south":  [
+                                                   1,
+                                                   1
+                                               ],
+                                     "west":  [
+                                                  0,
+                                                  1
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          40,
+                                          524,
+                                          467,
+                                          395
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "bay-southeast",
+                       "sheet":  "coast-corners.png",
+                       "slot":  4,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       1,
+                                       1,
+                                       0,
+                                       1
+                                   ],
+                       "cornerMask":  11,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   1,
+                                                   1
+                                               ],
+                                     "east":  [
+                                                  1,
+                                                  0
+                                              ],
+                                     "south":  [
+                                                   1,
+                                                   0
+                                               ],
+                                     "west":  [
+                                                  1,
+                                                  1
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          550,
+                                          524,
+                                          443,
+                                          407
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "bay-southwest",
+                       "sheet":  "coast-corners.png",
+                       "slot":  5,
+                       "category":  "coast",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "corners":  [
+                                       1,
+                                       1,
+                                       1,
+                                       0
+                                   ],
+                       "cornerMask":  7,
+                       "height":  1,
+                       "ports":  {
+                                     "north":  [
+                                                   1,
+                                                   1
+                                               ],
+                                     "east":  [
+                                                  1,
+                                                  1
+                                              ],
+                                     "south":  [
+                                                   0,
+                                                   1
+                                               ],
+                                     "west":  [
+                                                  1,
+                                                  0
+                                              ]
+                                 },
+                       "sourceRect":  [
+                                          1038,
+                                          524,
+                                          461,
+                                          401
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "meadow-small",
+                       "sheet":  "ground-shapes.png",
+                       "slot":  0,
+                       "category":  "interior",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  0,
+                       "ports":  "land",
+                       "traversable":  "gentle_slopes",
+                       "sourceRect":  [
+                                          116,
+                                          204,
+                                          335,
+                                          207
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "meadow-long-ns",
+                       "sheet":  "ground-shapes.png",
+                       "slot":  1,
+                       "category":  "interior",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  0,
+                       "ports":  "land",
+                       "traversable":  "gentle_slopes",
+                       "sourceRect":  [
+                                          556,
+                                          116,
+                                          427,
+                                          327
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "meadow-long-ew",
+                       "sheet":  "ground-shapes.png",
+                       "slot":  2,
+                       "category":  "interior",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             1,
+                                             0
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  0,
+                       "ports":  "land",
+                       "traversable":  "gentle_slopes",
+                       "sourceRect":  [
+                                          1052,
+                                          126,
+                                          439,
+                                          323
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "meadow-elbow",
+                       "sheet":  "ground-shapes.png",
+                       "slot":  3,
+                       "category":  "interior",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             1,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  0,
+                       "ports":  "land",
+                       "traversable":  "gentle_slopes",
+                       "sourceRect":  [
+                                          52,
+                                          540,
+                                          425,
+                                          391
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "rolling-hill",
+                       "sheet":  "ground-shapes.png",
+                       "slot":  4,
+                       "category":  "interior",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             1,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ],
+                                         [
+                                             1,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  3,
+                       "ports":  "land",
+                       "traversable":  "gentle_slopes",
+                       "sourceRect":  [
+                                          518,
+                                          560,
+                                          501,
+                                          363
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "plateau-ramp",
+                       "sheet":  "ground-shapes.png",
+                       "slot":  5,
+                       "category":  "interior",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             1,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ],
+                                         [
+                                             1,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  3,
+                       "ports":  "land",
+                       "traversable":  "ramp_and_top",
+                       "sourceRect":  [
+                                          1030,
+                                          548,
+                                          475,
+                                          387
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "massif-large",
+                       "sheet":  "relief-and-water.png",
+                       "slot":  0,
+                       "category":  "relief",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             1,
+                                             0
+                                         ],
+                                         [
+                                             2,
+                                             0
+                                         ],
+                                         [
+                                             3,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ],
+                                         [
+                                             1,
+                                             1
+                                         ],
+                                         [
+                                             2,
+                                             1
+                                         ],
+                                         [
+                                             3,
+                                             1
+                                         ],
+                                         [
+                                             0,
+                                             2
+                                         ],
+                                         [
+                                             1,
+                                             2
+                                         ],
+                                         [
+                                             2,
+                                             2
+                                         ],
+                                         [
+                                             3,
+                                             2
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  18,
+                       "ports":  "land",
+                       "waterPorts":  [
+
+                                      ],
+                       "sourceRect":  [
+                                          16,
+                                          22,
+                                          783,
+                                          511
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "hill-medium",
+                       "sheet":  "relief-and-water.png",
+                       "slot":  1,
+                       "category":  "relief",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             1,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ],
+                                         [
+                                             1,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  6,
+                       "ports":  "land",
+                       "waterPorts":  [
+
+                                      ],
+                       "sourceRect":  [
+                                          800,
+                                          180,
+                                          379,
+                                          335
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "knoll-small",
+                       "sheet":  "relief-and-water.png",
+                       "slot":  2,
+                       "category":  "relief",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  3,
+                       "ports":  "land",
+                       "waterPorts":  [
+
+                                      ],
+                       "sourceRect":  [
+                                          1180,
+                                          256,
+                                          347,
+                                          293
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "river-straight",
+                       "sheet":  "relief-and-water.png",
+                       "slot":  3,
+                       "category":  "waterway",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  0,
+                       "ports":  "land",
+                       "waterPorts":  [
+                                          "north",
+                                          "south"
+                                      ],
+                       "sourceRect":  [
+                                          20,
+                                          566,
+                                          491,
+                                          401
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "river-bend",
+                       "sheet":  "relief-and-water.png",
+                       "slot":  4,
+                       "category":  "waterway",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             1,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ],
+                                         [
+                                             1,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  0,
+                       "ports":  "land",
+                       "waterPorts":  [
+                                          "north",
+                                          "east"
+                                      ],
+                       "sourceRect":  [
+                                          512,
+                                          556,
+                                          511,
+                                          435
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   },
+                   {
+                       "id":  "waterfall-gorge",
+                       "sheet":  "relief-and-water.png",
+                       "slot":  5,
+                       "category":  "waterway",
+                       "footprint":  [
+                                         [
+                                             0,
+                                             0
+                                         ],
+                                         [
+                                             0,
+                                             1
+                                         ]
+                                     ],
+                       "height":  1,
+                       "relief":  4,
+                       "ports":  "land",
+                       "waterPorts":  [
+                                          "north-high",
+                                          "south-low"
+                                      ],
+                       "sourceRect":  [
+                                          1024,
+                                          545,
+                                          483,
+                                          443
+                                      ],
+                       "anchor":  [
+                                      0.5,
+                                      1
+                                  ]
+                   }
+               ],
+    "notes":  [
+                  "No rejected eight-material swatch atlas is used.",
+                  "Connector metadata defines intended adjacency; visual seams still require assembly review.",
+                  "Ramps are traversable terrain, not coastal props.",
+                  "Large massif footprint 12 cells; medium hill 4; small knoll 1."
+              ]
+}
