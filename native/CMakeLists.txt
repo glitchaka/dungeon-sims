@@ -88,3 +88,14 @@ if(BUILD_TESTING)
     target_link_libraries(isla_islands_tests PRIVATE isla_sim)
     add_test(NAME islands_civic_sleep COMMAND isla_islands_tests)
 endif()
+
+enable_language(RC)
+target_sources(isla_viva_native PRIVATE src/ProductVersion.rc)
+target_sources(isla_launcher PRIVATE src/ProductVersion.rc)
+
+
+if(BUILD_TESTING)
+    add_executable(isla_terrain_tests tests/terrain_pack_test.cpp src/TerrainPack.cpp)
+    target_link_libraries(isla_terrain_tests PRIVATE isla_sim RA::Engine)
+    add_test(NAME topdown_mutable_terrain COMMAND isla_terrain_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets/terrain-topdown-v4.pck")
+endif()

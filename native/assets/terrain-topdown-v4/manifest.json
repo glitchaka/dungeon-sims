@@ -1,0 +1,103 @@
+﻿{
+    "format":  "IslaViva Terrain Pack",
+    "version":  4,
+    "magic":  "IVTPACK4",
+    "camera":  "nadir_90_degrees",
+    "columns":  3,
+    "rows":  3,
+    "atlas":  "regions.png",
+    "regions":  [
+                    {
+                        "id":  "meadow-stones",
+                        "tile":  0,
+                        "sourceRect":  [
+                                           0,
+                                           0,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "meadow-dry",
+                        "tile":  1,
+                        "sourceRect":  [
+                                           418,
+                                           0,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "rolling-hills",
+                        "tile":  2,
+                        "sourceRect":  [
+                                           836,
+                                           0,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "forest-broadleaf",
+                        "tile":  3,
+                        "sourceRect":  [
+                                           0,
+                                           418,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "forest-mixed",
+                        "tile":  4,
+                        "sourceRect":  [
+                                           418,
+                                           418,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "rocky-hills",
+                        "tile":  5,
+                        "sourceRect":  [
+                                           836,
+                                           418,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "massif-a",
+                        "tile":  6,
+                        "sourceRect":  [
+                                           0,
+                                           836,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "massif-b",
+                        "tile":  7,
+                        "sourceRect":  [
+                                           418,
+                                           836,
+                                           418,
+                                           418
+                                       ]
+                    },
+                    {
+                        "id":  "alpine-lake",
+                        "tile":  8,
+                        "sourceRect":  [
+                                           836,
+                                           836,
+                                           418,
+                                           418
+                                       ]
+                    }
+                ],
+    "runtimeForest":  "independent mutable props; forest cells are preview-only",
+    "sourceSHA256":  "6A8EDA6E942E940C25DA435F86E8A71B626E7D6E5B2AC817E0E7769999F48ED5"
+}

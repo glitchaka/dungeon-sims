@@ -10,52 +10,60 @@
 #include <queue>
 #include <stdexcept>
 namespace isla {
-void TerrainPack::load(const std::string& path){
-    std::ifstream file(path,std::ios::binary);char magic[8]{};std::uint32_t metadata{},size{};file.read(magic,8);file.read(reinterpret_cast<char*>(&metadata),4);file.read(reinterpret_cast<char*>(&size),4);
-    if(std::memcmp(magic,"IVTPACK2",8)||metadata>65536||size>32*1024*1024||size<8)throw std::runtime_error("Paquete de terrenos invalido");std::string jsonText(metadata,0);file.read(jsonText.data(),metadata);auto info=nlohmann::json::parse(jsonText);info.at("reliefRects").get_to(reliefRects);std::vector<unsigned char> png(size);file.read(reinterpret_cast<char*>(png.data()),size);if(!file)throw std::runtime_error("Paquete de terrenos incompleto");
-    SDL_Surface* source=IMG_Load_IO(SDL_IOFromConstMem(png.data(),png.size()),true);if(!source)throw std::runtime_error("No se pudo leer el atlas de terreno");SDL_Surface* rgba=SDL_ConvertSurface(source,SDL_PIXELFORMAT_RGBA32);SDL_DestroySurface(source);if(!rgba)throw std::runtime_error("No se pudo convertir el atlas");atlasWidth_=rgba->w;atlasHeight_=rgba->h;pixels_.resize(atlasWidth_*atlasHeight_*4);for(int y=0;y<atlasHeight_;++y)std::memcpy(pixels_.data()+y*atlasWidth_*4,static_cast<unsigned char*>(rgba->pixels)+y*rgba->pitch,atlasWidth_*4);SDL_DestroySurface(rgba);
-    file.read(reinterpret_cast<char*>(&size),4);if(size>32*1024*1024||size<8)throw std::runtime_error("Relieve de terreno invalido");png.resize(size);file.read(reinterpret_cast<char*>(png.data()),size);if(!file)throw std::runtime_error("Relieve incompleto");
-    source=IMG_Load_IO(SDL_IOFromConstMem(png.data(),png.size()),true);if(!source)throw std::runtime_error("No se pudo leer el relieve");rgba=SDL_ConvertSurface(source,SDL_PIXELFORMAT_RGBA32);SDL_DestroySurface(source);if(!rgba)throw std::runtime_error("Relieve incompatible");reliefWidth=rgba->w;reliefHeight=rgba->h;relief.resize(reliefWidth*reliefHeight*4);for(int y=0;y<reliefHeight;++y)std::memcpy(relief.data()+y*reliefWidth*4,static_cast<unsigned char*>(rgba->pixels)+y*rgba->pitch,reliefWidth*4);SDL_DestroySurface(rgba);
+void TerrainPack::load(const std::string& path) {
+    std::ifstream file(path,std::ios::binary);
+    char magic[8]{};std::uint32_t metadata{},size{};
+    file.read(magic,8);file.read(reinterpret_cast<char*>(&metadata),4);file.read(reinterpret_cast<char*>(&size),4);
+    if(!file||std::memcmp(magic,"IVTPACK4",8)||metadata>65536||size>32*1024*1024||size<8)throw std::runtime_error("Paquete cenital invalido");
+    std::string jsonText(metadata,0);file.read(jsonText.data(),metadata);auto info=nlohmann::json::parse(jsonText);
+    if(info.at("camera")!="nadir_90_degrees"||info.at("columns")!=3||info.at("rows")!=3)throw std::runtime_error("Atlas cenital incompatible");
+    std::vector<unsigned char> png(size);file.read(reinterpret_cast<char*>(png.data()),size);if(!file)throw std::runtime_error("Paquete cenital incompleto");
+    SDL_Surface* source=IMG_Load_IO(SDL_IOFromConstMem(png.data(),png.size()),true);if(!source)throw std::runtime_error("No se pudo leer el atlas cenital");
+    SDL_Surface* rgba=SDL_ConvertSurface(source,SDL_PIXELFORMAT_RGBA32);SDL_DestroySurface(source);if(!rgba)throw std::runtime_error("No se pudo convertir el atlas");
+    atlasWidth_=rgba->w;atlasHeight_=rgba->h;
+    if(atlasWidth_<96||atlasHeight_<96||atlasWidth_>8192||atlasHeight_>8192){SDL_DestroySurface(rgba);throw std::runtime_error("Dimensiones de atlas invalidas");}
+    pixels_.resize(atlasWidth_*atlasHeight_*4);
+    for(int y=0;y<atlasHeight_;++y)std::memcpy(pixels_.data()+y*atlasWidth_*4,static_cast<unsigned char*>(rgba->pixels)+y*rgba->pitch,atlasWidth_*4);
+    SDL_DestroySurface(rgba);
 }
-std::vector<unsigned char> TerrainPack::render(const World& w) const{
-    if(pixels_.empty())throw std::runtime_error("Falta el atlas de terrenos");
+std::vector<unsigned char> TerrainPack::render(const World& w) const {
+    if(pixels_.empty())throw std::runtime_error("Falta el atlas cenital");
+    using Color=std::array<float,3>;
+    auto smooth=[](float t){t=std::clamp(t,0.0f,1.0f);return t*t*(3-2*t);};
+    auto mix=[](Color a,Color b,float t){t=std::clamp(t,0.0f,1.0f);for(int c=0;c<3;++c)a[c]+=(b[c]-a[c])*t;return a;};
+    int tileW=atlasWidth_/3,tileH=atlasHeight_/3;
+    auto sample=[&](int tile,float u,float v){int sx=tile%3*tileW+std::clamp(static_cast<int>(u*tileW),0,tileW-1),sy=tile/3*tileH+std::clamp(static_cast<int>(v*tileH),0,tileH-1);Color c;for(int i=0;i<3;++i)c[i]=pixels_[(sy*atlasWidth_+sx)*4+i];return c;};
     std::array<int,mapWidth*mapHeight> fromSea,fromLand;fromSea.fill(999);fromLand.fill(999);
-    auto distances=[&](std::array<int,mapWidth*mapHeight>& values,bool sea){std::queue<int> q;for(int k=0;k<mapWidth*mapHeight;++k)if((w.terrain[k]==Terrain::Sea)==sea){values[k]=0;q.push(k);}while(!q.empty()){int k=q.front();q.pop();for(int d:{1,-1,mapWidth,-mapWidth}){int n=k+d;if(n<0||n>=mapWidth*mapHeight||std::abs(n%mapWidth-k%mapWidth)+std::abs(n/mapWidth-k/mapWidth)!=1||values[n]<=values[k]+1)continue;values[n]=values[k]+1;q.push(n);}}};distances(fromSea,true);distances(fromLand,false);
-    std::vector<unsigned char> image(width*height*4);int tileW=atlasWidth_/4,tileH=atlasHeight_/2;
-    auto sample=[&](int material,int px,int py){int tw=tileW-16,th=tileH-16;auto mirror=[](int p,int size){int t=p%(size*2);return t<size?t:size*2-1-t;};int sx=(material%4)*tileW+8+mirror(px*3/2,tw),sy=(material/4)*tileH+8+mirror(py*3/2,th);std::array<float,3> c;for(int i=0;i<3;++i)c[i]=pixels_[(sy*atlasWidth_+sx)*4+i];const std::array<std::array<float,3>,8> palette{{{14,84,139},{33,165,182},{210,188,133},{126,141,68},{119,117,101},{213,222,224},{46,146,174},{111,82,43}}};float detail=material==0?.19f:material==3?.30f:.55f;for(int i=0;i<3;++i)c[i]=palette[material][i]+(c[i]-palette[material][i])*detail;return c;};
-    auto mix=[](std::array<float,3> a,const std::array<float,3>& b,float t){t=std::clamp(t,0.0f,1.0f);for(int i=0;i<3;++i)a[i]+=(b[i]-a[i])*t;return a;};
-    std::array<float,mapWidth*mapHeight> shoreline;
-    constexpr int weights[]{1,4,6,4,1};
-    for(int y=0;y<mapHeight;++y)for(int x=0;x<mapWidth;++x){float d=0;for(int dy=-2;dy<=2;++dy)for(int dx=-2;dx<=2;++dx){int k=cellId(std::clamp(x+dx,0,mapWidth-1),std::clamp(y+dy,0,mapHeight-1));d+=(w.terrain[k]==Terrain::Sea?.5f-fromLand[k]:fromSea[k]-.5f)*weights[dx+2]*weights[dy+2];}shoreline[cellId(x,y)]=d/256;}
-    auto field=[&](int x,int y){return shoreline[cellId(std::clamp(x,0,mapWidth-1),std::clamp(y,0,mapHeight-1))];};
-    std::vector<float> riverX(height,-999),riverH(height,0);
-    if(w.riverCourse.size()>1)for(int py=0;py<height;++py){float y=py/static_cast<float>(scale);if(y<w.riverCourse.front()[1]||y>w.riverCourse.back()[1])continue;int i=std::clamp(static_cast<int>(std::floor(y-w.riverCourse.front()[1])),0,static_cast<int>(w.riverCourse.size())-2);auto a=w.riverCourse[i],b=w.riverCourse[i+1];float t=std::clamp(y-a[1],0.0f,1.0f);riverX[py]=a[0]+(b[0]-a[0])*t;riverH[py]=a[2]+(b[2]-a[2])*t;}
-    for(int py=0;py<height;++py)for(int px=0;px<width;++px){auto water=sample(0,px,py);for(int i=0;i<3;++i)image[(py*width+px)*4+i]=static_cast<unsigned char>(water[i]);image[(py*width+px)*4+3]=255;}
-    for(int py=0;py<height;++py)for(int px=0;px<width;++px){float x=px/static_cast<float>(scale)-.5f,y=py/static_cast<float>(scale)-.5f;int ix=static_cast<int>(std::floor(x)),iy=static_cast<int>(std::floor(y));float fx=x-ix,fy=y-iy;fx=fx*fx*(3-2*fx);fy=fy*fy*(3-2*fy);float top=field(ix,iy)*(1-fx)+field(ix+1,iy)*fx,bottom=field(ix,iy+1)*(1-fx)+field(ix+1,iy+1)*fx,d=top*(1-fy)+bottom*fy;
-        auto c=mix(sample(0,px,py),sample(1,px,py),std::clamp((d+5)/4,0.0f,1.0f));
-        c=mix(c,sample(2,px,py),std::clamp((d+.15f)*2.5f,0.0f,1.0f));c=mix(c,sample(3,px,py),std::clamp((d-.8f)/1.5f,0.0f,1.0f));
-        int gx=std::clamp(px/scale,0,mapWidth-1),gy=std::clamp(py/scale,0,mapHeight-1);float mountain=0,river=0;for(int dy=0;dy<=1;++dy)for(int dx=0;dx<=1;++dx){auto t=w.terrainAt(ix+dx,iy+dy);float weight=(dx?fx:1-fx)*(dy?fy:1-fy);if(t==Terrain::Mountain)mountain+=weight;if(t==Terrain::FreshWater||t==Terrain::Bridge)river+=weight;}
-        if(!w.riverCourse.empty())river=riverX[py]>-900?std::clamp((.78f-std::abs(px/static_cast<float>(scale)-riverX[py]))/.23f,0.0f,1.0f):0;
-        if(mountain>0)c=mix(c,mix(sample(3,px,py),sample(4,px,py),.65f),mountain*.75f);if(river>0)c=mix(c,sample(6,px,py),std::min(1.0f,river*1.6f));
-        float foam=std::max(0.0f,1-std::abs(d+.15f)*7)*.28f;c=mix(c,{235,250,236},foam);
-        float wx=px/static_cast<float>(scale),wy=py/static_cast<float>(scale);
-        float h=w.heightAt(wx,wy),south=w.heightAt(wx,wy+1.0f/scale);if(river>.8f&&!w.riverCourse.empty()){h=riverH[py];south=riverH[std::min(py+1,height-1)];}
-        float light=std::clamp(1.0f+(w.heightAt(wx-.5f,wy)-w.heightAt(wx+.5f,wy))*.23f+(w.heightAt(wx,wy-.5f)-w.heightAt(wx,wy+.5f))*.18f,.52f,1.28f);
-        int screen=py-static_cast<int>(h*scale*.7f);int front=py+1-static_cast<int>(south*scale*.7f);int end=std::min(height-1,std::max(screen,front));
-        for(int yy=std::max(0,screen);yy<=end;++yy){auto surface=c;
-            if((h-south)*scale>.45f||(yy>screen&&h>south+.01f)){surface=sample(river>.2f?6:4,px,py+yy-screen);for(float& channel:surface)channel*=.68f;}else for(float& channel:surface)channel*=light;
-            for(int i=0;i<3;++i)image[(yy*width+px)*4+i]=static_cast<unsigned char>(std::clamp(surface[i],0.0f,255.0f));image[(yy*width+px)*4+3]=255;
+    auto distances=[&](auto& values,bool sea){std::queue<int> q;for(int k=0;k<mapWidth*mapHeight;++k)if((w.terrain[k]==Terrain::Sea)==sea){values[k]=0;q.push(k);}while(!q.empty()){int k=q.front();q.pop();for(int step:{1,-1,mapWidth,-mapWidth}){int n=k+step;if(n<0||n>=mapWidth*mapHeight||std::abs(n%mapWidth-k%mapWidth)+std::abs(n/mapWidth-k/mapWidth)!=1||values[n]<=values[k]+1)continue;values[n]=values[k]+1;q.push(n);}}};
+    distances(fromSea,true);distances(fromLand,false);
+    std::array<float,mapWidth*mapHeight> shore;constexpr int weights[]{1,4,6,4,1};
+    for(int y=0;y<mapHeight;++y)for(int x=0;x<mapWidth;++x){float d=0;for(int dy=-2;dy<=2;++dy)for(int dx=-2;dx<=2;++dx){int k=cellId(std::clamp(x+dx,0,mapWidth-1),std::clamp(y+dy,0,mapHeight-1));d+=(w.terrain[k]==Terrain::Sea?.5f-fromLand[k]:fromSea[k]-.5f)*weights[dx+2]*weights[dy+2];}shore[cellId(x,y)]=d/256;}
+    auto field=[&](int x,int y){return shore[cellId(std::clamp(x,0,mapWidth-1),std::clamp(y,0,mapHeight-1))];};
+    std::vector<unsigned char> image(width*height*4);
+    for(int py=0;py<height;++py)for(int px=0;px<width;++px){
+        float x=px/static_cast<float>(scale),y=py/static_cast<float>(scale),cx=x-.5f,cy=y-.5f;int ix=static_cast<int>(std::floor(cx)),iy=static_cast<int>(std::floor(cy));float fx=smooth(cx-ix),fy=smooth(cy-iy);
+        float d=(field(ix,iy)*(1-fx)+field(ix+1,iy)*fx)*(1-fy)+(field(ix,iy+1)*(1-fx)+field(ix+1,iy+1)*fx)*fy;
+        float wave=std::sin(px*.07f+std::sin(py*.03f))*1.5f;
+        Color c=mix({16+wave,78+wave,132+wave},{43,161,174},smooth((d+4)/4));
+        if(d>-.3f){
+            // Offset overlapping meadow modules avoid a fixed island background or a visible tile grid.
+            auto fract=[](float t){return t-std::floor(t);};
+            float u=fract(x/24),v=fract(y/24),blend=smooth((std::sin(x*.12f+y*.07f)+1)*.5f)*.35f;
+            Color land=mix(sample(0,u,v),sample(1,fract((x+13)/31),fract((y+7)/29)),blend);
+            for(std::size_t i=0;i<w.landforms.size();++i){const auto& f=w.landforms[i];float a=(x-(f.x-f.radiusX))/(2*f.radiusX),b=(y-(f.y-f.radiusY))/(2*f.radiusY);if(a<=0||a>=1||b<=0||b>=1)continue;
+                int tile=f.kind=="mountain"?6+static_cast<int>(i%2):f.kind=="hill"||f.kind=="mount"?5:2;
+                float opacity=smooth(std::min({a,1-a,b,1-b})/.16f);land=mix(land,sample(tile,a,b),opacity);
+            }
+            // Trees are independent mutable world props, never baked into the ground atlas layer.
+            float river=0;
+            if(w.riverCourse.size()>1){for(std::size_t i=1;i<w.riverCourse.size();++i){const auto& a=w.riverCourse[i-1];const auto& b=w.riverCourse[i];if(y<a[1]||y>b[1])continue;float t=(y-a[1])/std::max(.001f,b[1]-a[1]);float rx=a[0]+(b[0]-a[0])*t;float slope=(b[0]-a[0])/std::max(.001f,b[1]-a[1]);float distance=std::abs(x-rx)/std::sqrt(1+slope*slope);river=1-smooth((distance-.38f)/.30f);break;}}
+            else if(w.terrainAt(static_cast<int>(x),static_cast<int>(y))==Terrain::FreshWater)river=1;
+            land=mix(land,{40,137,161},river);
+            Color beach={218,199,148};Color ground=mix(beach,land,smooth((d-.25f)/1.4f));c=mix(c,ground,smooth((d+.3f)/.5f));
         }
+        c=mix(c,{230,243,226},(1-smooth(std::abs(d+.15f)/.12f))*.35f);
+        int at=(py*width+px)*4;for(int i=0;i<3;++i)image[at+i]=static_cast<unsigned char>(std::clamp(c[i],0.0f,255.0f));image[at+3]=255;
     }
     return image;
 }
 }
-
-
-
-
-
-
-
-
-

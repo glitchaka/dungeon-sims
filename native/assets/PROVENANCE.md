@@ -10,3 +10,7 @@ Las imagenes completas usadas como referencia estan archivadas en native/referen
 
 ## Recursos de esta entrega
 Los edificios civicos de civic-buildings.png y el material y relieve contenidos en terrain-islands.pck fueron generados con la herramienta incorporada imagegen. Los prompts exactos estan en CIVIC-GENERATION-PROMPT.txt, terrain-pack/GENERATION-PROMPT.txt y terrain-pack/RELIEF-GENERATION-PROMPT.txt. No proceden del repositorio CnC. civic-pieces.json y el manifiesto del paquete contienen recortes de atlas; los PNG originales conservan su transparencia.
+
+## Terreno cenital v4 (2026-10-22)
+
+Nuevo atlas: terrain-topdown-v4/regions.png, generado con imagegen; prompt íntegro en terrain-topdown-v4/PROMPT.txt. Reemplaza el terreno de ocho materiales y el relieve en tres cuartos en el ejecutable. La muestra se ensambla por código con este atlas, no es una generación independiente. Las construcciones y personajes conservan sus recursos anteriores.

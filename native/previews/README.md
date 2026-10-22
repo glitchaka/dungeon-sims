@@ -9,3 +9,7 @@ Reproducir desde la raíz:
 Limitaciones visibles: el set conserva perspectiva de tres cuartos, aunque la última petición requiere vista cenital. Las conexiones lógicas del catálogo no garantizan uniones gráficas: quedan huecos, costas repetidas y paredes internas. Esta muestra permite evaluar esos problemas; no está integrada al juego ni tiene colisiones. No se ha pintado ni generado una imagen nueva para ocultar las uniones.
 
 island-top-down-sample.png es la imagen conceptual anterior generada desde cero; NO procede del ensamblaje. Su prompt se conserva por trazabilidad.
+
+## Ensamblaje cenital v4
+
+assembled-topdown-v4.png sí está compuesto con el nuevo atlas cenital terrain-topdown-v4/regions.png. Su disposición está en terrain-topdown-v4/sample-layout.json y se reproduce con tools/render_topdown_island.ps1. Costa, mar y cauce se calculan por código. game-topdown-v4.bmp y package-topdown-v4.bmp son capturas reales de la alpha compilada y empaquetada, con semilla 1749. El juego compone desde el mundo actual; no usa esta muestra como fondo.

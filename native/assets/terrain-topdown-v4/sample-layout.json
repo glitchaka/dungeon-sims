@@ -1,0 +1,106 @@
+﻿{
+    "format":  "IslaViva topdown sample",
+    "version":  4,
+    "seed":  1749,
+    "camera":  "nadir_90_degrees",
+    "canvas":  [
+                   1536,
+                   1280
+               ],
+    "placements":  [
+                       {
+                           "tile":  2,
+                           "x":  300,
+                           "y":  290,
+                           "width":  280,
+                           "height":  250
+                       },
+                       {
+                           "tile":  5,
+                           "x":  400,
+                           "y":  240,
+                           "width":  290,
+                           "height":  270
+                       },
+                       {
+                           "tile":  5,
+                           "x":  850,
+                           "y":  250,
+                           "width":  290,
+                           "height":  270
+                       },
+                       {
+                           "tile":  3,
+                           "x":  260,
+                           "y":  550,
+                           "width":  230,
+                           "height":  250
+                       },
+                       {
+                           "tile":  4,
+                           "x":  420,
+                           "y":  650,
+                           "width":  280,
+                           "height":  290
+                       },
+                       {
+                           "tile":  3,
+                           "x":  930,
+                           "y":  530,
+                           "width":  240,
+                           "height":  280
+                       },
+                       {
+                           "tile":  4,
+                           "x":  840,
+                           "y":  840,
+                           "width":  260,
+                           "height":  220
+                       },
+                       {
+                           "tile":  2,
+                           "x":  560,
+                           "y":  820,
+                           "width":  270,
+                           "height":  220
+                       },
+                       {
+                           "tile":  5,
+                           "x":  1000,
+                           "y":  730,
+                           "width":  200,
+                           "height":  240
+                       },
+                       {
+                           "tile":  3,
+                           "x":  330,
+                           "y":  830,
+                           "width":  230,
+                           "height":  230
+                       },
+                       {
+                           "tile":  6,
+                           "x":  510,
+                           "y":  230,
+                           "width":  330,
+                           "height":  320
+                       },
+                       {
+                           "tile":  7,
+                           "x":  760,
+                           "y":  210,
+                           "width":  350,
+                           "height":  340
+                       },
+                       {
+                           "tile":  8,
+                           "x":  700,
+                           "y":  420,
+                           "width":  180,
+                           "height":  150
+                       }
+                   ],
+    "coast":  "analytic continuous mask",
+    "river":  "continuous world-space curve",
+    "base":  "blended meadow cells 0 and 1"
+}

@@ -22,7 +22,7 @@ public:
     explicit IslaVivaGame(bool smoke, std::filesystem::path assets, std::string capture,std::string profile,std::string join,unsigned short port,bool host,std::string name,bool fresh,unsigned seed): name_(std::move(name)),fresh_(fresh),seed_(seed), profile_(std::move(profile)),joinIp_(std::move(join)),port_(port),hostOnStart_(host),assetRoot_(std::move(assets)), capturePath_(std::move(capture)), raining_(smoke), smoke_(smoke) {}
     void onStart(ra::Engine& engine) override {
         engine.setWindowTitle("Isla Viva | Simulacion nativa");
-        terrain_=engine.loadTexture((assetRoot_/"geology.png").string());
+
         civicTexture_=engine.loadTexture((assetRoot_/"civic-buildings.png").string());
         std::ifstream civicFile(assetRoot_/"civic-pieces.json");auto civicData=nlohmann::json::parse(civicFile);for(int i=0;i<4;++i){auto c=civicData.at(i);civicRegions_[i]={c[0].get<float>(),c[1].get<float>(),c[2].get<float>(),c[3].get<float>()};}
         natureTexture_=engine.loadTexture((assetRoot_/"nature-pieces.png").string());
@@ -34,11 +34,11 @@ public:
         houseTexture_=engine.loadTexture((assetRoot_/"house.png").string());
         roadTexture_=engine.loadTexture((assetRoot_/"road-tiles.png").string());
         objectsTexture_=engine.loadTexture((assetRoot_/"objects.png").string());
-        if(!terrain_ || !residentsTexture_ || !fieldsTexture_ || !objectsTexture_ || !houseTexture_ || !roadTexture_ || !natureTexture_ || !buildingsTexture_) throw std::runtime_error("Faltan recursos del mapa en la carpeta assets");
+        if(!residentsTexture_ || !fieldsTexture_ || !objectsTexture_ || !houseTexture_ || !roadTexture_ || !natureTexture_ || !buildingsTexture_) throw std::runtime_error("Faltan recursos del mapa en la carpeta assets");
         bool loaded=!smoke_&&!fresh_&&world_.load(savePath());
         if(!loaded&&!smoke_&&!fresh_){auto old=std::filesystem::path(savePath()).parent_path()/(profile_=="default"?"world-v7.json":profile_+"-v7.json");loaded=world_.load(old.string());if(!loaded&&profile_=="default")loaded=world_.load((old.parent_path()/"world-v6.json").string());}
         if(!loaded){if(std::filesystem::exists(savePath()))std::filesystem::copy_file(savePath(),savePath()+".bak",std::filesystem::copy_options::overwrite_existing);world_.generateIsland(seed_?seed_:static_cast<unsigned>(SDL_GetTicksNS()));}
-        world_.playerName=name_;engine.setWindowTitle("Isla Viva | "+world_.playerName+" | "+profile_);terrainPack_.load((assetRoot_/"terrain-islands.pck").string());reliefTexture_=engine.createTextureRGBA(terrainPack_.relief.data(),terrainPack_.reliefWidth,terrainPack_.reliefHeight);for(int i=0;i<4;++i){auto r=terrainPack_.reliefRects[i];reliefRegions_[i]={static_cast<float>(r[0]),static_cast<float>(r[1]),static_cast<float>(r[2]),static_cast<float>(r[3])};}
+        world_.playerName=name_;engine.setWindowTitle("Isla Viva | "+world_.playerName+" | "+profile_);terrainPack_.load((assetRoot_/"terrain-topdown-v4.pck").string());
         message_=loaded?"Partida recuperada; caminos heredados migrados":"Nueva isla aleatoria generada";
         if(hostOnStart_)network_.host(port_);else if(!joinIp_.empty())network_.join(joinIp_,port_);
         world_.updateFishing(0);
@@ -48,7 +48,7 @@ public:
         if(!renderer_) throw std::runtime_error("Cannot access map renderer");
         SDL_AddEventWatch(textEvents,this);
     }
-    void onStop(ra::Engine& engine) override { SDL_RemoveEventWatch(textEvents,this);engine.destroyTexture(generatedTerrain_);engine.destroyTexture(civicTexture_);engine.destroyTexture(reliefTexture_); engine.destroyTexture(terrain_); engine.destroyTexture(residentsTexture_); engine.destroyTexture(fieldsTexture_); engine.destroyTexture(objectsTexture_); engine.destroyTexture(houseTexture_); engine.destroyTexture(roadTexture_); engine.destroyTexture(natureTexture_); engine.destroyTexture(buildingsTexture_); if(!smoke_) world_.save(savePath()); }
+    void onStop(ra::Engine& engine) override { SDL_RemoveEventWatch(textEvents,this);engine.destroyTexture(generatedTerrain_);engine.destroyTexture(civicTexture_);engine.destroyTexture(terrain_); engine.destroyTexture(residentsTexture_); engine.destroyTexture(fieldsTexture_); engine.destroyTexture(objectsTexture_); engine.destroyTexture(houseTexture_); engine.destroyTexture(roadTexture_); engine.destroyTexture(natureTexture_); engine.destroyTexture(buildingsTexture_); if(!smoke_) world_.save(savePath()); }
     void onUpdate(ra::Engine& engine,float delta) override {
         if(chatOpen_){
             if(engine.keyPressed(ra::Key::Escape)){chatOpen_=false;setTextInput(false);}
@@ -222,7 +222,7 @@ public:
 private:
     struct Control { ra::Rect rect; std::string id; };
     std::vector<Control> controls_;
-    std::string name_;bool fresh_{};unsigned seed_{};isla::TerrainPack terrainPack_;ra::Texture generatedTerrain_,civicTexture_,reliefTexture_;std::array<ra::Rect,4> reliefRegions_{};std::array<ra::Rect,4> civicRegions_{};int drawnRevision_{-1};
+    std::string name_;bool fresh_{};unsigned seed_{};isla::TerrainPack terrainPack_;ra::Texture generatedTerrain_,civicTexture_;std::array<ra::Rect,4> civicRegions_{};int drawnRevision_{-1};
     bool chatOpen_{},chatSubmit_{};std::string chatText_;
     isla::PeerLink network_;std::string profile_,joinIp_;unsigned short port_{32145};bool hostOnStart_{};float networkClock_{};
     std::string tool_,message_;int relocateSource_{-1};float autosaveClock_{};
@@ -272,11 +272,9 @@ private:
         if(!paused_){accumulator_+=std::clamp(delta,0.0f,.25f)*static_cast<float>(speed_);while(accumulator_>=.1f){world_.tick(.1f);accumulator_-=.1f;}}
         int phase=static_cast<int>(std::fmod(world_.elapsed,300.0f)/75);if(phase!=phase_||drawnRevision_!=world_.terrainRevision)updateTerrain(engine);
     }
-    float elevationView(float x,float y) const{return world_.heightAt(x,y)*.7f;}
+    float elevationView(float,float) const{return 0.0f;}
     std::pair<float,float> groundPoint(float mouseX,float mouseY) const{
-        float x=(mouseX-mapX_)/unit_,screen=(mouseY-mapY_)/unit_,best=screen,error=100000;
-        for(int y=0;y<isla::mapHeight;++y){float projected=y+.5f-elevationView(x,y+.5f),distance=std::abs(projected-screen);if(distance<=error){error=distance;best=y+.5f;}}
-        return {x,best};
+        return {(mouseX-mapX_)/unit_,(mouseY-mapY_)/unit_};
     }
     void drawPiece(ra::Engine& engine,const ra::Texture& texture,ra::Rect source,float x,float footY,float width) {
         const float height=width*source.h/std::max(1.0f,source.w);
@@ -289,20 +287,18 @@ private:
         for(std::size_t i=0;i<world_.residents.size();++i){const auto& r=world_.residents[i];if(r.alive&&!r.inDungeon&&!r.away&&!r.inBoat)draw.push_back({r.y+.2f,2,i});}
         for(std::size_t i=0;i<world_.camps.size();++i)draw.push_back({static_cast<float>(world_.camps[i].cell/isla::mapWidth)+1,3,i});
         for(std::size_t i=0;i<world_.gifts.size();++i)draw.push_back({static_cast<float>(world_.gifts[i].cell/isla::mapWidth)+1,4,i});
-        if(world_.procedural)for(std::size_t i=0;i<world_.landforms.size();++i){const auto& form=world_.landforms[i];if(form.sprite<0)continue;draw.push_back({form.y+form.radiusY*.7f,5,i});}
         std::sort(draw.begin(),draw.end(),[](const Item& a,const Item& b){return a.bottom<b.bottom;});
         for(const auto& item:draw){
             if(item.kind==0){const auto& p=world_.props[item.index];if(p.tree)drawPiece(engine,natureTexture_,natureRegions_[p.health<40?3:p.uid%2],p.x+static_cast<float>((p.uid*17)%7-3)*.045f,p.y+.5f,2.6f);else if(p.kind=="townhall"||p.kind=="altar"||p.kind=="dock")drawPiece(engine,civicTexture_,civicRegions_[p.kind=="townhall"?0:p.kind=="altar"?1:2],p.x,p.y+1,p.kind=="townhall"?3.4f:2.6f);else drawPiece(engine,buildingsTexture_,buildingRegions_[p.uid%4],p.x,p.y+1,2.6f);}
             else if(item.kind==1){const auto& a=world_.animals[item.index];engine.drawTextureRegion(residentsTexture_,{static_cast<float>(a.kind*8),32,8,8},{mapX_+(a.x-.5f)*unit_,mapY_+(a.y-.5f-elevationView(a.x,a.y))*unit_,unit_,unit_});}
             else if(item.kind==2){const auto& r=world_.residents[item.index];int direction=0;if(r.next<r.path.size()){int next=r.path[r.next];float dx=next%isla::mapWidth+.5f-r.x,dy=next/isla::mapWidth+.5f-r.y;direction=std::abs(dx)>std::abs(dy)?(dx>0?1:3):(dy>0?0:2);}int step=r.next<r.path.size()?static_cast<int>(world_.elapsed*6)%4:0;int sx=(direction==1||direction==3?1:0)+(step%2)*2,sy=(direction==2||direction==3?1:0)+(step/2)*2;engine.drawTextureRegion(residentsTexture_,{static_cast<float>(sx*8),static_cast<float>(sy*8),8,8},{mapX_+(r.x-.6f)*unit_,mapY_+(r.y-.8f-elevationView(r.x,r.y))*unit_,unit_*1.2f,unit_*1.2f});if(item.index==selected_)engine.drawRect({mapX_+(r.x-.5f)*unit_,mapY_+(r.y-.5f-elevationView(r.x,r.y))*unit_,unit_,unit_},{249,206,122,255});}
-            else if(item.kind==5){const auto& form=world_.landforms[item.index];drawPiece(engine,reliefTexture_,reliefRegions_[form.sprite],form.x,item.bottom,form.drawWidth);}
             else if(item.kind==4){int k=world_.gifts[item.index].cell;engine.fillRect({mapX_+(k%isla::mapWidth+.2f)*unit_,mapY_+(k/isla::mapWidth+.2f)*unit_,unit_*.6f,unit_*.6f},{247,207,83,255});}
             else{const auto& camp=world_.camps[item.index];drawPiece(engine,buildingsTexture_,buildingRegions_[0],camp.cell%isla::mapWidth+.5f,camp.cell/isla::mapWidth+1.0f,1.6f);}
         }
         for(const auto& ship:world_.ships){if(ship.seaHome<0)continue;drawPiece(engine,buildingsTexture_,buildingRegions_[4],ship.cell%isla::mapWidth+.5f,ship.cell/isla::mapWidth+1.2f,2.6f);if(ship.state!="lost")drawPiece(engine,buildingsTexture_,buildingRegions_[6],ship.x,ship.y+.7f,1.7f);}
     }
     void drawTerrain(ra::Engine& engine) {
-        engine.drawTexture(world_.procedural?generatedTerrain_:terrain_,{mapX_,mapY_,isla::mapWidth*unit_,isla::mapHeight*unit_});
+        engine.drawTexture(generatedTerrain_,{mapX_,mapY_,isla::mapWidth*unit_,isla::mapHeight*unit_});
         auto road=[&](int x,int y){auto t=world_.terrainAt(x,y);return t==isla::Terrain::Road||t==isla::Terrain::Bridge;};
         const int left=std::max(0,static_cast<int>(std::floor((20-mapX_)/unit_))),right=std::min(isla::mapWidth,static_cast<int>(std::ceil((engine.windowWidth()-352-mapX_)/unit_)));
         const int top=std::max(0,static_cast<int>(std::floor((20-mapY_)/unit_))),bottom=std::min(isla::mapHeight,static_cast<int>(std::ceil((engine.windowHeight()-20-mapY_)/unit_)));
@@ -323,7 +319,7 @@ private:
         mapX_=viewportCenterX_-centerX_*unit_;mapY_=viewportCenterY_-centerY_*unit_;
     }
     void updateTerrain(ra::Engine& engine) {
-        if(world_.procedural&&(!generatedTerrain_||drawnRevision_!=world_.terrainRevision)){
+        if(!generatedTerrain_||drawnRevision_!=world_.terrainRevision){
             auto pixels=terrainPack_.render(world_);engine.destroyTexture(generatedTerrain_);generatedTerrain_=engine.createTextureRGBA(pixels.data(),isla::TerrainPack::width,isla::TerrainPack::height);drawnRevision_=world_.terrainRevision;
         }
         phase_=static_cast<int>(std::fmod(world_.elapsed,300.0f)/75);
@@ -359,20 +355,3 @@ int main(int argc,char** argv) {
         return result;
     } catch(const std::exception& error) { std::cerr << error.what() << '\n';return 1; }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

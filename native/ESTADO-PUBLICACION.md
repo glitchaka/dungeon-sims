@@ -1,5 +1,9 @@
-﻿# Estado de esta publicacion
+﻿# Estado de publicación
 
-Se publica el proyecto en curso por peticion del usuario. El paquete actual de terreno y las pruebas de geografia fueron RECHAZADOS por el usuario y deben rehacerse desde cero. No constituyen una entrega visual aprobada.
+Alpha C++ recompilada con terreno cenital v4 y paquete local dist/IslaViva-alpha-islands. Abre Jugar.exe en la raíz, o extrae releases/IslaViva-alpha-topdown-v4.zip y abre su Jugar.exe.
 
-El ZIP de releases conserva la compilacion publicada anterior. Los cambios posteriores de pantalla grafica, chat, terrenos y edificios estan en el codigo fuente; esta publicacion de trabajo no actualiza ese ZIP. El nuevo lanzador local espera dist/IslaViva-alpha-islands; se prepara compilando y ejecutando tools/package_alpha.ps1.
+El terreno usa un atlas de nueve regiones cenitales compuesto según el estado del mundo, sin sprites geográficos en tres cuartos ni una imagen completa como fondo. Se conserva una muestra reproducible del set y una captura real del ejecutable en native/previews.
+
+El proyecto sigue siendo una alpha: el acabado visual no equivale a una copia exacta de la ilustración original. Los sprites de construcciones y habitantes no se han sustituido. El multijugador directo requiere conectividad entre las direcciones de los dos jugadores; no hay servidor público, cifrado ni autenticación de sesión.
+
+La revisión antivirus y los hashes del paquete se documentan en native/SECURITY-REVIEW.md. No se afirma ausencia absoluta de malware ni compatibilidad con todos los antivirus.

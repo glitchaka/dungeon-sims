@@ -1,0 +1,11 @@
+﻿{
+    "reviewDate":  "2026-10-22",
+    "engine":  "Microsoft Defender",
+    "scan":  "CustomScan",
+    "scope":  "dist/IslaViva-alpha-islands",
+    "completed":  true,
+    "projectDetectionCount":  0,
+    "detections":  [
+
+                   ]
+}
