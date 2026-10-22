@@ -29,7 +29,7 @@ World::World(){
     constexpr std::array<const char*,6> names{{"Luna","Bruno","Alma","Teo","Vera","Nico"}};
     constexpr std::array<const char*,6> traits{{"Exploradora","Sociable","Cazadora","Trabajador","Agricultora","Explorador"}};
     constexpr std::array<int,6> homes{{cellId(55,46),cellId(56,46),cellId(57,46),cellId(59,46),cellId(60,46),cellId(61,46)}};
-    for(std::size_t i=0;i<names.size();++i){Resident r;r.name=names[i];r.trait=traits[i];r.home=freeNear(homes[i]);r.goal=r.home;r.x=r.home%mapWidth+.5f;r.y=r.home/mapWidth+.5f;residents.push_back(r);}
+    for(std::size_t i=0;i<names.size();++i){Resident r;r.female=i%2==0;r.name=names[i];r.trait=traits[i];r.home=freeNear(homes[i]);r.goal=r.home;r.x=r.home%mapWidth+.5f;r.y=r.home/mapWidth+.5f;residents.push_back(r);}
 
     for(int center:std::array<int,5>{{cellId(49,35),cellId(96,38),cellId(88,48),cellId(56,63),cellId(55,80)}})
         for(int dy=-1;dy<=1;++dy)for(int dx=-2;dx<=2;++dx){int x=center%mapWidth+dx,y=center/mapWidth+dy,k=cellId(x,y);if(x<0||y<0||x>=mapWidth||y>=mapHeight||terrain[k]!=Terrain::Ground)continue;forest[k]=false;crops.push_back({k,(x%4==0?0:3),0,-1,(x%4==0?0.0f:120.0f),0});}
@@ -42,7 +42,7 @@ World::World(){
 }
 std::vector<int> World::route(int sx,int sy,const std::function<bool(int,int)>& goal) const{
     if(!walkable(sx,sy))return {};std::array<int,mapWidth*mapHeight> previous;previous.fill(-1);std::queue<int> q;const int start=cellId(sx,sy);previous[start]=start;q.push(start);int found=-1;
-    while(!q.empty()){int at=q.front();q.pop();int x=at%mapWidth,y=at/mapWidth;if(goal(x,y)){found=at;break;}for(auto d:std::array<std::array<int,2>,4>{{{1,0},{-1,0},{0,1},{0,-1}}}){int nx=x+d[0],ny=y+d[1];if(!canStep(x,y,nx,ny))continue;int k=cellId(nx,ny);if(previous[k]>=0)continue;bool occupied=false;for(const auto& person:residents)if(person.alive&&!person.inDungeon&&!person.away&&!person.inBoat&&cellId(static_cast<int>(person.x),static_cast<int>(person.y))==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;if(occupied&&!goal(nx,ny))continue;previous[k]=at;q.push(k);}}
+    while(!q.empty()){int at=q.front();q.pop();int x=at%mapWidth,y=at/mapWidth;if(goal(x,y)){found=at;break;}for(auto d:std::array<std::array<int,2>,4>{{{1,0},{-1,0},{0,1},{0,-1}}}){int nx=x+d[0],ny=y+d[1];if(!canStep(x,y,nx,ny))continue;int k=cellId(nx,ny);if(previous[k]>=0)continue;bool occupied=false;for(const auto& person:residents)if(person.alive&&person.insideHouse<0&&!person.inDungeon&&!person.away&&!person.inBoat&&cellId(static_cast<int>(person.x),static_cast<int>(person.y))==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;if(occupied&&!goal(nx,ny))continue;previous[k]=at;q.push(k);}}
     if(found<0)return {};std::vector<int> path;for(int at=found;at!=start;at=previous[at])path.push_back(at);path.push_back(start);std::reverse(path.begin(),path.end());return path;
 }
 int World::nearest(const Resident& r,const std::function<bool(int,int)>& predicate) const{auto p=route(static_cast<int>(r.x),static_cast<int>(r.y),predicate);return p.empty()?-1:p.back();}

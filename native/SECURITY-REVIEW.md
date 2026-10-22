@@ -31,3 +31,5 @@ Recompilado para mapas nuevos de 256 x 192 celdas y guardados v9. Las cinco prue
 ## Actualización de autonomía y visitas navales
 
 La compilación de esta revisión incluye obras cívicas por necesidad, viviendas realmente vacantes para inmigración y salida/regreso en barco para nuevas visitas. Cinco pruebas aprobadas; las pruebas de multijugador usan dos conexiones TCP reales y comprueban embarque persistido, salida al mar antes de transferir al visitante, mensajes repetidos y desembarco alternativo al bloquear el muelle. La alpha empaquetada arrancó y terminó con código 0. El análisis Defender del paquete actualizado se registra con hashes en native/previews/defender-review.json. Se mantienen las limitaciones de firma y conexión directa documentadas arriba.
+
+Revision family-life: compilacion Release y siete pruebas aprobadas. Microsoft Defender completo el analisis del paquete dist/IslaViva-alpha-family-life con cero detecciones del proyecto. Hashes en previews/defender-review.json. Los ejecutables siguen sin firma digital; no se garantiza ausencia absoluta de malware.

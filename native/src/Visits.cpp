@@ -5,10 +5,11 @@
 namespace isla {
 using nlohmann::json;
 std::string World::sendVisit(int who,const std::string& kind){
+    if(night())return "Las visitas embarcan al amanecer";
     if(peerId.empty()||peerId==worldId)return "Conecta otra isla para enviar visitas";
     if(kind!="diplomacy"&&kind!="raid")return "Mision desconocida";
     if(who<0||who>=static_cast<int>(residents.size()))return "Habitante inexistente";auto& r=residents[who];
-    if(!r.alive||r.visitor||r.away||r.inBoat||r.inDungeon||r.mission>=0||r.ageDays<4320||r.health<cnc::maxHealth*.7f||r.energy<50||r.hunger<50||r.thirst<50)return "El habitante debe prepararse antes de viajar";
+    if(!r.alive||r.visitor||r.away||r.inBoat||r.inDungeon||r.mission>=0||r.ageDays<World::adultAgeDays||r.health<cnc::maxHealth*.7f||r.energy<50||r.hunger<50||r.thirst<50)return "El habitante debe prepararse antes de viajar";
     auto committed=[&](int who){return std::any_of(visits.begin(),visits.end(),[&](const Visit& v){return !v.incoming&&v.resident==who&&v.state!="complete"&&v.state!="cancelled";});};
     if(committed(who))return "El habitante ya tiene un viaje asignado";
     int present=0;for(std::size_t i=0;i<residents.size();++i){const auto& p=residents[i];if(p.alive&&!p.away&&!p.visitor&&!p.inBoat&&!p.inDungeon&&!committed(static_cast<int>(i)))++present;}if(present<3)return "Deben quedar dos habitantes en la isla";
@@ -47,7 +48,8 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
         }
         if(spawn<0)return "No hay lugar para desembarcar";
         float health=m.at("health").get<float>();if(!std::isfinite(health)||health<=0||health>cnc::maxHealth)return "Estado de visitante invalido";
-        Resident guest;guest.name=name;guest.trait="Visitante";guest.visitor=true;guest.seeds=guest.money=0;guest.chosen=m.value("chosen",false);guest.health=health;guest.home=guest.goal=spawn;guest.x=spawn%mapWidth+.5f;guest.y=spawn/mapWidth+.5f;guest.relationships.resize(residents.size()+1);
+        float visitorAge=m.value("ageDays",World::adultAgeDays),visitorLifespan=m.value("naturalDeathAge",90*360.0f);if(!std::isfinite(visitorAge)||visitorAge<World::adultAgeDays||!std::isfinite(visitorLifespan)||visitorLifespan<World::adultAgeDays)return "Edad de visitante invalida";
+        Resident guest;guest.ageDays=visitorAge;guest.naturalDeathAge=visitorLifespan;guest.female=m.value("female",false);guest.name=name;guest.trait="Visitante";guest.visitor=true;guest.seeds=guest.money=0;guest.chosen=m.value("chosen",false);guest.health=health;guest.home=guest.goal=spawn;guest.x=spawn%mapWidth+.5f;guest.y=spawn/mapWidth+.5f;guest.relationships.resize(residents.size()+1);
         int index=static_cast<int>(residents.size());residents.push_back(guest);for(auto& r:residents)r.relationships.resize(residents.size());
         visits.push_back({id,peer,kind,"arrived",index,m.at("who").get<int>(),0,true,peer});record(name+" llego desde otra isla: "+kind);return "Visitante recibido";
     }
@@ -57,7 +59,7 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
         if(trip->origin!=worldId||trip->resident<0||trip->resident>=static_cast<int>(residents.size()))return "Retorno invalido";
         if(trip->state!="complete"&&trip->state!="returning"){
             int gold=m.at("gold").get<int>(),food=m.at("food").get<int>();float health=m.at("health").get<float>();if(gold<0||gold>12||food<0||food>8||!std::isfinite(health)||health<0||health>cnc::maxHealth)return "Resultado invalido";
-            auto& r=residents[trip->resident];
+            auto& r=residents[trip->resident];double returnedAge=m.value("ageDays",r.ageDays);if(!std::isfinite(returnedAge)||returnedAge<World::adultAgeDays)return "Edad de retorno invalida";r.ageDays=std::max(r.ageDays,returnedAge);
             auto boat=std::find_if(ships.begin(),ships.end(),[&](const Ship& s){return s.passenger==trip->resident&&s.state=="visit_waiting";});
             if(boat!=ships.end()){
                 r.health=health;r.alive=health>0;r.money+=gold;r.grain+=food;trip->state="returning";outbox.erase(id);
@@ -84,7 +86,7 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
 void World::updateVisits(float dt){
     for(auto& trip:visits)if(!trip.incoming&&trip.state=="travel"&&!outbox.count(trip.id)){
         const auto& r=residents[trip.resident];
-        outbox[trip.id]=json{{"protocol",1},{"type","visit"},{"id",trip.id},{"from",worldId},{"to",trip.partner},{"who",trip.originResident},{"kind",trip.kind},{"name",r.name},{"trait",r.trait},{"health",r.health},{"chosen",r.chosen}}.dump();
+        outbox[trip.id]=json{{"protocol",1},{"type","visit"},{"id",trip.id},{"from",worldId},{"to",trip.partner},{"who",trip.originResident},{"kind",trip.kind},{"name",r.name},{"trait",r.trait},{"health",r.health},{"chosen",r.chosen},{"ageDays",r.ageDays},{"female",r.female},{"naturalDeathAge",r.naturalDeathAge}}.dump();
     }
     for(auto& trip:visits)if(trip.incoming&&trip.state!="complete"){
         auto& r=residents[trip.resident];trip.clock+=dt;
@@ -96,7 +98,7 @@ void World::updateVisits(float dt){
             int defenders=0;for(const auto& p:residents)if(p.alive&&!p.away&&!p.visitor&&!p.inBoat&&!p.inDungeon&&p.health>cnc::maxHealth*.5f&&std::hypot(p.x-r.x,p.y-r.y)<12)++defenders;
             r.health=std::max(0.0f,r.health-defenders*25.0f);if(r.health>0){gold=std::min(12,treasury);food=std::min(8,grain);treasury-=gold;grain-=food;}relations[trip.origin]=std::max(-100,relations[trip.origin]-20);++metrics["raids"];alarm(r.x,r.y);record("Una incursion saqueo "+std::to_string(gold)+" monedas y "+std::to_string(food)+" de grano");
         }
-        outbox["result:"+trip.id]=json{{"protocol",1},{"type","result"},{"id",trip.id},{"from",worldId},{"to",trip.origin},{"gold",gold},{"food",food},{"health",r.health}}.dump();
+        outbox["result:"+trip.id]=json{{"protocol",1},{"type","result"},{"id",trip.id},{"from",worldId},{"to",trip.origin},{"gold",gold},{"food",food},{"health",r.health},{"ageDays",r.ageDays}}.dump();
         trip.state="complete";r.away=true;r.alive=false;r.path.clear();r.next=0;
     }
     if(peerId.empty())return;

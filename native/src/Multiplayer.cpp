@@ -28,6 +28,8 @@ void PeerLink::poll(){auto& p=*impl_;
 }
 void PeerLink::send(const std::string& message){auto& p=*impl_;if(p.ready&&message.size()<16384&&p.output.size()+message.size()<65536)p.output+=message+'\n';}
 std::vector<std::string> PeerLink::receive(){auto result=std::move(impl_->inbox);impl_->inbox.clear();return result;}
+void PeerLink::stop(){impl_->close();impl_->note="ISLA CERRADA";}
+bool PeerLink::hosting() const{return impl_->listener!=INVALID_SOCKET;}
 bool PeerLink::connected() const{return impl_->ready;}
 std::string PeerLink::status() const{return impl_->note;}
 }

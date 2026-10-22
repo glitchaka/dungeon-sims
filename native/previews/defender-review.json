@@ -1,14 +1,9 @@
 ﻿{
     "reviewDate":  "2026-10-22",
     "engine":  "Microsoft Defender",
-    "scan":  "CustomScan",
-    "scope":  "dist/IslaViva-alpha-islands",
+    "scope":  "dist/IslaViva-alpha-family-life",
     "completed":  true,
     "projectDetectionCount":  0,
-    "detections":  [
-
-                   ],
-    "build":  "autonomous-civic-naval-visits",
-    "gameSHA256":  "57A5506F85239BA1828BF52D3722EBF25E096611A8BACE8A08A8EFF5B32D908E",
-    "launcherSHA256":  "5459BEE4079F05030B54BC6EDD8DB7B3CA4C5BA03845C16FA131BE3B9D823D37"
+    "gameSHA256":  "EF16C17CEC58DE5AABCB16C51087C74F8061EF056305335BB7D96AC9AE657D58",
+    "launcherSHA256":  "6D088E45F389D688A0DECC593FD59395F1E6C2C78A140715C02A577184205C83"
 }

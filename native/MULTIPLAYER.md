@@ -1,8 +1,8 @@
 # Partidas multijugador sin consola
 
-Abre Jugar.exe. Escribe tu nombre y elige **Abrir mi isla a otro jugador**. Comparte la direccion IPv4 que muestra la pantalla (hay un boton para copiarla). El otro jugador abre Jugar.exe, elige **Conectar a otra isla** y escribe esa direccion. No se necesitan comandos. Dentro del juego, CONECTAR ISLA tambien abre un cuadro de direccion y puerto; ya no intenta conectar ciegamente a localhost.
+Inicia tu isla con tu nombre. Durante la partida, ABRIR MI ISLA permite recibir visitas y cambia a CERRAR MI ISLA. El otro jugador usa CONECTAR ISLA e introduce direccion y puerto dentro del juego. No hay roles de conexion al iniciar ni comandos obligatorios.
 
-Para probar dos ventanas en el mismo PC: abre una como anfitrion y conecta la otra a 127.0.0.1. Usa perfiles distintos; si se deja default, el modo anfitrion usa island-host y el modo cliente usa island-guest. Cada perfil tiene nombre, partida e identidad de isla propios.
+Para dos ventanas en el mismo PC usa perfiles distintos en Opciones de isla; abre una y conecta la otra a 127.0.0.1. No uses el mismo perfil simultaneamente.
 
 Puerto TCP predeterminado 32145. Es una conexion directa entre dos jugadores, utilizable en LAN o cuando los equipos tienen conectividad TCP por esa direccion. Esta entrega no incluye servidor publico, directorio de partidas, relay, apertura automatica de puertos de Internet, cuentas ni medidas contra trampas.
 

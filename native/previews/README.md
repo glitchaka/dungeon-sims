@@ -17,3 +17,5 @@ assembled-topdown-v4.png sí está compuesto con el nuevo atlas cenital terrain-
 ## Isla grande
 
 game-large-island.bmp es una captura real del ejecutable empaquetado con una isla de 256 x 192 celdas y semilla 1749. No es una ampliación de la muestra estática; la simulación tiene cuatro veces más celdas y la cámara admite zoom hasta 800 %.
+
+menu-integrated.bmp: pantalla integrada sin roles de conexion. night-inside-houses.bmp: captura nocturna real; 6/6 habitantes dentro de sus viviendas.

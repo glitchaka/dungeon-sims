@@ -19,7 +19,8 @@ struct Resident {
     Task task{Task::Idle};std::vector<int> path;std::size_t next{};
     int goal{},target{-1},home{},wood{},meat{},grain{},seeds{12},money{12},eggs{},fish{},job{-1},mission{-1};
     bool alive{true},inDungeon{},inBoat{},resumeRest{},hasOrder{}; Task orderedTask{Task::Idle}; int orderedCell{-1},workCell{-1};
-    bool away{},visitor{},chosen{};float ageDays{6480};std::string inspiration;float inspirationUntil{};
+    bool female{};int insideHouse{-1},mother{-1},father{-1},pregnancyFather{-1};float pregnancyDue{-1},postpartumUntil{},naturalDeathAge{90*360.0f},familySeekAfter{};int familyPartner{-1};
+    bool away{},visitor{},chosen{};double ageDays{6480};std::string inspiration;float inspirationUntil{};
     std::vector<int> relationships=std::vector<int>(6,0);std::vector<Artifact> artifacts,loot;
 };
 struct Prop {float x,y,halfWidth,halfDepth,height;bool tree;std::string id;int uid{-1},owner{-1};float health{100};std::string kind{"house"};};
@@ -46,9 +47,9 @@ public:
     std::uint32_t islandSeed{};bool procedural{};int terrainRevision{},roadPolicy{2};
     std::string playerName{"Deidad"},peerName;std::vector<std::string> chatLog,chatSeen;
     std::string sendChat(const std::string& text);
-    static constexpr float daySeconds=300,monthDays=30,gestationSeconds=9*monthDays*daySeconds;
+    static constexpr float daySeconds=300,monthDays=30,gestationSeconds=9*monthDays*daySeconds,adultAgeDays=18*12*monthDays,childhoodDays=6*12*monthDays,elderAgeDays=65*12*monthDays;
     std::string miracle(const std::string& kind,int who,int cell=-1);
-    void updateDivinity(float dt);void updateVisits(float dt);
+    void updateLifecycle(float dt);static const char* lifeStageName(const Resident& resident);void updateFamilies(float dt);bool leaveShelter(Resident& resident);void updateDivinity(float dt);void updateVisits(float dt);
     std::string sendVisit(int who,const std::string& kind);
     std::string receivePeer(const std::string& message,const std::string& peer);
     std::string worldId,peerId;bool raining{};float chosenBirthAt{-1};int chosenPatron{-1};
@@ -77,12 +78,12 @@ public:
     std::vector<Animal> animals;std::vector<Camp> camps;std::vector<Job> jobs;
     std::vector<Ship> ships;std::vector<Dungeon> dungeons;std::vector<std::string> events;
     std::map<std::string,int> metrics;
-    float elapsed{93},harvestClock{},alarmSeconds{},alarmX{},alarmY{},livestockClock{},lastDispatch{};
+    double elapsed{93};float harvestClock{},alarmSeconds{},alarmX{},alarmY{},livestockClock{},lastDispatch{};
     int grain{12},harvests{},communityWood{24},treasury{60},herbs{},reserve{30},livestockFood{6},priority{},nextJob{};
     int market{cellId(59,46)},granary{cellId(58,47)};bool autoTrade{};float ecologyClock{},townClock{},populationClock{};int nextProp{};std::array<unsigned short,mapWidth*mapHeight> traffic{};
 private:
     std::array<bool,mapWidth*mapHeight> blocked_{};std::uint32_t randomState_{1749};
-    std::uint32_t random();void plan(Resident& r);bool planCivicWork();void addProp(Prop p);
+    std::uint32_t random();void plan(Resident& r);bool planCivicWork();bool seekFamily(Resident& resident);void addProp(Prop p);
     bool begin(Resident& r,Task task,int goal);void finish(Resident& r,const std::string& metric,const std::string& note);
     void act(Resident& r,float dt);void updateRealm(float dt);void updateDungeons(float dt);
     void updateCrops(float dt);void updateAnimals(float dt);void completeJob(Resident& r);

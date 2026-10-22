@@ -8,7 +8,7 @@
 namespace isla {
 using nlohmann::json;
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Artifact,name,bonus,value,rare)
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Resident,name,trait,x,y,hunger,thirst,energy,health,social,fun,hygiene,speed,decisionTimer,actionTimer,homeWater,task,path,next,goal,target,home,wood,meat,grain,seeds,money,eggs,job,mission,alive,inDungeon,inBoat,resumeRest,relationships,artifacts,loot,fish,hasOrder,orderedTask,orderedCell,workCell,away,visitor,chosen,ageDays,inspiration,inspirationUntil)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Resident,name,trait,x,y,hunger,thirst,energy,health,social,fun,hygiene,speed,decisionTimer,actionTimer,homeWater,task,path,next,goal,target,home,wood,meat,grain,seeds,money,eggs,job,mission,alive,inDungeon,inBoat,resumeRest,relationships,artifacts,loot,fish,hasOrder,orderedTask,orderedCell,workCell,away,visitor,chosen,ageDays,inspiration,inspirationUntil,female,insideHouse,mother,father,pregnancyFather,pregnancyDue,postpartumUntil,naturalDeathAge,familySeekAfter,familyPartner)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Prop,x,y,halfWidth,halfDepth,height,tree,id,uid,owner,health,kind)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Crop,cell,stage,cycles,worker,growth,ripeAge)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Animal,x,y,timer,respawn,kind,alive)
@@ -50,6 +50,7 @@ static void migrateMapDimensions(json& data){
 }
 bool World::load(const std::string& filename){try{
     std::ifstream input(filename,std::ios::binary);if(!input)return false;auto data=json::parse(input);int version=data.at("version").get<int>();if(version!=6&&version!=7&&version!=8&&version!=9)return false;migrateMapDimensions(data);World next;
+    for(std::size_t i=0;i<data["residents"].size();++i){auto& r=data["residents"][i];if(!r.contains("female"))r["female"]=(i%2==0);for(const char* key:{"insideHouse","mother","father","pregnancyFather"})if(!r.contains(key))r[key]=-1;if(!r.contains("pregnancyDue"))r["pregnancyDue"]=-1;if(!r.contains("postpartumUntil"))r["postpartumUntil"]=0;if(!r.contains("naturalDeathAge"))r["naturalDeathAge"]=90*360;if(!r.contains("familySeekAfter"))r["familySeekAfter"]=0;if(!r.contains("familyPartner"))r["familyPartner"]=-1;}
     if(version==6)for(auto& r:data["residents"]){r["away"]=false;r["visitor"]=false;r["chosen"]=false;r["ageDays"]=6480;r["inspiration"]="";r["inspirationUntil"]=0;}
     if(version>=7){next.worldId=data.at("worldId");data.at("relations").get_to(next.relations);next.raining=data.at("raining");next.chosenBirthAt=data.at("chosenBirthAt");next.chosenPatron=data.at("chosenPatron");data.at("gifts").get_to(next.gifts);data.at("visits").get_to(next.visits);data.at("outbox").get_to(next.outbox);
         if(next.worldId.size()!=32||!std::isfinite(next.chosenBirthAt)||next.visits.size()>4096||next.outbox.size()>8192)return false;
@@ -71,6 +72,7 @@ bool World::load(const std::string& filename){try{
     if((next.residents.empty()||next.residents.size()>1000)||next.dungeons.size()!=3||next.ships.size()>128||!std::isfinite(next.elapsed)||next.grain<0||next.communityWood<0||next.treasury<0)return false;
     for(const auto& v:next.visits)if(v.resident<0||v.resident>=static_cast<int>(next.residents.size())||!std::isfinite(v.clock))return false;
     next.market=data.value("market",next.market);next.granary=data.value("granary",next.granary);
+    for(const auto& r:next.residents){if(!std::isfinite(r.ageDays)||r.ageDays<0||!std::isfinite(r.naturalDeathAge)||r.naturalDeathAge<World::adultAgeDays||!std::isfinite(r.familySeekAfter)||r.familyPartner>=static_cast<int>(next.residents.size())||!std::isfinite(r.pregnancyDue)||!std::isfinite(r.postpartumUntil)||r.mother>=static_cast<int>(next.residents.size())||r.father>=static_cast<int>(next.residents.size())||r.pregnancyFather>=static_cast<int>(next.residents.size()))return false;if(r.insideHouse>=0&&(!std::any_of(next.props.begin(),next.props.end(),[&](const Prop& p){return p.uid==r.insideHouse&&p.kind=="house";})||r.inBoat||r.away||r.inDungeon))return false;}
     next.rebuildNavigation();for(const auto& r:next.residents){if(!std::isfinite(r.x)||!std::isfinite(r.y)||r.x<0||r.y<0||r.x>=mapWidth||r.y>=mapHeight||r.next>r.path.size()||r.mission<-1||r.mission>=3)return false;for(int k:r.path)if(k<0||k>=mapWidth*mapHeight)return false;if(r.alive&&!r.away&&!r.inDungeon&&!r.inBoat&&!next.walkable(static_cast<int>(r.x),static_cast<int>(r.y)))return false;}
     for(const auto& d:next.dungeons){if(d.room<1||d.room>3||(!d.party.empty()&&d.party.size()!=2))return false;for(int who:d.party)if(who<0||who>=static_cast<int>(next.residents.size()))return false;}
     for(const auto& c:next.crops)if(c.cell<0||c.cell>=mapWidth*mapHeight||c.worker<-1||c.worker>=static_cast<int>(next.residents.size())||c.stage<0||c.stage>3)return false;

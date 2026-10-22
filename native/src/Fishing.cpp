@@ -14,7 +14,7 @@ std::vector<int> seaRoute(const World& w,int start,const std::function<bool(int)
 }
 std::string World::startFishing(int who,int boat){
     if(who<0||who>=static_cast<int>(residents.size())||boat<0||boat>=static_cast<int>(ships.size()))return "Selecciona habitante y barco";
-    auto& r=residents[who];auto& s=ships[boat];if(!r.alive||r.away||r.visitor||r.ageDays<4320||r.inDungeon||r.inBoat||r.mission>=0)return "El habitante no esta disponible";
+    auto& r=residents[who];auto& s=ships[boat];if(!r.alive||r.away||r.visitor||r.ageDays<World::adultAgeDays||r.inDungeon||r.inBoat||r.mission>=0)return "El habitante no esta disponible";
     for(const auto& boat:ships)if(boat.passenger==who)return "El habitante ya esta asignado a un barco";
     if(s.passenger>=0||s.remaining>0)return "Barco ocupado";
     if(s.state=="lost"){if(communityWood<8||treasury<5)return "Reponer barco: 8 madera y 5 monedas";communityWood-=8;treasury-=5;s.state="docked";}
@@ -75,7 +75,7 @@ void World::updateFishing(float dt){
     auto house=std::find_if(props.begin(),props.end(),[&](const Prop& p){return !p.tree&&p.kind=="house"&&(p.owner<0||p.owner>=static_cast<int>(residents.size())||!residents[p.owner].alive);});if(house==props.end())return;
     int home=cellId(static_cast<int>(house->x),static_cast<int>(house->y+1));if(!walkable(home%mapWidth,home/mapWidth))return;
     bool occupied=false;for(const auto& r:residents)if(r.alive&&!r.inBoat&&!r.inDungeon&&!r.away&&at(r)==home)occupied=true;if(occupied)return;
-    Resident newcomer;newcomer.name="Habitante "+std::to_string(residents.size()+1);newcomer.trait=alive%2?"Trabajador":"Agricultora";newcomer.home=home;newcomer.goal=home;newcomer.x=home%mapWidth+.5f;newcomer.y=home/mapWidth+.5f;newcomer.grain=2;newcomer.relationships.resize(residents.size()+1);house->owner=static_cast<int>(residents.size());grain-=2;treasury-=8;residents.push_back(std::move(newcomer));for(auto& r:residents)r.relationships.resize(residents.size());++metrics["arrivals"];record("Llego un nuevo habitante: hay vivienda y provisiones");
+    Resident newcomer;newcomer.female=random()%2==0;newcomer.name="Habitante "+std::to_string(residents.size()+1);newcomer.trait=alive%2?"Trabajador":"Agricultora";newcomer.home=home;newcomer.goal=home;newcomer.x=home%mapWidth+.5f;newcomer.y=home/mapWidth+.5f;newcomer.grain=2;newcomer.relationships.resize(residents.size()+1);house->owner=static_cast<int>(residents.size());grain-=2;treasury-=8;residents.push_back(std::move(newcomer));for(auto& r:residents)r.relationships.resize(residents.size());++metrics["arrivals"];record("Llego un nuevo habitante: hay vivienda y provisiones");
 }
 }
 

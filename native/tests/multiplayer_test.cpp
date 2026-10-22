@@ -20,7 +20,7 @@ void clean(isla::World& w){
     w.rebuildNavigation();
 }
 void depart(isla::World& w,int who,const std::string& kind){
-    w.sendVisit(who,kind);check(!w.visits.empty()&&w.visits.back().state=="boarding"&&w.outbox.empty()&&!w.residents[who].away,"Visit transferred before boarding and actual sailing");
+    w.elapsed=100;w.sendVisit(who,kind);check(!w.visits.empty()&&w.visits.back().state=="boarding"&&w.outbox.empty()&&!w.residents[who].away,"Visit transferred before boarding and actual sailing");
     auto resumed=std::make_unique<isla::World>();check(w.save("naval-boarding-test.json")&&resumed->load("naval-boarding-test.json")&&resumed->ships[0].state=="visit_boarding"&&resumed->outbox.empty(),"Boarding voyage did not persist without transferring visitor early");
     for(int i=0;i<4000&&resumed->outbox.empty();++i){resumed->elapsed=100;resumed->tick(.1f);}check(!resumed->outbox.empty()&&resumed->ships[0].state=="visit_waiting","Restored boarding voyage did not resume sailing");
     auto count=w.visits.size();w.sendVisit(who,kind);check(w.visits.size()==count,"Boarding resident assigned to multiple voyages");
@@ -57,10 +57,10 @@ int main(){try{
     a->playerName="Manuel";b->playerName="Otra deidad";a->sendChat("Hola desde mi isla");check(a->outbox.size()==1,"Chat was not queued");auto chatId=a->outbox.begin()->first;auto text=a->outbox.begin()->second;
     deliver(client,host,*b,a->worldId,text);deliver(client,host,*b,a->worldId,text);check(b->chatLog.size()==1&&b->chatLog[0]=="Manuel: Hola desde mi isla","Real TCP chat lost player name or duplicated text");
     deliver(host,client,*a,b->worldId,b->outbox.at("ack:"+chatId));check(a->outbox.empty(),"Chat acknowledgement did not clear pending message");
-    depart(*a,0,"diplomacy");check(a->residents[0].away&&a->outbox.size()==1,"Sending a visitor failed to suspend the original resident");
+    a->residents[0].ageDays=isla::World::elderAgeDays;depart(*a,0,"diplomacy");check(a->residents[0].away&&a->outbox.size()==1,"Sending a visitor failed to suspend the original resident");
     check(a->save("active-outgoing-test.json")&&restored->load("active-outgoing-test.json")&&restored->residents[0].away&&restored->outbox.size()==1,"Outgoing resident duplicated after restart");
     const std::string id=a->visits[0].id,payload=a->outbox.at(id);deliver(client,host,*b,a->worldId,payload);deliver(client,host,*b,a->worldId,payload);
-    check(b->residents.size()==7&&b->visits.size()==1&&b->residents.back().visitor,"Repeated packet duplicated visiting resident");
+    check(b->residents.size()==7&&b->visits.size()==1&&b->residents.back().visitor,"Repeated packet duplicated visiting resident");check(b->residents.back().ageDays>=isla::World::elderAgeDays&&b->residents.back().female==a->residents[0].female,"Visit reset resident age or sex");
     check(b->save("visitor-test.json")&&restored->load("visitor-test.json"),"Incoming visit cannot survive save/load");
     restored->updateVisits(45);check(restored->outbox.count("result:"+id)==1&&restored->treasury==97,"Receiving island did not resolve diplomacy exactly once");
     std::string result=restored->outbox.at("result:"+id);int before=a->residents[0].money;
@@ -79,6 +79,7 @@ int main(){try{
     check(host.connected()&&client.connected(),"TCP session did not recover on reconnect");
     int returned=a->metrics["visits_returned"];deliver(host,client,*a,b->worldId,result);check(a->metrics["visits_returned"]==returned,"Reconnect replay duplicated a completed visit");
     auto altered=json::parse(result);altered["food"]=-10;check(a->receivePeer(altered.dump(),std::string(32,'f'))=="Destino de red incorrecto","Spoofed peer message was accepted");
+    check(host.hosting(),"Open island did not expose hosting state");host.stop();check(!host.hosting()&&!host.connected(),"Closing island kept listener or peer open");check(host.host(port),"Island cannot reopen from gameplay after closing");host.stop();
     std::cout<<"PASS: nine-month birth deadline, newborn, pregnancy save/load, rain, gift collision/collection, autonomous needs, two TCP peers, diplomacy, raid, duplicate delivery, return and persistence\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
 

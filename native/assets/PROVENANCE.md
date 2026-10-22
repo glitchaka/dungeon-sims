@@ -14,3 +14,5 @@ Los edificios civicos de civic-buildings.png y el material y relieve contenidos 
 ## Terreno cenital v4 (2026-10-22)
 
 Nuevo atlas: terrain-topdown-v4/regions.png, generado con imagegen; prompt íntegro en terrain-topdown-v4/PROMPT.txt. Reemplaza el terreno de ocho materiales y el relieve en tres cuartos en el ejecutable. La muestra se ensambla por código con este atlas, no es una generación independiente. Las construcciones y personajes conservan sus recursos anteriores.
+
+menu-island.png reutiliza la muestra compuesta del atlas cenital v4 exclusivamente como ilustracion del menu; no es el suelo del mundo jugable.

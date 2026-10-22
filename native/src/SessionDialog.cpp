@@ -1,53 +1,77 @@
-#define NOMINMAX
-#include <windows.h>
 #include "SessionDialog.h"
 #include "Multiplayer.h"
-#include <nlohmann/json.hpp>
+#include <ra/Engine.h>
+#include <SDL3/SDL.h>
+#include <algorithm>
+#include <array>
 #include <filesystem>
-#include <fstream>
 #include <random>
-#include <vector>
+#include <limits>
 namespace {
-std::wstring wide(const std::string& text){int n=MultiByteToWideChar(CP_UTF8,0,text.data(),static_cast<int>(text.size()),nullptr,0);std::wstring s(n,0);MultiByteToWideChar(CP_UTF8,0,text.data(),static_cast<int>(text.size()),s.data(),n);return s;}
-std::string value(HWND w,int id){int n=GetWindowTextLengthW(GetDlgItem(w,id));std::wstring s(n+1,0);GetWindowTextW(GetDlgItem(w,id),s.data(),n+1);n=WideCharToMultiByte(CP_UTF8,0,s.data(),n,nullptr,0,nullptr,nullptr);std::string out(n,0);WideCharToMultiByte(CP_UTF8,0,s.data(),static_cast<int>(wcslen(s.c_str())),out.data(),n,nullptr,nullptr);return out;}
-struct Form {SessionOptions* options;bool accepted{};};
-LRESULT CALLBACK proc(HWND w,UINT message,WPARAM wp,LPARAM lp){auto* f=reinterpret_cast<Form*>(GetWindowLongPtrW(w,GWLP_USERDATA));
-    if(message==WM_NCCREATE){f=static_cast<Form*>(reinterpret_cast<CREATESTRUCTW*>(lp)->lpCreateParams);SetWindowLongPtrW(w,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(f));}
-    if(message==WM_COMMAND&&LOWORD(wp)==1){auto& o=*f->options;std::string name=value(w,101),profile=value(w,102);if(name.empty()||name.size()>32||profile.empty()||profile.size()>32||profile.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")!=std::string::npos){MessageBoxW(w,L"Escribe un nombre y un perfil de hasta 32 caracteres. El perfil admite letras, numeros, - y _.",L"Datos de la isla",MB_OK);return 0;}
-        int mode=static_cast<int>(SendDlgItemMessageW(w,103,CB_GETCURSEL,0,0));o.name=name;o.profile=profile;o.host=mode==1;o.ip=mode==2?value(w,104):"";if(mode==2&&o.ip.empty()){MessageBoxW(w,L"Introduce la IPv4 de la otra isla.",L"Conexion",MB_OK);return 0;}
-        if(o.profile=="default"&&mode!=0)o.profile=mode==1?"island-host":"island-guest";
-        try{auto seed=value(w,105);o.seed=seed.empty()?std::random_device{}():static_cast<unsigned>(std::stoul(seed));}catch(...){MessageBoxW(w,L"La semilla debe ser un numero positivo.",L"Semilla",MB_OK);return 0;}
-        o.fresh=SendDlgItemMessageW(w,106,BM_GETCHECK,0,0)==BST_CHECKED;f->accepted=true;DestroyWindow(w);return 0;
-    }
-    if(message==WM_COMMAND&&LOWORD(wp)==2){auto text=wide(isla::localIPv4());if(OpenClipboard(w)){EmptyClipboard();auto data=GlobalAlloc(GMEM_MOVEABLE,(text.size()+1)*sizeof(wchar_t));if(data){auto memory=GlobalLock(data);memcpy(memory,text.c_str(),(text.size()+1)*sizeof(wchar_t));GlobalUnlock(data);SetClipboardData(CF_UNICODETEXT,data);}CloseClipboard();}return 0;}
-    if(message==WM_CLOSE){DestroyWindow(w);return 0;}return DefWindowProcW(w,message,wp,lp);
+struct Field {std::string label,value;float y;std::size_t limit;};
+bool ipv4(const std::string& s){int count=0;std::size_t start=0;for(std::size_t i=0;i<=s.size();++i)if(i==s.size()||s[i]=='.'){if(i==start||i-start>3)return false;int n=0;for(auto j=start;j<i;++j){if(s[j]<'0'||s[j]>'9')return false;n=n*10+s[j]-'0';}if(n>255)return false;++count;start=i+1;}return count==4;}
+bool menu(ra::Engine& engine,SessionOptions& o,bool connection,const std::string& capture){
+ int count=0;auto windows=SDL_GetWindows(&count);auto* window=count?windows[0]:nullptr;SDL_free(windows);if(!window)return false;auto* renderer=SDL_GetRenderer(window);if(!renderer)return false;
+ float oldX=1,oldY=1;SDL_GetRenderScale(renderer,&oldX,&oldY);
+ auto background=engine.loadTexture((std::filesystem::path(SDL_GetBasePath())/"assets/menu-island.png").string());
+ std::array<Field,5> fields{{{"TU NOMBRE",o.name,164,32},{"PARTIDA",o.profile,460,32},{"DIRECCION DE LA OTRA ISLA",o.ip,350,15},{"SEMILLA (VACIA = ALEATORIA)",o.seed?std::to_string(o.seed):"",530,10},{"PUERTO",std::to_string(o.port),600,5}}};
+ int action=connection?2:0,focus=connection?2:0;bool selectAll=true,advanced=connection,fresh=o.fresh,done=false,accepted=false;std::string error;int frames=0;
+ if(connection){fields[2].y=164;fields[4].y=244;}else{fields[1].y=350;fields[3].y=420;}
+ auto visible=[&](int i){return i==0?!connection:i==2?action==2:i==4?advanced&&connection:advanced&&!connection;};
+ SDL_StartTextInput(window);
+ while(!done){
+  int w=0,h=0;SDL_GetWindowSizeInPixels(window,&w,&h);float sx=w/1280.0f,sy=h/800.0f;
+  auto hit=[](float x,float y,float a,float b,float width,float height){return x>=a&&x<a+width&&y>=b&&y<b+height;};
+  auto submit=[&](){
+   error.clear();if(!connection&&(fields[0].value.empty()||fields[0].value.size()>32||fields[0].value.find_first_not_of(' ')==std::string::npos)){error="ESCRIBE TU NOMBRE PARA ENTRAR";focus=0;return;}
+   if(action==2&&!ipv4(fields[2].value)){error="REVISA LA DIRECCION: EJEMPLO 192.168.1.20";focus=2;return;}
+   if(fields[1].value.empty()||fields[1].value.size()>32||fields[1].value.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_")!=std::string::npos){advanced=true;focus=1;error="LA PARTIDA ADMITE LETRAS, NUMEROS, - Y _";return;}
+   unsigned long seed=0,port=0;try{if(fields[4].value.find_first_not_of("0123456789")!=std::string::npos)throw 0;std::size_t used=0;port=std::stoul(fields[4].value,&used);if(used!=fields[4].value.size()||port<1024||port>65535)throw 0;}catch(...){advanced=true;focus=4;error="PUERTO VALIDO: 1024 A 65535";return;}
+   if(!fields[3].value.empty())try{if(fields[3].value.find_first_not_of("0123456789")!=std::string::npos)throw 0;std::size_t used=0;seed=std::stoul(fields[3].value,&used);if(used!=fields[3].value.size()||seed==0||seed>std::numeric_limits<unsigned>::max())throw 0;}catch(...){advanced=true;focus=3;error="LA SEMILLA DEBE SER UN NUMERO POSITIVO";return;}
+   o.name=fields[0].value;o.profile=fields[1].value;o.host=action==1;o.ip=action==2?fields[2].value:"";o.port=static_cast<unsigned short>(port);o.fresh=fresh;o.seed=fields[3].value.empty()?std::random_device{}():static_cast<unsigned>(seed);
+   if(o.profile=="default"&&action!=0)o.profile=action==1?"island-host":"island-guest";
+   accepted=done=true;
+  };
+  SDL_Event e;while(SDL_PollEvent(&e)){
+   if(e.type==SDL_EVENT_QUIT){engine.quit();done=true;}
+   if(e.type==SDL_EVENT_KEY_DOWN){
+    if(e.key.key==SDLK_ESCAPE){done=true;}
+    else if(e.key.key==SDLK_RETURN)submit();
+    else if(e.key.key==SDLK_TAB){do{focus=(focus+1)%5;}while(!visible(focus));selectAll=true;}
+    else if(e.key.key==SDLK_A&&(e.key.mod&SDL_KMOD_CTRL))selectAll=true;
+    else if(e.key.key==SDLK_BACKSPACE){auto& value=fields[focus].value;if(selectAll)value.clear();else if(!value.empty()){std::size_t pos=value.size()-1;while(pos>0&&(static_cast<unsigned char>(value[pos])&0xc0)==0x80)--pos;value.erase(pos);}selectAll=false;}
+    else if(e.key.key==SDLK_V&&(e.key.mod&SDL_KMOD_CTRL)){char* pasted=SDL_GetClipboardText();if(pasted){auto& value=fields[focus].value;std::string text=pasted;SDL_free(pasted);if(selectAll)value.clear();for(unsigned char c:text)if(c>=32&&value.size()<fields[focus].limit)value+=c;selectAll=false;}}
+   }
+   if(e.type==SDL_EVENT_TEXT_INPUT){auto& field=fields[focus];if(selectAll)field.value.clear();for(const unsigned char* c=reinterpret_cast<const unsigned char*>(e.text.text?e.text.text:"");*c;++c)if(*c>=32&&field.value.size()<field.limit)field.value+=static_cast<char>(*c);selectAll=false;error.clear();}
+   if(e.type==SDL_EVENT_MOUSE_BUTTON_UP&&e.button.button==SDL_BUTTON_LEFT){float x=e.button.x/sx,y=e.button.y/sy;
+    for(int i=0;i<5;++i)if(visible(i)&&hit(x,y,814,fields[i].y,390,38)){focus=i;selectAll=true;}
+    if(!connection&&hit(x,y,814,250,390,26))fresh=!fresh;
+    if(hit(x,y,814,connection?284:300,390,22)){advanced=!advanced;if(!visible(focus)){focus=connection?2:0;selectAll=true;}}
+    if(hit(x,y,814,714,390,46))submit();
+    if(hit(x,y,814,770,390,22))done=true;
+   }
+  }
+  SDL_SetRenderScale(renderer,sx,sy);engine.clear({11,29,36,255});
+  if(background)engine.drawTexture(background,{-80,-40,1040,880});
+  engine.fillRect({0,0,790,800},{6,27,32,95});engine.fillRect({770,0,510,800},{14,34,40,250});engine.fillRect({792,36,2,728},{180,153,93,160});
+  auto text=[&](float x,float y,const std::string& value,ra::Color c,float size=1){SDL_SetRenderScale(renderer,sx*size,sy*size);engine.drawText(x/size,y/size,value,c);SDL_SetRenderScale(renderer,sx,sy);};
+  const ra::Color cream{237,226,196,255},gold{220,184,111,255},muted{155,178,169,255};
+  text(64,100,"ISLA VIVA",cream,5);text(68,170,"UN MUNDO QUE VIVE POR SI MISMO",gold,1.5f);
+  text(68,651,"CUIDA A TU PUEBLO. INSPIRA SU DESTINO.",cream,1.5f);text(68,683,"CADA ISLA TIENE SU PROPIA HISTORIA.",muted,1.2f);
+  text(814,70,connection?"OTRA ISLA TE ESPERA":"TU HISTORIA COMIENZA AQUI",gold,1.5f);
+  if(!connection)text(814,112,"CONTINUA TU MUNDO O CREA UNA NUEVA ISLA",muted);
+  for(int i=0;i<5;++i)if(visible(i)){const auto& f=fields[i];text(814,f.y-17,f.label,muted);engine.fillRect({814,f.y,390,38},{20,44,49,255});engine.drawRect({814,f.y,390,38},focus==i?gold:ra::Color{68,92,88,255});text(826,f.y+15,f.value,cream,1.1f);if(focus==i&&SDL_GetTicks()%1000<500)engine.fillRect({826+static_cast<float>(f.value.size())*8.8f,f.y+10,1,19},gold);}
+  if(action==0&&!connection)text(814,220,"TU ISLA CONTINUA DONDE LA DEJASTE.",muted);
+  if(!connection){text(814,259,std::string(fresh?"[X] ":"[ ] ")+"CREAR UNA NUEVA ISLA",fresh?gold:cream);text(814,308,advanced?"OCULTAR OPCIONES DE ISLA":"OPCIONES DE ISLA",muted);}
+  else text(814,292,advanced?"OCULTAR OPCIONES":"OPCIONES DE CONEXION",muted);
+  if(!error.empty())text(814,681,error,{243,185,123,255});
+  engine.fillRect({814,714,390,46},{167,133,73,255});text(836,733,action==2?"CONECTAR CON LA OTRA ISLA":"ENTRAR A MI ISLA",{18,35,39,255},1.4f);text(814,779,connection?"VOLVER A MI ISLA":"SALIR",muted);
+  SDL_RenderPresent(renderer);
+  if(!capture.empty()&&++frames==3){auto* image=SDL_RenderReadPixels(renderer,nullptr);if(image){SDL_SaveBMP(image,capture.c_str());SDL_DestroySurface(image);}done=true;}
+  SDL_Delay(8);
+ }
+ SDL_StopTextInput(window);engine.destroyTexture(background);SDL_SetRenderScale(renderer,oldX,oldY);return accepted;
 }
 }
-bool chooseSession(SessionOptions& o){
-    auto instance=GetModuleHandleW(nullptr);WNDCLASSW cls{};cls.lpfnWndProc=proc;cls.hInstance=instance;cls.lpszClassName=L"IslaVivaSession";cls.hCursor=LoadCursor(nullptr,IDC_ARROW);cls.hbrBackground=reinterpret_cast<HBRUSH>(COLOR_WINDOW+1);RegisterClassW(&cls);
-    Form form{&o};HWND w=CreateWindowExW(WS_EX_DLGMODALFRAME,cls.lpszClassName,L"Isla Viva - Tu nombre y tu isla",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU, CW_USEDEFAULT,CW_USEDEFAULT,560,385,nullptr,nullptr,instance,&form);if(!w)return false;
-    auto add=[&](const wchar_t* type,const wchar_t* text,int x,int y,int width,int height,int id,DWORD style){HWND c=CreateWindowExW(type==std::wstring(L"EDIT")?WS_EX_CLIENTEDGE:0,type,text,WS_CHILD|WS_VISIBLE|style,x,y,width,height,w,reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),instance,nullptr);SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(GetStockObject(DEFAULT_GUI_FONT)),TRUE);};
-    add(L"STATIC",L"Tu nombre",24,22,160,20,0,0);add(L"EDIT",wide(o.name).c_str(),190,18,320,26,101,WS_TABSTOP|ES_AUTOHSCROLL);
-    add(L"STATIC",L"Perfil de guardado",24,62,160,20,0,0);add(L"EDIT",wide(o.profile).c_str(),190,58,320,26,102,WS_TABSTOP|ES_AUTOHSCROLL);
-    add(L"STATIC",L"Modo",24,102,160,20,0,0);add(L"COMBOBOX",L"",190,98,320,120,103,WS_TABSTOP|CBS_DROPDOWNLIST);
-    for(const auto* text:{L"Mi isla individual",L"Abrir mi isla a otro jugador",L"Conectar a otra isla"})SendDlgItemMessageW(w,103,CB_ADDSTRING,0,reinterpret_cast<LPARAM>(text));SendDlgItemMessageW(w,103,CB_SETCURSEL,o.host?1:o.ip.empty()?0:2,0);
-    add(L"STATIC",L"IP de la otra isla",24,142,160,20,0,0);add(L"EDIT",wide(o.ip.empty()?"127.0.0.1":o.ip).c_str(),190,138,320,26,104,WS_TABSTOP|ES_AUTOHSCROLL);
-    add(L"STATIC",L"Semilla de nueva isla",24,182,160,20,0,0);add(L"EDIT",o.seed?wide(std::to_string(o.seed)).c_str():L"",190,178,320,26,105,WS_TABSTOP|ES_NUMBER);
-    add(L"BUTTON",L"Crear una nueva isla aleatoria (conserva copia de la partida anterior)",24,220,490,28,106,WS_TABSTOP|BS_AUTOCHECKBOX);if(o.fresh)SendDlgItemMessageW(w,106,BM_SETCHECK,BST_CHECKED,0);
-    add(L"STATIC",wide("Tu direccion local: "+isla::localIPv4()+":"+std::to_string(o.port)).c_str(),24,258,490,22,0,0);
-    add(L"BUTTON",L"Copiar mi direccion",24,292,180,32,2,WS_TABSTOP|BS_PUSHBUTTON);
-    add(L"BUTTON",L"Entrar a mi isla",330,292,180,32,1,WS_TABSTOP|BS_DEFPUSHBUTTON);
-    ShowWindow(w,SW_SHOW);SetFocus(GetDlgItem(w,101));MSG m{};while(IsWindow(w)&&GetMessageW(&m,nullptr,0,0)>0){if(!IsDialogMessageW(w,&m)){TranslateMessage(&m);DispatchMessageW(&m);}}
-    return form.accepted;
-}
-
-namespace {
-struct ConnectionForm{std::string* ip;unsigned short* port;bool accepted{};};
-LRESULT CALLBACK connectProc(HWND w,UINT msg,WPARAM wp,LPARAM lp){auto* f=reinterpret_cast<ConnectionForm*>(GetWindowLongPtrW(w,GWLP_USERDATA));if(msg==WM_NCCREATE){f=static_cast<ConnectionForm*>(reinterpret_cast<CREATESTRUCTW*>(lp)->lpCreateParams);SetWindowLongPtrW(w,GWLP_USERDATA,reinterpret_cast<LONG_PTR>(f));}
-    if(msg==WM_COMMAND&&LOWORD(wp)==1){try{auto ip=value(w,101);int port=std::stoi(value(w,102));if(ip.empty()||port<1024||port>65535)throw std::runtime_error("Invalid address");*f->ip=ip;*f->port=static_cast<unsigned short>(port);f->accepted=true;DestroyWindow(w);}catch(...){MessageBoxW(w,L"Escribe una direccion IPv4 y un puerto entre 1024 y 65535.",L"Conexion",MB_OK);}return 0;}if(msg==WM_CLOSE){DestroyWindow(w);return 0;}return DefWindowProcW(w,msg,wp,lp);}
-}
-bool chooseConnection(std::string& ip,unsigned short& port){auto instance=GetModuleHandleW(nullptr);WNDCLASSW cls{};cls.lpfnWndProc=connectProc;cls.hInstance=instance;cls.lpszClassName=L"IslaVivaConnect";cls.hCursor=LoadCursor(nullptr,IDC_ARROW);cls.hbrBackground=reinterpret_cast<HBRUSH>(COLOR_WINDOW+1);RegisterClassW(&cls);ConnectionForm form{&ip,&port};auto w=CreateWindowExW(WS_EX_DLGMODALFRAME,cls.lpszClassName,L"Conectarse a otra isla",WS_OVERLAPPED|WS_CAPTION|WS_SYSMENU,CW_USEDEFAULT,CW_USEDEFAULT,460,220,nullptr,nullptr,instance,&form);
-    auto add=[&](const wchar_t* type,const std::wstring& text,int x,int y,int width,int height,int id,DWORD style){auto c=CreateWindowExW(0,type,text.c_str(),WS_CHILD|WS_VISIBLE|style,x,y,width,height,w,reinterpret_cast<HMENU>(static_cast<INT_PTR>(id)),instance,nullptr);SendMessageW(c,WM_SETFONT,reinterpret_cast<WPARAM>(GetStockObject(DEFAULT_GUI_FONT)),TRUE);};
-    add(L"STATIC",L"Direccion IPv4 del anfitrion",20,18,300,20,0,0);add(L"EDIT",wide(ip.empty()?"127.0.0.1":ip),20,42,300,26,101,WS_BORDER|WS_TABSTOP|ES_AUTOHSCROLL);add(L"STATIC",L"Puerto",330,18,90,20,0,0);add(L"EDIT",wide(std::to_string(port)),330,42,90,26,102,WS_BORDER|WS_TABSTOP|ES_NUMBER);add(L"STATIC",L"Pide al anfitrion la direccion que muestra al abrir su isla.",20,84,410,32,0,0);add(L"BUTTON",L"Conectar",280,126,140,30,1,WS_TABSTOP|BS_DEFPUSHBUTTON);
-    ShowWindow(w,SW_SHOW);SetFocus(GetDlgItem(w,101));MSG m{};while(IsWindow(w)&&GetMessageW(&m,nullptr,0,0)>0)if(!IsDialogMessageW(w,&m)){TranslateMessage(&m);DispatchMessageW(&m);}return form.accepted;
-}
+bool chooseSession(ra::Engine& engine,SessionOptions& options,const std::string& capture){return menu(engine,options,false,capture);}
+bool chooseConnection(ra::Engine& engine,std::string& ip,unsigned short& port){SessionOptions options;options.ip=ip;options.port=port;if(!menu(engine,options,true,""))return false;ip=options.ip;port=options.port;return true;}

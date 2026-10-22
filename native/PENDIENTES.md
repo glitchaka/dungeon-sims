@@ -11,3 +11,5 @@
 | Gestación del elegido, regalos y lluvia | Ya presentes; pruebas de poderes y gestación siguen aprobadas |
 
 El multijugador sigue siendo directo entre dos islas con conectividad TCP. No se ha desplegado un servidor público, buscador global de partidas, relay ni autenticación/cifrado. Las dos costas se conectan mediante el protocolo de visitas; no existe un océano continuo compartido. El combate de saqueo sigue siendo una resolución simplificada por defensores cercanos. El arte de edificios/personajes conserva sus sprites y el acabado no se presenta como copia exacta de la referencia.
+
+Actualizacion: menu integrado sin roles de conexion al inicio; apertura/cierre de isla durante la partida; descanso interior real; familias autonomas adultas, embarazo de nueve meses, parentesco y ciclo de vida hasta muerte natural. Siete pruebas aprobadas.

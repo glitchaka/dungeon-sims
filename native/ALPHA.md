@@ -2,7 +2,7 @@
 
 Abre **Jugar.exe** con doble clic, en el proyecto o en el ZIP extraido. Es un lanzador grafico y el juego usa el subsistema Windows: no mantiene una consola CMD. Jugar.bat y Jugar-Alpha.bat solo delegan en ese lanzador y terminan. Jugar.vbs es otro acceso sin consola. Para desarrollo se conserva tools/run_native.ps1, que compila; Jugar.bat ya no compila al abrir una partida.
 
-La primera pantalla pide nombre y perfil de guardado; permite jugar individualmente, abrir una partida o conectar a una IPv4. Muestra la direccion local del anfitrion y permite copiarla. Se puede continuar una partida o marcar Nueva isla. Si no existe partida, se genera una isla por semilla. Un reinicio deliberado conserva la partida v9 previa como .bak.
+La primera pantalla pide tu nombre y permite continuar o crear una isla. Opciones de isla contiene perfil y semilla. Durante la partida puedes ABRIR MI ISLA / CERRAR MI ISLA o CONECTAR ISLA. No son modos de juego.
 
 ## Jugador y habitantes
 
@@ -39,3 +39,5 @@ Las partidas se guardan en archivos v9. Se pueden importar v6/v7/v8 de 128 x 96:
 Los habitantes pueden iniciar un muelle si falta comida o una inspiración diplomática/de saqueo necesita transporte; un altar si el bienestar social es bajo y hay provisiones; un townhall si crece la comunidad o existe inspiración de edificación; y una vivienda adicional cuando hay recursos para admitir nuevos pobladores. Se eligen terrenos válidos, se reservan recursos y se ejecutan trabajos reales, con prioridad para necesidades urgentes, viviendas ausentes y caminos necesarios. No se duplican obras cívicas ya existentes o en cola ni se inicia esta planificación de noche.
 
 La vivienda se entrega primero a un adulto sin casa. Si todos tienen vivienda, queda libre para un inmigrante: el constructor conserva su casa anterior. Los encargos manuales siguen disponibles como intervención opcional.
+
+Familias y ciclo de vida implementados: detalles en FAMILIAS.md. Descanso nocturno dentro de viviendas, con salida por necesidades urgentes.
