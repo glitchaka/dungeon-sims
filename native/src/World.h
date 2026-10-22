@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include "CncData.h"
 #include <array>
 #include <cstdint>
@@ -19,6 +19,7 @@ struct Resident {
     Task task{Task::Idle};std::vector<int> path;std::size_t next{};
     int goal{},target{-1},home{},wood{},meat{},grain{},seeds{12},money{12},eggs{},fish{},job{-1},mission{-1};
     bool alive{true},inDungeon{},inBoat{},resumeRest{},hasOrder{}; Task orderedTask{Task::Idle}; int orderedCell{-1},workCell{-1};
+    bool away{},visitor{},chosen{};float ageDays{6480};std::string inspiration;float inspirationUntil{};
     std::vector<int> relationships=std::vector<int>(6,0);std::vector<Artifact> artifacts,loot;
 };
 struct Prop {float x,y,halfWidth,halfDepth,height;bool tree;std::string id;int uid{-1},owner{-1};float health{100};};
@@ -33,9 +34,18 @@ struct Dungeon {
     std::array<float,3> enemies{};std::array<bool,3> opened{};
     float clock{},cooldown{};std::vector<std::string> log;
 };
+struct Gift {int cell{},grain{12},wood{8};};
+struct Visit {std::string id,origin,kind,state;int resident{-1},originResident{-1};float clock{};bool incoming{};std::string partner;};
 class World {
 public:
     World();void tick(float seconds);
+    static constexpr float daySeconds=300,monthDays=30,gestationSeconds=9*monthDays*daySeconds;
+    std::string miracle(const std::string& kind,int who,int cell=-1);
+    void updateDivinity(float dt);void updateVisits(float dt);
+    std::string sendVisit(int who,const std::string& kind);
+    std::string receivePeer(const std::string& message,const std::string& peer);
+    std::string worldId,peerId;bool raining{};float chosenBirthAt{-1};int chosenPatron{-1};
+    std::map<std::string,int> relations;std::vector<Gift> gifts;std::vector<Visit> visits;std::map<std::string,std::string> outbox;
     bool walkable(int x,int y) const;Terrain terrainAt(int x,int y) const;bool besideFreshWater(int x,int y) const;
     std::vector<int> route(int sx,int sy,const std::function<bool(int,int)>& goal) const;
     void alarm(float x,float y);void record(const std::string& message);
@@ -68,8 +78,12 @@ private:
     void act(Resident& r,float dt);void updateRealm(float dt);void updateDungeons(float dt);
     void updateCrops(float dt);void updateAnimals(float dt);void completeJob(Resident& r);
     int nearest(const Resident& r,const std::function<bool(int,int)>& predicate) const;
-    void feed(Resident& r);void rest(Resident& r);bool farmTask(Resident& r);
+    void feed(Resident& r);void rest(Resident& r);bool farmTask(Resident& r);bool gatherTask(Resident& r);
 };
 }
+
+
+
+
 
 

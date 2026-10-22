@@ -4,6 +4,7 @@
 #include <cmath>
 #include <queue>
 #include <stdexcept>
+#include <random>
 namespace isla {
 namespace {
 bool inside(int x,int y){return x>=0&&y>=0&&x<mapWidth&&y<mapHeight;}
@@ -14,9 +15,10 @@ std::uint32_t World::random(){randomState_=randomState_*1664525u+1013904223u;ret
 Terrain World::terrainAt(int x,int y) const{return inside(x,y)?terrain[cellId(x,y)]:Terrain::Sea;}
 bool World::walkable(int x,int y) const{return inside(x,y)&&terrainAt(x,y)!=Terrain::Sea&&terrainAt(x,y)!=Terrain::FreshWater&&terrainAt(x,y)!=Terrain::Mountain&&!blocked_[cellId(x,y)];}
 bool World::besideFreshWater(int x,int y) const{return terrainAt(x+1,y)==Terrain::FreshWater||terrainAt(x-1,y)==Terrain::FreshWater||terrainAt(x,y+1)==Terrain::FreshWater||terrainAt(x,y-1)==Terrain::FreshWater;}
-void World::rebuildNavigation(){blocked_.fill(false);for(const auto& p:props)for(int y=static_cast<int>(std::floor(p.y-p.halfDepth));y<=static_cast<int>(std::floor(p.y+p.halfDepth));++y)for(int x=static_cast<int>(std::floor(p.x-p.halfWidth));x<=static_cast<int>(std::floor(p.x+p.halfWidth));++x)if(inside(x,y))blocked_[cellId(x,y)]=true;for(const auto& c:crops)if(c.stage>0)blocked_[c.cell]=true;}
+void World::rebuildNavigation(){blocked_.fill(false);for(const auto& gift:gifts)blocked_[gift.cell]=true;for(const auto& p:props)for(int y=static_cast<int>(std::floor(p.y-p.halfDepth));y<=static_cast<int>(std::floor(p.y+p.halfDepth));++y)for(int x=static_cast<int>(std::floor(p.x-p.halfWidth));x<=static_cast<int>(std::floor(p.x+p.halfWidth));++x)if(inside(x,y))blocked_[cellId(x,y)]=true;for(const auto& c:crops)if(c.stage>0)blocked_[c.cell]=true;}
 void World::addProp(Prop p){props.push_back(std::move(p));rebuildNavigation();}
 World::World(){
+    std::random_device entropy;const char* hex="0123456789abcdef";for(int i=0;i<32;++i)worldId+=hex[entropy()%16];
     // Only hard geology is authored. Roads are built by workers from actual use.
     for(int k=0;k<mapWidth*mapHeight;++k)terrain[k]=static_cast<Terrain>(geologyCells[k]);
     for(int y=0;y<mapHeight;++y)for(int x=0;x<mapWidth;++x){int k=cellId(x,y);if(terrain[k]!=Terrain::Ground)continue;forest[k]=(ellipse(x,y,45,23,11,9)<1||ellipse(x,y,46,55,13,10)<1||ellipse(x,y,68,40,10,9)<1||ellipse(x,y,83,24,9,8)<1||ellipse(x,y,77,61,8,7)<1);pasture[k]=ellipse(x,y,37,50,3,3)<1;}
@@ -38,7 +40,7 @@ World::World(){
 }
 std::vector<int> World::route(int sx,int sy,const std::function<bool(int,int)>& goal) const{
     if(!walkable(sx,sy))return {};std::array<int,mapWidth*mapHeight> previous;previous.fill(-1);std::queue<int> q;const int start=cellId(sx,sy);previous[start]=start;q.push(start);int found=-1;
-    while(!q.empty()){int at=q.front();q.pop();int x=at%mapWidth,y=at/mapWidth;if(goal(x,y)){found=at;break;}for(auto d:std::array<std::array<int,2>,4>{{{1,0},{-1,0},{0,1},{0,-1}}}){int nx=x+d[0],ny=y+d[1];if(!walkable(nx,ny))continue;int k=cellId(nx,ny);if(previous[k]>=0)continue;bool occupied=false;for(const auto& person:residents)if(person.alive&&!person.inDungeon&&!person.inBoat&&cellId(static_cast<int>(person.x),static_cast<int>(person.y))==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;if(occupied&&!goal(nx,ny))continue;previous[k]=at;q.push(k);}}
+    while(!q.empty()){int at=q.front();q.pop();int x=at%mapWidth,y=at/mapWidth;if(goal(x,y)){found=at;break;}for(auto d:std::array<std::array<int,2>,4>{{{1,0},{-1,0},{0,1},{0,-1}}}){int nx=x+d[0],ny=y+d[1];if(!walkable(nx,ny))continue;int k=cellId(nx,ny);if(previous[k]>=0)continue;bool occupied=false;for(const auto& person:residents)if(person.alive&&!person.inDungeon&&!person.away&&!person.inBoat&&cellId(static_cast<int>(person.x),static_cast<int>(person.y))==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;if(occupied&&!goal(nx,ny))continue;previous[k]=at;q.push(k);}}
     if(found<0)return {};std::vector<int> path;for(int at=found;at!=start;at=previous[at])path.push_back(at);path.push_back(start);std::reverse(path.begin(),path.end());return path;
 }
 int World::nearest(const Resident& r,const std::function<bool(int,int)>& predicate) const{auto p=route(static_cast<int>(r.x),static_cast<int>(r.y),predicate);return p.empty()?-1:p.back();}
@@ -48,6 +50,8 @@ bool World::hasBonus(const Resident& r,const std::string& b) const{return std::a
 Crop* World::cropAt(int k){for(auto& c:crops)if(c.cell==k)return &c;return nullptr;}
 void World::record(const std::string& message){events.push_back("D"+std::to_string(static_cast<int>(elapsed/300)+1)+" | "+message);if(events.size()>120)events.erase(events.begin());}
 }
+
+
 
 
 

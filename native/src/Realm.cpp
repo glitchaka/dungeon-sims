@@ -1,4 +1,4 @@
-﻿#include "World.h"
+#include "World.h"
 #include <algorithm>
 #include <cmath>
 #include <queue>
@@ -20,11 +20,11 @@ std::string World::dispatch(int i){if(i<0||i>=static_cast<int>(ships.size()))ret
 void World::updateRealm(float dt){livestockClock+=dt;if(livestockClock>=50){livestockClock-=50;livestockFood=std::min(12,livestockFood+2);}for(auto& s:ships)if(s.remaining>0){s.remaining=std::max(0.0f,s.remaining-dt);if(s.remaining<=.0001f){s.remaining=0;++s.voyages;communityWood+=8;treasury+=15;herbs+=2;++metrics["trade"];record("Barco de vuelta: 8 madera, 15 monedas, 2 hierbas");}}
     if(autoTrade&&elapsed-lastDispatch>90)dispatch(0);
     if(priority==3&&static_cast<int>(elapsed*10)%1500==0)for(std::size_t i=0;i<dungeons.size();++i)if(dungeons[i].state=="idle"){requestExpedition(static_cast<int>(i));break;}
-    for(auto& r:residents)if(!r.inDungeon&&r.alive&&r.health<cnc::maxHealth*.7f&&herbs>0&&std::hypot(r.x-market%mapWidth-.5f,r.y-market/mapWidth-.5f)<4){--herbs;r.health=std::min(cnc::maxHealth,r.health+cnc::maxHealth*.25f);record(r.name+" uso una hierba medicinal");}
+    for(auto& r:residents)if(!r.inDungeon&&!r.away&&r.alive&&r.health<cnc::maxHealth*.7f&&herbs>0&&std::hypot(r.x-market%mapWidth-.5f,r.y-market/mapWidth-.5f)<4){--herbs;r.health=std::min(cnc::maxHealth,r.health+cnc::maxHealth*.25f);record(r.name+" uso una hierba medicinal");}
     for(auto& j:jobs)if(j.worker>=0){const auto& r=residents[j.worker];if(!r.alive||r.task!=Task::Project||r.job!=j.id)j.worker=-1;}
 }
 Artifact World::makeArtifact(float roll,int v,int level) const{v=std::clamp(v,0,3);if(roll<.04f)return {std::array<const char*,4>{{"BOTAS DEL CAMINANTE","CANTIMPLORA ETERNA","HOZ DEL ALBA","AMULETO DEL REPOSO"}}[v],std::array<const char*,4>{{"speed","thirst","harvest","rest"}}[v],90+level*20,true};return {std::array<const char*,4>{{"IDOLILLO ANTIGUO","CALIZ DE PLATA","SELLO DE BRONCE","GEMA DEL ECO"}}[v],"",12+level*8+v*3,false};}
-std::string World::requestExpedition(int i){if(i<0||i>=static_cast<int>(dungeons.size()))return "Mazmorra inexistente";auto& d=dungeons[i];if(d.state!="idle")return "La expedicion ya esta en curso o repoblando";std::vector<int> candidates;int free=0;for(std::size_t k=0;k<residents.size();++k){auto& r=residents[k];if(r.alive&&r.mission<0)++free;if(r.alive&&!r.inDungeon&&r.mission<0&&r.health>=cnc::maxHealth*.65f&&r.energy>=45&&r.hunger>30&&r.thirst>30)candidates.push_back(static_cast<int>(k));}if(free<4||candidates.size()<2)return "Faltan dos habitantes aptos; deben quedar dos en la isla";
+std::string World::requestExpedition(int i){if(i<0||i>=static_cast<int>(dungeons.size()))return "Mazmorra inexistente";auto& d=dungeons[i];if(d.state!="idle")return "La expedicion ya esta en curso o repoblando";std::vector<int> candidates;int free=0;for(std::size_t k=0;k<residents.size();++k){auto& r=residents[k];if(r.alive&&!r.away&&!r.visitor&&r.ageDays>=4320&&r.mission<0)++free;if(r.alive&&!r.visitor&&r.ageDays>=4320&&!r.inBoat&&!r.inDungeon&&!r.away&&r.mission<0&&r.health>=cnc::maxHealth*.65f&&r.energy>=45&&r.hunger>30&&r.thirst>30)candidates.push_back(static_cast<int>(k));}if(free<4||candidates.size()<2)return "Faltan dos habitantes aptos; deben quedar dos en la isla";
     std::sort(candidates.begin(),candidates.end(),[&](int a,int b){auto score=[&](int k){return residents[k].energy+(residents[k].trait.find("Explorador")==0?40:0);};return score(a)>score(b);});d.party={candidates[0],candidates[1]};
     for(int who:d.party){const auto& r=residents[who];auto p=route(static_cast<int>(r.x),static_cast<int>(r.y),[&](int x,int y){return cellId(x,y)==d.entrance;});if(p.empty()){d.party.clear();return "La entrada no tiene camino accesible";}}
     d.state="approach";d.room=1;d.clock=0;d.opened.fill(false);d.enemies.fill(22.0f+d.level*7);d.x={{6.5f,6.8f}};d.y={{5.5f,5.5f}};d.log={"La expedicion viaja por la isla"};for(int who:d.party){auto& r=residents[who];r.mission=i;begin(r,Task::Expedition,d.entrance);}record("Expedicion enviada a "+d.name);return "Expedicion enviada";
@@ -42,5 +42,7 @@ void World::updateDungeons(float dt){for(auto& d:dungeons){
     if(d.room>=3)d.state="returning";else{++d.room;d.state="exploring";}
 }}
 }
+
+
 
 

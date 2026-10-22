@@ -62,3 +62,12 @@ add_custom_command(OUTPUT "${CNC_GENERATED}/Geography.h"
         -Image "${CMAKE_CURRENT_SOURCE_DIR}/assets/geology.png" -Output "${CNC_GENERATED}/Geography.h"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/geology.png" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/import_geography.ps1" VERBATIM)
 target_sources(isla_sim PRIVATE "${CNC_GENERATED}/Geography.h")
+
+target_sources(isla_sim PRIVATE src/Divinity.cpp src/Visits.cpp src/Multiplayer.cpp)
+target_link_libraries(isla_sim PUBLIC ws2_32)
+
+if(BUILD_TESTING)
+    add_executable(isla_multiplayer_tests tests/multiplayer_test.cpp)
+    target_link_libraries(isla_multiplayer_tests PRIVATE isla_sim)
+    add_test(NAME divine_multiplayer COMMAND isla_multiplayer_tests)
+endif()

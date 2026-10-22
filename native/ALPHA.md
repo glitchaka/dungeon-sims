@@ -1,38 +1,32 @@
-﻿# Alpha de entorno modificable
+# Alpha: habitantes autonomos y poderes divinos
 
-Estado: alpha de desarrollo. El aspecto visual de referencia todavia no esta reproducido de forma identica ni aprobado por el usuario.
+Abrir Jugar-Alpha.bat para jugar sin compilar. Jugar.bat compila y ejecuta. Jugar-Multijugador.bat permite abrir otra isla o conectar por IP. El ZIP portable contiene Multijugador.bat. Esta alpha sigue en desarrollo; el aspecto del mapa no es una reproduccion identica aprobada de la referencia.
 
-## Probar
+## El jugador es una deidad
 
-En esta maquina: Jugar-Alpha.bat. Para compilar: Jugar.bat. Paquete portable: releases/IslaViva-alpha-wip.zip; extraer toda la carpeta y ejecutar isla_viva_native.exe manteniendo assets al lado.
+Clic inspecciona habitantes y objetos. El panel ya no ofrece construir casas, crear campos, mover objetos, ordenar tala o enviar barcos directamente. Tampoco el clic derecho ordena trabajo o movimiento. Las decisiones y trabajos pertenecen a los NPC.
 
-Espacio pausa; E alterna velocidad; Q lluvia; rueda zoom 100-200%; central o WASD desplazan; Enter encuadra toda la isla. Clic izquierdo selecciona habitante. Clic derecho da una orden de movimiento o trabajo contextual: cosechar/sembrar, talar un arbol o beber. No envia una alerta.
+INSP. SUSTENTO favorece agricultura y pesca. INSP. EDIFICAR favorece trabajar en obras incluso de noche. Las inspiraciones duran treinta dias de juego, sin saltarse sed, hambre, descanso ni requisitos materiales. INSP. DIPLOMACIA e INSP. SAQUEO motivan un viaje a la isla conectada cuando el habitante adulto esta preparado; deben quedar al menos otros dos habitantes propios.
 
-Los botones CASA, CAMPO y CAMINO/PUENTE encargan una obra en la siguiente celda elegida. DEMOLER retira una casa, un arbol, un camino o un campo mediante trabajo de una unidad. REUBICAR pide origen y destino, conserva la entidad y requiere dos etapas de trabajo. Los costes se reservan al encargar; si la obra resulta inviable se devuelven. CANCELAR ORDEN libera la unidad y sus reservas; la obra queda en la cola para otro trabajador. Esc sale de la herramienta; Esc sin herramienta cierra el juego.
+ENVIAR LLUVIA / Q cambia el clima y ayuda al crecimiento de los cultivos. DEJAR REGALO permite escoger suelo libre: aparece un objeto solido con doce de grano y ocho de madera que un habitante busca, recoge desde una celda contigua y lleva al suministro comun. MILAGRO: SANAR recupera salud y necesidades basicas del habitante seleccionado.
 
-## Entorno
+ANUNCIAR ELEGIDO programa un solo nacimiento pendiente, vinculado al hogar del habitante seleccionado. Nueve meses equivalen a 270 dias; un dia son 300 segundos simulados. A 1x son 22.5 horas reales; a 12x, 1 h 52 min 30 s si no se pausa. El contador se guarda y solo avanza con la simulacion. Nace como menor con cero dias de edad; recibe cuidados y alimentos de la aldea y no trabaja ni viaja antes de los doce anos del calendario de 360 dias. Todavia no hay genealogia, embarazo biologico ni familias completas.
 
-Casas de huella 2x2, arboles y plantas con cultivo activo son solidos tanto para habitantes como para animales. Se trabaja desde el exterior de su huella. Las rutas se calculan con el estado actual, evitan la ocupacion de otras unidades y se revisan si un objeto nuevo corta el paso. La construccion rechaza lugares que bloquearian el acceso de habitantes al agua o al almacen.
+## Autonomia y entorno
 
-Talar retira el arbol y produce cuatro unidades de madera. Los bosques pueden extenderse a nuevas celdas libres; no se plantan sobre unidades, animales, caminos, obras, cultivos o edificios. Los habitantes pueden encargar vivienda si no tienen casa y caminos en zonas muy transitadas. La agricultura reserva parcelas y consume semillas; no genera grano por tiempo sin cosecha.
+Habitantes y animales respetan casas, arboles, plantas con cultivo activo y regalos. Los trabajos se ejecutan desde fuera de su huella. Tala, construccion, demolicion, reubicacion, agricultura, caminos y pesca mantienen sus operaciones internas; ya no son herramientas laborales del jugador.
 
-## Pesca y poblacion
+Los NPC buscan alimento, agua, descanso, higiene, ocio y contacto social. Atienden obras, crean vivienda por necesidad, cultivan, amplian parcelas, pescan y obtienen madera talando arboles reales. Los campos remotos trabajados repetidamente pueden acercarse al almacen si escasea comida; las casas con salud menor de treinta generan encargos de demolicion. Si un propietario esta agotado y vive lejos del almacen, puede encargar reubicar su vivienda mas cerca, respetando costes y accesos. Las nuevas islas nacen sin caminos predefinidos: el transito reciente encarga construirlos y el desuso encarga retirarlos. Los puentes no se eliminan automaticamente. Las partidas existentes conservan caminos y los someten al mismo ciclo de uso.
 
-PESCAR OESTE/ESTE asigna al habitante seleccionado a un barco. Primero camina al muelle y embarca. El barco recorre una ruta exclusivamente maritima, pesca treinta segundos y regresa. Un unico sorteo por viaje tiene umbral exacto de 0.25: si se pierde, mueren el ocupante y el barco desaparece; si regresa, el inventario recibe cuatro a ocho pescados consumibles. Reponer un barco perdido requiere ocho de madera y cinco monedas al encargar otro viaje.
+La pesca requiere caminar al muelle y viajar por mar. Un unico sorteo por viaje tiene un 25% de perdida del barco y su ocupante. La poblacion tambien puede disminuir por necesidades desatendidas y crecer mediante inmigracion cuando existen vivienda y provisiones.
 
-La poblacion cuenta vivos, no un total fijo de seis. Puede disminuir por hambre, sed o perdida en el mar. Cada 180 segundos puede llegar un nuevo habitante si hay vivienda vacante, grano por encima de la reserva y ocho monedas; se consumen dos de grano para sus provisiones y esas monedas. No se han implementado familias ni nacimientos.
+## Controles y partidas
 
-## Guardado
+Espacio pausa; E cambia entre 1x/4x/12x; rueda zoom 100-200%; central/WASD desplaza; Enter encuadra. Esc cancela la seleccion de regalo; sin herramienta, cierra. GUARDAR/CARGAR y autoguardado cada 45 segundos reales, ademas del guardado al cerrar. No se carga otra partida durante una conexion activa.
 
-GUARDAR/CARGAR, autoguardado cada 45 segundos reales y guardado al cerrar. Archivo independiente world-v6.json en LOCALAPPDATA/IslaVivaNative. Conserva edificios, cultivos, trabajos, ordenes, bosque, poblacion, barcos y viajes activos. No importa partidas Godot ni formatos nativos anteriores.
+Partidas bajo LOCALAPPDATA/IslaVivaNative. world-v7.json es la partida individual; island-host-v7.json y island-guest-v7.json son islas independientes para red. La partida individual anterior world-v6.json se importa al primer arranque cuando aun no hay v7. Los archivos anteriores se conservan. Clima, regalos, inspiraciones, edad, nacimiento pendiente, identidad de isla, visitas y mensajes pendientes se guardan.
 
-## Arte y limites
+## Pruebas y limites
 
-geology.png es una textura de geologia y agua fijas, sin casas, bosques, parcelas, puentes ni muelles pintados. La mascara de navegacion se deriva de ella a resolucion 128x96. Los objetos modificables se dibujan por separado desde nature-pieces.png y building-pieces.png, con orden de profundidad por su apoyo en el suelo. Las unidades conservan los sprites originales. No hay colision a resolucion de pixel, simulacion naval meteorologica, editor completo de altura ni reproduccion visual identica de la referencia.
+CTest comprueba entorno y colisiones, construccion, reubicacion, campos, caminos por uso, pesca y poblacion. Comprueba tambien dos conexiones TCP reales, visitas de diplomacia y saqueo, deduplicacion, reconexion, resultados y guardado, regalos, lluvia, necesidades y plazo exacto del elegido. MULTIPLAYER.md detalla el alcance de red. No hay reproduccion visual identica, genealogia completa ni combate tactico multijugador.
 
-## Comprobacion
-
-Build Release y CTest: colision de habitantes y animales, huella de casas, construccion, demolicion, reubicacion conservando identidad, agricultura desde fuera, tala y regeneracion, caminos, ordenes directas, limite de riesgo del 25%, viaje maritimo real, fluctuacion de poblacion y guardado/carga. Otra prueba cambia una copia del XML para comprobar su propagacion al juego.
-
-## Caminos segun uso
-Las islas nuevas comienzan sin caminos ni puentes predefinidos. El transito reciente de habitantes genera encargos en los tramos mas usados, con coste de materiales y trabajo. El uso decae cada veinte segundos simulados; los caminos abandonados se retiran mediante encargos. Los terrenos protegidos quedan fuera de esta gestion. Los puentes no se retiran automaticamente, para no cortar conexiones. Las partidas existentes conservan sus caminos; los caminos sin uso entran en el mismo ciclo de retirada.
