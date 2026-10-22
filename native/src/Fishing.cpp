@@ -41,12 +41,13 @@ void World::updateFishing(float dt){
     }
     populationClock+=dt;if(populationClock<180)return;populationClock-=180;
     int alive=static_cast<int>(std::count_if(residents.begin(),residents.end(),[](const Resident& r){return r.alive&&!r.visitor;}));if(alive>=24||grain<reserve+8||treasury<8)return;
-    auto house=std::find_if(props.begin(),props.end(),[&](const Prop& p){return !p.tree&&(p.owner<0||p.owner>=static_cast<int>(residents.size())||!residents[p.owner].alive);});if(house==props.end())return;
+    auto house=std::find_if(props.begin(),props.end(),[&](const Prop& p){return !p.tree&&p.kind=="house"&&(p.owner<0||p.owner>=static_cast<int>(residents.size())||!residents[p.owner].alive);});if(house==props.end())return;
     int home=cellId(static_cast<int>(house->x),static_cast<int>(house->y+1));if(!walkable(home%mapWidth,home/mapWidth))return;
     bool occupied=false;for(const auto& r:residents)if(r.alive&&!r.inBoat&&!r.inDungeon&&!r.away&&at(r)==home)occupied=true;if(occupied)return;
     Resident newcomer;newcomer.name="Habitante "+std::to_string(residents.size()+1);newcomer.trait=alive%2?"Trabajador":"Agricultora";newcomer.home=home;newcomer.goal=home;newcomer.x=home%mapWidth+.5f;newcomer.y=home/mapWidth+.5f;newcomer.grain=2;newcomer.relationships.resize(residents.size()+1);house->owner=static_cast<int>(residents.size());grain-=2;treasury-=8;residents.push_back(std::move(newcomer));for(auto& r:residents)r.relationships.resize(residents.size());++metrics["arrivals"];record("Llego un nuevo habitante: hay vivienda y provisiones");
 }
 }
+
 
 
 

@@ -1,0 +1,43 @@
+﻿{
+    "format":  "IslaViva terrain pack",
+    "version":  2,
+    "columns":  4,
+    "rows":  2,
+    "materials":  [
+                      "ocean",
+                      "shallows",
+                      "sand",
+                      "grass",
+                      "rock",
+                      "snow",
+                      "river",
+                      "soil"
+                  ],
+    "provenance":  "AI generated using built-in imagegen; prompt in GENERATION-PROMPT.txt",
+    "reliefRects":  [
+                        [
+                            23,
+                            60,
+                            585,
+                            598
+                        ],
+                        [
+                            629,
+                            215,
+                            588,
+                            390
+                        ],
+                        [
+                            1223,
+                            191,
+                            560,
+                            420
+                        ],
+                        [
+                            1800,
+                            306,
+                            348,
+                            291
+                        ]
+                    ]
+}

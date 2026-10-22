@@ -1,3 +1,5 @@
+Abre **Jugar.exe**: elige nombre y modo en una pantalla grafica, sin consola. [Controles actuales](native/ALPHA.md), [conexion y chat](native/MULTIPLAYER.md), [terrenos](native/TERRENO.md).
+
 ## Alpha de autonomia y visitas multijugador
 
 Abre Jugar-Alpha.bat para jugar o Jugar-Multijugador.bat para conectar dos islas por IP. El panel contiene poderes divinos; los habitantes deciden sus trabajos. Hay diplomacia, saqueo y un elegido que nace tras nueve meses del calendario del juego. Alcance, controles y limites: [ALPHA](native/ALPHA.md) y [multijugador](native/MULTIPLAYER.md).
@@ -74,5 +76,6 @@ Las suites verifican supervivencia durante doce días, obstáculos, caza, agua, ca
 La simulación todavía es una base: no incluye interiores habitables, familias ni la complejidad completa de Los Sims. Las tareas de construcción de campamentos, comercio y relaciones son sencillas. El mundo solo avanza mientras está abierto.
 
 Assets: **Aleksandr Makarov / IKnowKingRabbit**, Micro Asset Series. Se conservan todos los originales de `Res` y su `license.txt`. No se descargaron recursos gráficos externos.
+
 
 

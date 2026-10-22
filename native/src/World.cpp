@@ -14,6 +14,8 @@ float ellipse(float x,float y,float cx,float cy,float rx,float ry){return (x-cx)
 std::uint32_t World::random(){randomState_=randomState_*1664525u+1013904223u;return randomState_;}
 Terrain World::terrainAt(int x,int y) const{return inside(x,y)?terrain[cellId(x,y)]:Terrain::Sea;}
 bool World::walkable(int x,int y) const{return inside(x,y)&&terrainAt(x,y)!=Terrain::Sea&&terrainAt(x,y)!=Terrain::FreshWater&&terrainAt(x,y)!=Terrain::Mountain&&!blocked_[cellId(x,y)];}
+float World::heightAt(float x,float y) const{if(!procedural)return 0;x=std::clamp(x-.5f,0.0f,static_cast<float>(mapWidth-1));y=std::clamp(y-.5f,0.0f,static_cast<float>(mapHeight-1));int ix=static_cast<int>(x),iy=static_cast<int>(y);float fx=x-ix,fy=y-iy;auto h=[&](int xx,int yy){return elevation[cellId(std::min(xx,mapWidth-1),std::min(yy,mapHeight-1))];};return (h(ix,iy)*(1-fx)+h(ix+1,iy)*fx)*(1-fy)+(h(ix,iy+1)*(1-fx)+h(ix+1,iy+1)*fx)*fy;}
+bool World::canStep(int x,int y,int nx,int ny) const{if(!walkable(nx,ny))return false;if(!inside(x,y))return false;return std::abs(elevation[cellId(x,y)]-elevation[cellId(nx,ny)])<=.8f||terrainAt(x,y)==Terrain::Bridge||terrainAt(nx,ny)==Terrain::Bridge;}
 bool World::besideFreshWater(int x,int y) const{return terrainAt(x+1,y)==Terrain::FreshWater||terrainAt(x-1,y)==Terrain::FreshWater||terrainAt(x,y+1)==Terrain::FreshWater||terrainAt(x,y-1)==Terrain::FreshWater;}
 void World::rebuildNavigation(){blocked_.fill(false);for(const auto& gift:gifts)blocked_[gift.cell]=true;for(const auto& p:props)for(int y=static_cast<int>(std::floor(p.y-p.halfDepth));y<=static_cast<int>(std::floor(p.y+p.halfDepth));++y)for(int x=static_cast<int>(std::floor(p.x-p.halfWidth));x<=static_cast<int>(std::floor(p.x+p.halfWidth));++x)if(inside(x,y))blocked_[cellId(x,y)]=true;for(const auto& c:crops)if(c.stage>0)blocked_[c.cell]=true;}
 void World::addProp(Prop p){props.push_back(std::move(p));rebuildNavigation();}
@@ -40,7 +42,7 @@ World::World(){
 }
 std::vector<int> World::route(int sx,int sy,const std::function<bool(int,int)>& goal) const{
     if(!walkable(sx,sy))return {};std::array<int,mapWidth*mapHeight> previous;previous.fill(-1);std::queue<int> q;const int start=cellId(sx,sy);previous[start]=start;q.push(start);int found=-1;
-    while(!q.empty()){int at=q.front();q.pop();int x=at%mapWidth,y=at/mapWidth;if(goal(x,y)){found=at;break;}for(auto d:std::array<std::array<int,2>,4>{{{1,0},{-1,0},{0,1},{0,-1}}}){int nx=x+d[0],ny=y+d[1];if(!walkable(nx,ny))continue;int k=cellId(nx,ny);if(previous[k]>=0)continue;bool occupied=false;for(const auto& person:residents)if(person.alive&&!person.inDungeon&&!person.away&&!person.inBoat&&cellId(static_cast<int>(person.x),static_cast<int>(person.y))==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;if(occupied&&!goal(nx,ny))continue;previous[k]=at;q.push(k);}}
+    while(!q.empty()){int at=q.front();q.pop();int x=at%mapWidth,y=at/mapWidth;if(goal(x,y)){found=at;break;}for(auto d:std::array<std::array<int,2>,4>{{{1,0},{-1,0},{0,1},{0,-1}}}){int nx=x+d[0],ny=y+d[1];if(!canStep(x,y,nx,ny))continue;int k=cellId(nx,ny);if(previous[k]>=0)continue;bool occupied=false;for(const auto& person:residents)if(person.alive&&!person.inDungeon&&!person.away&&!person.inBoat&&cellId(static_cast<int>(person.x),static_cast<int>(person.y))==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;if(occupied&&!goal(nx,ny))continue;previous[k]=at;q.push(k);}}
     if(found<0)return {};std::vector<int> path;for(int at=found;at!=start;at=previous[at])path.push_back(at);path.push_back(start);std::reverse(path.begin(),path.end());return path;
 }
 int World::nearest(const Resident& r,const std::function<bool(int,int)>& predicate) const{auto p=route(static_cast<int>(r.x),static_cast<int>(r.y),predicate);return p.empty()?-1:p.back();}
@@ -50,6 +52,7 @@ bool World::hasBonus(const Resident& r,const std::string& b) const{return std::a
 Crop* World::cropAt(int k){for(auto& c:crops)if(c.cell==k)return &c;return nullptr;}
 void World::record(const std::string& message){events.push_back("D"+std::to_string(static_cast<int>(elapsed/300)+1)+" | "+message);if(events.size()>120)events.erase(events.begin());}
 }
+
 
 
 

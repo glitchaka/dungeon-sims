@@ -21,6 +21,12 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
     if(raw.size()>16384||peer.empty()||peer==worldId)return "Mensaje de red rechazado";
     auto m=json::parse(raw);if(m.at("protocol")!=1||m.at("from")!=peer||m.at("to")!=worldId)return "Destino de red incorrecto";
     const auto type=m.at("type").get<std::string>(),id=m.at("id").get<std::string>();if(id.empty()||id.size()>100)return "Identificador invalido";
+    if(type=="chat"){
+        auto text=m.at("text").get<std::string>(),name=m.at("name").get<std::string>();if(id.rfind(peer+":chat:",0)!=0||text.empty()||text.size()>256||name.empty()||name.size()>32||std::any_of(text.begin(),text.end(),[](unsigned char c){return c<32;}))return "Chat invalido";
+        if(std::find(chatSeen.begin(),chatSeen.end(),id)==chatSeen.end()){chatSeen.push_back(id);if(chatSeen.size()>256)chatSeen.erase(chatSeen.begin());chatLog.push_back(name+": "+text);if(chatLog.size()>64)chatLog.erase(chatLog.begin());}
+        outbox["ack:"+id]=json{{"protocol",1},{"type","chat_ack"},{"id",id},{"from",worldId},{"to",peer}}.dump();return "Mensaje recibido";
+    }
+    if(type=="chat_ack"){auto pending=outbox.find(id);if(pending!=outbox.end()){auto original=json::parse(pending->second);if(original.at("type")=="chat"&&original.at("to")==peer)outbox.erase(pending);}return "Chat entregado";}
     auto trip=std::find_if(visits.begin(),visits.end(),[&](const Visit& v){return v.id==id;});
     if(type=="visit"){
         if(trip!=visits.end())return "Visita ya registrada";
@@ -77,7 +83,15 @@ void World::updateVisits(float dt){
     if(peerId.empty())return;
     for(std::size_t i=0;i<residents.size();++i){const auto& r=residents[i];if(r.inspiration=="diplomacy"||r.inspiration=="raid"){if(!r.away&&r.hunger>65&&r.thirst>65&&r.energy>60&&r.health>cnc::maxHealth*.7f){sendVisit(static_cast<int>(i),r.inspiration);break;}}}
 }
+std::string World::sendChat(const std::string& text){
+    if(peerId.empty())return "Conecta otra isla para conversar";
+    if(text.empty()||text.size()>256||std::any_of(text.begin(),text.end(),[](unsigned char c){return c<32;}))return "Mensaje vacio o demasiado largo";
+    if(outbox.size()>128)return "Espera a que se entreguen los mensajes pendientes";
+    std::string id=worldId+":chat:"+std::to_string(++metrics["chat_sequence"]);
+    outbox[id]=json{{"protocol",1},{"type","chat"},{"id",id},{"from",worldId},{"to",peerId},{"name",playerName},{"text",text}}.dump();chatLog.push_back(playerName+": "+text);if(chatLog.size()>64)chatLog.erase(chatLog.begin());return "Mensaje enviado";
 }
+}
+
 
 
 

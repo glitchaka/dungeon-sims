@@ -25,6 +25,7 @@ std::string World::miracle(const std::string& kind,int who,int cell){
 void World::updateDivinity(float dt){
     for(auto& r:residents)if(r.alive&&!r.away){
         r.ageDays+=dt/daySeconds;
+        for(const auto& p:props)if(p.kind=="altar"&&std::hypot(r.x-p.x,r.y-p.y)<4){r.social=std::min(100.0f,r.social+dt*.8f);r.fun=std::min(100.0f,r.fun+dt*.5f);}
         if(r.inspirationUntil<elapsed)r.inspiration.clear();
         if(r.ageDays<4320&&!r.visitor){if(r.hunger<45&&grain>0){--grain;r.hunger=90;}if(r.thirst<45){
                 if(r.homeWater>0){r.homeWater-=.1f;r.thirst=90;}
@@ -49,4 +50,5 @@ void World::updateDivinity(float dt){
     residents.push_back(std::move(child));for(auto& r:residents)r.relationships.resize(residents.size());chosenBirthAt=-1;chosenPatron=-1;++metrics["chosen_births"];record("Nacio el elegido despues de nueve meses. Es un recien nacido, no un trabajador adulto.");
 }
 }
+
 

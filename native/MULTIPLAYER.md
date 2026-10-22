@@ -1,30 +1,17 @@
-# Visitas multijugador entre dos islas
+# Partidas multijugador sin consola
 
-## Conectar
+Abre Jugar.exe. Escribe tu nombre y elige **Abrir mi isla a otro jugador**. Comparte la direccion IPv4 que muestra la pantalla (hay un boton para copiarla). El otro jugador abre Jugar.exe, elige **Conectar a otra isla** y escribe esa direccion. No se necesitan comandos. Dentro del juego, CONECTAR ISLA tambien abre un cuadro de direccion y puerto; ya no intenta conectar ciegamente a localhost.
 
-Ejecuta Jugar-Multijugador.bat en el repositorio, o Multijugador.bat dentro del ZIP extraido. Un jugador elige abrir su isla; el otro elige conectar e introduce la IPv4 del primero. Puerto TCP predeterminado: 32145. Las ventanas conservan mundos distintos, no una misma isla compartida.
+Para probar dos ventanas en el mismo PC: abre una como anfitrion y conecta la otra a 127.0.0.1. Usa perfiles distintos; si se deja default, el modo anfitrion usa island-host y el modo cliente usa island-guest. Cada perfil tiene nombre, partida e identidad de isla propios.
 
-Para probar dos jugadores en este PC, abre el lanzador dos veces: abre una isla en la primera y conecta a 127.0.0.1 en la segunda. Los perfiles automaticos island-host e island-guest tienen partidas e identidades separadas. El panel tambien permite ABRIR MI ISLA o CONECTAR ISLA; este ultimo usa la IP proporcionada al arrancar, o localhost.
+Puerto TCP predeterminado 32145. Es una conexion directa entre dos jugadores, utilizable en LAN o cuando los equipos tienen conectividad TCP por esa direccion. Esta entrega no incluye servidor publico, directorio de partidas, relay, apertura automatica de puertos de Internet, cuentas ni medidas contra trampas.
 
-Opciones directas del ejecutable:
+## Chat y visitas
 
-```
-isla_viva_native.exe --host --profile manuel --port 32145
-isla_viva_native.exe --join 192.168.1.20 --profile visitante --port 32145
-```
+CHAT abre un campo de escritura. Enter envia; Esc cierra la escritura. Los mensajes llevan el nombre elegido, viajan por la misma conexion TCP y se confirman sin duplicarse al retransmitir. El historial reciente se guarda por isla. No hay chat global fuera de la partida conectada.
 
-Primera entrega: pareja de jugadores mediante conexion TCP directa, utilizable en localhost o una red con conectividad entre ambos equipos. No incluye cuentas, descubrimiento de partidas, servidor publico, relay ni apertura automatica de puertos de Internet. El protocolo es para jugadores de confianza; no incorpora autenticacion, cifrado ni medidas contra trampas.
+Inspira diplomacia o saqueo en un habitante adulto. Viaja cuando esta preparado y quedan dos habitantes propios. El receptor crea un visitante con movimiento y necesidades sujetos a sus colisiones. Mientras esta fuera, el original no trabaja ni colisiona en su isla.
 
-## Misiones
+Tras 45 segundos simulados en la isla receptora se resuelve la visita. Diplomacia mejora relaciones y puede entregar tres monedas del anfitrion. Saqueo empeora relaciones; defensores cercanos pueden danar o matar al atacante. Si sobrevive, roba hasta doce monedas y ocho de grano del suministro real de esa isla. La resolucion de defensa es inicial, no combate tactico completo. No se representa todavia la travesia naval entre ambas islas.
 
-Selecciona un habitante adulto propio e inspira diplomacia o saqueo. Viaja cuando tiene salud y necesidades suficientes, dejando dos habitantes propios. Mientras esta fuera no trabaja, colisiona ni consume recursos en su isla original. El receptor crea un visitante independiente con movimiento y necesidades sujetos a sus colisiones. No duplica el inventario original.
-
-Tras 45 segundos simulados en la isla receptora se resuelve la visita. Diplomacia mejora diez puntos las relaciones entre esas dos islas y entrega hasta tres monedas desde el tesoro anfitrion. Saqueo empeora veinte puntos las relaciones; la resistencia de habitantes adultos cercanos causa dano al saqueador. Si sobrevive, roba como maximo doce monedas y ocho de grano del suministro real del receptor. Hay alerta local. El dano puede causar una muerte real. Los resultados se resuelven en la isla visitada, no en la de quien envia.
-
-El visitante desaparece de la isla receptora al regresar. El original vuelve con su resultado y botin, o queda muerto si no sobrevivio. Si su lugar anterior se construyo o bloqueo mientras viajaba, busca un desembarco libre. Esta entrega usa una resolucion inicial de defensa por presencia y salud: todavia no hay combate tactico ni trayecto de barcos entre las dos islas.
-
-## Desconexion y guardado
-
-Cada isla tiene identidad persistente. Los viajes usan identificadores unicos, guardado del estado antes de transmitir, reenvio de mensajes pendientes y confirmacion de resultados. Repetir un paquete o reconectar no vuelve a crear el visitante ni duplica el botin. Si se corta la conexion, el residente queda fuera y su viaje pendiente se conserva; conecta otra vez las mismas islas para completar la entrega. No se genera una copia local gratuita al desconectar.
-
-Los tiempos de ambas islas son independientes: la mision espera si el receptor pausa o cierra. No hay simulacion de servidor cuando los dos juegos estan cerrados. Una conexion sirve a otra isla por vez. El guardado local no es una base de datos transaccional distribuida ni evita que un usuario restaure manualmente copias antiguas de sus archivos.
+Cada viaje tiene identificador persistente y resultado confirmado. Una desconexion conserva el viaje y los mensajes pendientes; reconectar las mismas islas no duplica habitantes ni botin. Si el receptor pausa, el tiempo de su mision se pausa. No hay servidor que simule cuando todos cierran. Restaurar manualmente copias antiguas de los archivos no esta protegido por un sistema contra trampas.

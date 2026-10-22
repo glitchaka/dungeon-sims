@@ -22,7 +22,7 @@ struct Resident {
     bool away{},visitor{},chosen{};float ageDays{6480};std::string inspiration;float inspirationUntil{};
     std::vector<int> relationships=std::vector<int>(6,0);std::vector<Artifact> artifacts,loot;
 };
-struct Prop {float x,y,halfWidth,halfDepth,height;bool tree;std::string id;int uid{-1},owner{-1};float health{100};};
+struct Prop {float x,y,halfWidth,halfDepth,height;bool tree;std::string id;int uid{-1},owner{-1};float health{100};std::string kind{"house"};};
 struct Crop {int cell{},stage{},cycles{},worker{-1};float growth{},ripeAge{};};
 struct Animal {float x{},y{},timer{},respawn{};int kind{4};bool alive{true};};
 struct Camp {int cell{},owner{};float created{};};
@@ -34,11 +34,18 @@ struct Dungeon {
     std::array<float,3> enemies{};std::array<bool,3> opened{};
     float clock{},cooldown{};std::vector<std::string> log;
 };
+struct Landform {std::string kind;float x{},y{},radiusX{},radiusY{},height{},drawWidth{};int sprite{};};
 struct Gift {int cell{},grain{12},wood{8};};
 struct Visit {std::string id,origin,kind,state;int resident{-1},originResident{-1};float clock{};bool incoming{};std::string partner;};
 class World {
 public:
     World();void tick(float seconds);
+    void generateIsland(std::uint32_t seed);std::string growIsland(int cell,int radius=3);
+    std::vector<std::array<float,3>> riverCourse;
+    std::vector<Landform> landforms;
+    std::uint32_t islandSeed{};bool procedural{};int terrainRevision{},roadPolicy{2};
+    std::string playerName{"Deidad"},peerName;std::vector<std::string> chatLog,chatSeen;
+    std::string sendChat(const std::string& text);
     static constexpr float daySeconds=300,monthDays=30,gestationSeconds=9*monthDays*daySeconds;
     std::string miracle(const std::string& kind,int who,int cell=-1);
     void updateDivinity(float dt);void updateVisits(float dt);
@@ -46,6 +53,8 @@ public:
     std::string receivePeer(const std::string& message,const std::string& peer);
     std::string worldId,peerId;bool raining{};float chosenBirthAt{-1};int chosenPatron{-1};
     std::map<std::string,int> relations;std::vector<Gift> gifts;std::vector<Visit> visits;std::map<std::string,std::string> outbox;
+    float heightAt(float x,float y) const;bool canStep(int x,int y,int nx,int ny) const;
+    std::array<float,mapWidth*mapHeight> elevation{};
     bool walkable(int x,int y) const;Terrain terrainAt(int x,int y) const;bool besideFreshWater(int x,int y) const;
     std::vector<int> route(int sx,int sy,const std::function<bool(int,int)>& goal) const;
     void alarm(float x,float y);void record(const std::string& message);
@@ -81,6 +90,10 @@ private:
     void feed(Resident& r);void rest(Resident& r);bool farmTask(Resident& r);bool gatherTask(Resident& r);
 };
 }
+
+
+
+
 
 
 

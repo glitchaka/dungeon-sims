@@ -1,32 +1,29 @@
-# Alpha: habitantes autonomos y poderes divinos
+# Probar la alpha
 
-Abrir Jugar-Alpha.bat para jugar sin compilar. Jugar.bat compila y ejecuta. Jugar-Multijugador.bat permite abrir otra isla o conectar por IP. El ZIP portable contiene Multijugador.bat. Esta alpha sigue en desarrollo; el aspecto del mapa no es una reproduccion identica aprobada de la referencia.
+Abre **Jugar.exe** con doble clic, en el proyecto o en el ZIP extraido. Es un lanzador grafico y el juego usa el subsistema Windows: no mantiene una consola CMD. Jugar.bat y Jugar-Alpha.bat solo delegan en ese lanzador y terminan. Jugar.vbs es otro acceso sin consola. Para desarrollo se conserva tools/run_native.ps1, que compila; Jugar.bat ya no compila al abrir una partida.
 
-## El jugador es una deidad
+La primera pantalla pide nombre y perfil de guardado; permite jugar individualmente, abrir una partida o conectar a una IPv4. Muestra la direccion local del anfitrion y permite copiarla. Se puede continuar una partida o marcar Nueva isla. Si no existe partida, se genera una isla por semilla. Un reinicio deliberado conserva la partida v8 previa como .bak.
 
-Clic inspecciona habitantes y objetos. El panel ya no ofrece construir casas, crear campos, mover objetos, ordenar tala o enviar barcos directamente. Tampoco el clic derecho ordena trabajo o movimiento. Las decisiones y trabajos pertenecen a los NPC.
+## Jugador y habitantes
 
-INSP. SUSTENTO favorece agricultura y pesca. INSP. EDIFICAR favorece trabajar en obras incluso de noche. Las inspiraciones duran treinta dias de juego, sin saltarse sed, hambre, descanso ni requisitos materiales. INSP. DIPLOMACIA e INSP. SAQUEO motivan un viaje a la isla conectada cuando el habitante adulto esta preparado; deben quedar al menos otros dos habitantes propios.
+Clic inspecciona. El jugador puede inspirar sustento, edificacion, diplomacia o saqueo; enviar lluvia; sanar; dejar un regalo; anunciar el elegido. El regalo ocupa espacio y se recoge desde fuera. El elegido nace tras 270 dias de juego, no inmediatamente; el contador se guarda. Un dia son 300 segundos simulados.
 
-ENVIAR LLUVIA / Q cambia el clima y ayuda al crecimiento de los cultivos. DEJAR REGALO permite escoger suelo libre: aparece un objeto solido con doce de grano y ocho de madera que un habitante busca, recoge desde una celda contigua y lleva al suministro comun. MILAGRO: SANAR recupera salud y necesidades basicas del habitante seleccionado.
+Ahora tambien hay encargos de MUELLE, TOWNHALL y ALTAR: pulsa el boton y elige suelo adecuado. Se reservan recursos y el habitante seleccionado recibe el encargo, que puede interrumpir por necesidades o descanso. Otros trabajadores pueden retomarlo. No se crea un edificio instantaneo.
 
-ANUNCIAR ELEGIDO programa un solo nacimiento pendiente, vinculado al hogar del habitante seleccionado. Nueve meses equivalen a 270 dias; un dia son 300 segundos simulados. A 1x son 22.5 horas reales; a 12x, 1 h 52 min 30 s si no se pausa. El contador se guarda y solo avanza con la simulacion. Nace como menor con cero dias de edad; recibe cuidados y alimentos de la aldea y no trabaja ni viaja antes de los doce anos del calendario de 360 dias. Todavia no hay genealogia, embarazo biologico ni familias completas.
+Muelle: 16 madera y 12 monedas, junto al mar; aporta un barco funcional. Townhall: 24 madera y 25 monedas; actua como nuevo centro civico y almacen. Altar: 8 madera y 10 monedas; mejora socializacion y animo cerca de el. Conservan tipo propio, colisiones y guardado. Ninguno cuenta como vivienda.
 
-## Autonomia y entorno
+Los NPC deciden agricultura, tala, ampliacion de campos, viviendas, caminos y pesca. Por la noche interrumpen obras y vuelven a descansar; hambre/sed urgentes pueden despertarlos. Los viajeros ya embarcados terminan su travesia. El texto NOCHE y la simulacion usan el mismo reloj. La inspiracion de edificacion ya no obliga a trabajar toda la noche.
 
-Habitantes y animales respetan casas, arboles, plantas con cultivo activo y regalos. Los trabajos se ejecutan desde fuera de su huella. Tala, construccion, demolicion, reubicacion, agricultura, caminos y pesca mantienen sus operaciones internas; ya no son herramientas laborales del jugador.
+## Caminos y migracion
 
-Los NPC buscan alimento, agua, descanso, higiene, ocio y contacto social. Atienden obras, crean vivienda por necesidad, cultivan, amplian parcelas, pescan y obtienen madera talando arboles reales. Los campos remotos trabajados repetidamente pueden acercarse al almacen si escasea comida; las casas con salud menor de treinta generan encargos de demolicion. Si un propietario esta agotado y vive lejos del almacen, puede encargar reubicar su vivienda mas cerca, respetando costes y accesos. Las nuevas islas nacen sin caminos predefinidos: el transito reciente encarga construirlos y el desuso encarga retirarlos. Los puentes no se eliminan automaticamente. Las partidas existentes conservan caminos y los someten al mismo ciclo de uso.
+Las partidas nuevas no tienen una red de caminos inicial. El uso reciente crea encargos de caminos y el abandono crea encargos de retirada. Al importar archivos v6/v7 se retiran una sola vez los caminos antiguos y sus encargos obsoletos, conservando estructuras, habitantes y puentes necesarios. Los archivos originales se conservan. Los caminos construidos bajo v8 se guardan y no se borran en cada arranque.
 
-La pesca requiere caminar al muelle y viajar por mar. Un unico sorteo por viaje tiene un 25% de perdida del barco y su ocupante. La poblacion tambien puede disminuir por necesidades desatendidas y crecer mediante inmigracion cuando existen vivienda y provisiones.
+## Controles y guardado
 
-## Controles y partidas
+Espacio pausa; E cambia velocidad; Q lluvia; rueda zoom; central/WASD desplaza; Enter encuadra. CHAT abre escritura; Enter envia y Esc cierra. Mientras escribes, las teclas no ordenan mover la camara ni cambian el clima.
 
-Espacio pausa; E cambia entre 1x/4x/12x; rueda zoom 100-200%; central/WASD desplaza; Enter encuadra. Esc cancela la seleccion de regalo; sin herramienta, cierra. GUARDAR/CARGAR y autoguardado cada 45 segundos reales, ademas del guardado al cerrar. No se carga otra partida durante una conexion activa.
+LOCALAPPDATA/IslaVivaNative contiene partidas v8 separadas por perfil. Se importa v7 y, para la partida individual antigua, v6. Conserva identidad, visitas pendientes, chat, edificios, alturas, semilla, geografia, ordenes y nacimiento elegido. Guardado manual, automatico y al cerrar. La importacion no mezcla las dos islas ni sus habitantes.
 
-Partidas bajo LOCALAPPDATA/IslaVivaNative. world-v7.json es la partida individual; island-host-v7.json y island-guest-v7.json son islas independientes para red. La partida individual anterior world-v6.json se importa al primer arranque cuando aun no hay v7. Los archivos anteriores se conservan. Clima, regalos, inspiraciones, edad, nacimiento pendiente, identidad de isla, visitas y mensajes pendientes se guardan.
+## Estado
 
-## Pruebas y limites
-
-CTest comprueba entorno y colisiones, construccion, reubicacion, campos, caminos por uso, pesca y poblacion. Comprueba tambien dos conexiones TCP reales, visitas de diplomacia y saqueo, deduplicacion, reconexion, resultados y guardado, regalos, lluvia, necesidades y plazo exacto del elegido. MULTIPLAYER.md detalla el alcance de red. No hay reproduccion visual identica, genealogia completa ni combate tactico multijugador.
-
+Build Release y pruebas de simulacion, TCP real, chat, diplomacia/saqueo, deduplicacion, reconexion, guardado, islas por semilla, crecimiento, pendientes, obras y descanso nocturno. TERRENO.md describe geografia y arte. MULTIPLAYER.md describe conexion y alcance. El acabado visual aun esta en revision; no es una reproduccion aprobada de la isla de referencia.

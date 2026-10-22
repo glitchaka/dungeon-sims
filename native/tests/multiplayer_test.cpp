@@ -43,6 +43,9 @@ int main(){try{
         for(int i=0;i<1000&&messages.empty();++i){source.poll();target.poll();messages=target.receive();if(messages.empty())std::this_thread::sleep_for(std::chrono::milliseconds(1));}
         check(!messages.empty(),"Actual TCP transport lost a mission message");for(const auto& m:messages)receiver.receivePeer(m,sender);
     };
+    a->playerName="Manuel";b->playerName="Otra deidad";a->sendChat("Hola desde mi isla");check(a->outbox.size()==1,"Chat was not queued");auto chatId=a->outbox.begin()->first;auto text=a->outbox.begin()->second;
+    deliver(client,host,*b,a->worldId,text);deliver(client,host,*b,a->worldId,text);check(b->chatLog.size()==1&&b->chatLog[0]=="Manuel: Hola desde mi isla","Real TCP chat lost player name or duplicated text");
+    deliver(host,client,*a,b->worldId,b->outbox.at("ack:"+chatId));check(a->outbox.empty(),"Chat acknowledgement did not clear pending message");
     a->sendVisit(0,"diplomacy");check(a->residents[0].away&&a->outbox.size()==1,"Sending a visitor failed to suspend the original resident");
     check(a->save("active-outgoing-test.json")&&restored->load("active-outgoing-test.json")&&restored->residents[0].away&&restored->outbox.size()==1,"Outgoing resident duplicated after restart");
     const std::string id=a->visits[0].id,payload=a->outbox.at(id);deliver(client,host,*b,a->worldId,payload);deliver(client,host,*b,a->worldId,payload);
@@ -66,6 +69,7 @@ int main(){try{
     auto altered=json::parse(result);altered["food"]=-10;check(a->receivePeer(altered.dump(),std::string(32,'f'))=="Destino de red incorrecto","Spoofed peer message was accepted");
     std::cout<<"PASS: nine-month birth deadline, newborn, pregnancy save/load, rain, gift collision/collection, autonomous needs, two TCP peers, diplomacy, raid, duplicate delivery, return and persistence\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+
 
 
 

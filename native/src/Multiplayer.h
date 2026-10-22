@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 namespace isla {
+std::string localIPv4();
 // Nonblocking TCP link between two independently simulated islands.
 class PeerLink {
 public:
@@ -13,3 +14,4 @@ public:
 private:struct Impl;std::unique_ptr<Impl> impl_;
 };
 }
+

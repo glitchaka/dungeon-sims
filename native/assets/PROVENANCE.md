@@ -7,3 +7,6 @@ La geologia excluye los objetos modificables; la mascara de colision se obtiene 
 Los PNG pequenos de personajes y los recursos heredados proceden del proyecto Godot original y conservan la licencia ASSET-LICENSE.txt. Los datos XML adaptados de C&C tienen su propia licencia, conservada en cnc-license junto al ejecutable y en references/cnc-modding-support/LICENSE.md.
 
 Las imagenes completas usadas como referencia estan archivadas en native/reference; no se cargan como mapa jugable.
+
+## Recursos de esta entrega
+Los edificios civicos de civic-buildings.png y el material y relieve contenidos en terrain-islands.pck fueron generados con la herramienta incorporada imagegen. Los prompts exactos estan en CIVIC-GENERATION-PROMPT.txt, terrain-pack/GENERATION-PROMPT.txt y terrain-pack/RELIEF-GENERATION-PROMPT.txt. No proceden del repositorio CnC. civic-pieces.json y el manifiesto del paquete contienen recortes de atlas; los PNG originales conservan su transparencia.
