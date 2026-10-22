@@ -1,0 +1,13 @@
+﻿{
+  "format": "IslaViva Geography Resources",
+  "version": 2,
+  "status": "new_art_candidates_not_integrated_or_approved",
+  "replaces": "rejected terrain-islands.pck artwork",
+  "style_reference": "native/reference/island-reference.png (style only)",
+  "regions": [
+    {"id":"mountain-region","image":"mountain-region.png","kind":"mountain_range","footprint_cells":[44,32],"maximum_height_cells":18,"features":["multiple linked peaks","ridges","valleys","gorge","waterfall basins"],"navigation":"derive separate passable valley and water masks before integration"},
+    {"id":"coastal-region","image":"coastal-region.png","kind":"continuous_coastal_plateau","footprint_cells":[32,24],"maximum_height_cells":4,"features":["connected cliff faces","elevated plateau","sandy cove","lower beach"],"navigation":"cliff faces block; plateau and beach require separate heights"},
+    {"id":"upland-region","image":"upland-region.png","kind":"hill_knoll_plateau_ramp","footprint_cells":[24,20],"maximum_height_cells":6,"features":["broad hill","smaller knoll","elevated plateau","traversable natural ramp"],"navigation":"ramp is traversable sloping ground, not a cliff prop"}
+  ],
+  "provenance": "New images generated from scratch with built-in imagegen. Exact prompts saved alongside the images. No rejected atlas fragments are reused."
+}
