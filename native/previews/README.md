@@ -13,3 +13,7 @@ island-top-down-sample.png es la imagen conceptual anterior generada desde cero;
 ## Ensamblaje cenital v4
 
 assembled-topdown-v4.png sí está compuesto con el nuevo atlas cenital terrain-topdown-v4/regions.png. Su disposición está en terrain-topdown-v4/sample-layout.json y se reproduce con tools/render_topdown_island.ps1. Costa, mar y cauce se calculan por código. game-topdown-v4.bmp y package-topdown-v4.bmp son capturas reales de la alpha compilada y empaquetada, con semilla 1749. El juego compone desde el mundo actual; no usa esta muestra como fondo.
+
+## Isla grande
+
+game-large-island.bmp es una captura real del ejecutable empaquetado con una isla de 256 x 192 celdas y semilla 1749. No es una ampliación de la muestra estática; la simulación tiene cuatro veces más celdas y la cámara admite zoom hasta 800 %.

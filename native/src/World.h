@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 namespace isla {
-constexpr int mapWidth=128,mapHeight=96;
+constexpr int mapWidth=256,mapHeight=192;
 constexpr int cellId(int x,int y){return y*mapWidth+x;}
 enum class Terrain {Sea,Ground,FreshWater,Road,Bridge,Mountain};
 enum class Task {Idle,Wander,Drink,Eat,Rest,Flee,Bathe,Social,Gather,Camp,Trade,Till,Sow,Harvest,Deposit,Fetch,Hunt,Tend,DrinkHome,Project,Expedition,SellLoot,Move,Fish};

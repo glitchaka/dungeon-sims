@@ -22,7 +22,7 @@ void World::addProp(Prop p){props.push_back(std::move(p));rebuildNavigation();}
 World::World(){
     std::random_device entropy;const char* hex="0123456789abcdef";for(int i=0;i<32;++i)worldId+=hex[entropy()%16];
     // Only hard geology is authored. Roads are built by workers from actual use.
-    for(int k=0;k<mapWidth*mapHeight;++k)terrain[k]=static_cast<Terrain>(geologyCells[k]);
+    for(int k=0;k<mapWidth*mapHeight;++k)terrain[k]=(k%mapWidth<128&&k/mapWidth<96)?static_cast<Terrain>(geologyCells[(k/mapWidth)*128+k%mapWidth]):Terrain::Sea;
     for(int y=0;y<mapHeight;++y)for(int x=0;x<mapWidth;++x){int k=cellId(x,y);if(terrain[k]!=Terrain::Ground)continue;forest[k]=(ellipse(x,y,45,23,11,9)<1||ellipse(x,y,46,55,13,10)<1||ellipse(x,y,68,40,10,9)<1||ellipse(x,y,83,24,9,8)<1||ellipse(x,y,77,61,8,7)<1);pasture[k]=ellipse(x,y,37,50,3,3)<1;}
     auto freeNear=[&](int desired){int best=-1;float score=1e9f;for(int k=0;k<mapWidth*mapHeight;++k)if(walkable(k%mapWidth,k/mapWidth)){bool occupied=false;for(const auto& r:residents)if(cellId(static_cast<int>(r.x),static_cast<int>(r.y))==k)occupied=true;if(occupied)continue;float d=std::hypot(static_cast<float>(k%mapWidth-desired%mapWidth),static_cast<float>(k/mapWidth-desired/mapWidth));if(d<score){score=d;best=k;}}return best;};
     market=freeNear(market);granary=freeNear(granary);

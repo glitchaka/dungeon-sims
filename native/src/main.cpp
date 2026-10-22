@@ -36,6 +36,7 @@ public:
         objectsTexture_=engine.loadTexture((assetRoot_/"objects.png").string());
         if(!residentsTexture_ || !fieldsTexture_ || !objectsTexture_ || !houseTexture_ || !roadTexture_ || !natureTexture_ || !buildingsTexture_) throw std::runtime_error("Faltan recursos del mapa en la carpeta assets");
         bool loaded=!smoke_&&!fresh_&&world_.load(savePath());
+        if(!loaded&&!smoke_&&!fresh_){auto old8=std::filesystem::path(savePath()).parent_path()/(profile_=="default"?"world-v8.json":profile_+"-v8.json");loaded=world_.load(old8.string());}
         if(!loaded&&!smoke_&&!fresh_){auto old=std::filesystem::path(savePath()).parent_path()/(profile_=="default"?"world-v7.json":profile_+"-v7.json");loaded=world_.load(old.string());if(!loaded&&profile_=="default")loaded=world_.load((old.parent_path()/"world-v6.json").string());}
         if(!loaded){if(std::filesystem::exists(savePath()))std::filesystem::copy_file(savePath(),savePath()+".bak",std::filesystem::copy_options::overwrite_existing);world_.generateIsland(seed_?seed_:static_cast<unsigned>(SDL_GetTicksNS()));}
         world_.playerName=name_;engine.setWindowTitle("Isla Viva | "+world_.playerName+" | "+profile_);terrainPack_.load((assetRoot_/"terrain-topdown-v4.pck").string());
@@ -65,7 +66,7 @@ public:
             && engine.mouseY()>=20 && engine.mouseY()<engine.windowHeight()-20;
         if(overMap && engine.mouseWheelY()!=0) {
             const float worldX=(engine.mouseX()-mapX_)/unit_,worldY=(engine.mouseY()-mapY_)/unit_;
-            zoom_=std::clamp(zoom_+engine.mouseWheelY()*.1f,1.0f,2.0f);
+            zoom_=std::clamp(zoom_*std::pow(1.15f,engine.mouseWheelY()),1.0f,8.0f);
             layout(engine);
             centerX_=worldX-(engine.mouseX()-viewportCenterX_)/unit_;
             centerY_=worldY-(engine.mouseY()-viewportCenterY_)/unit_;
@@ -85,7 +86,7 @@ public:
         if(engine.keyDown(ra::Key::D)) centerX_+=panStep;
         if(engine.keyDown(ra::Key::W)) centerY_-=panStep;
         if(engine.keyDown(ra::Key::S)) centerY_+=panStep;
-        if(engine.keyPressed(ra::Key::Enter)) {zoom_=1;centerX_=64;centerY_=48;}
+        if(engine.keyPressed(ra::Key::Enter)) {zoom_=1;centerX_=isla::mapWidth*.5f;centerY_=isla::mapHeight*.5f;}
         layout(engine);
         if(engine.mousePressed(ra::MouseButton::Left) && !overMap) for(const auto& control:controls_) if(engine.mouseX()>=control.rect.x && engine.mouseX()<control.rect.x+control.rect.w && engine.mouseY()>=control.rect.y && engine.mouseY()<control.rect.y+control.rect.h){activate(control.id);break;}
         if (overMap && engine.mousePressed(ra::MouseButton::Left)) {
@@ -228,7 +229,7 @@ private:
     std::string tool_,message_;int relocateSource_{-1};float autosaveClock_{};
     std::string savePath() const {
         const char* local=std::getenv("LOCALAPPDATA");
-        return ((local?std::filesystem::path(local):assetRoot_.parent_path())/"IslaVivaNative"/(profile_=="default"?"world-v8.json":profile_+"-v8.json")).string();
+        return ((local?std::filesystem::path(local):assetRoot_.parent_path())/"IslaVivaNative"/(profile_=="default"?"world-v9.json":profile_+"-v9.json")).string();
     }
     void activate(const std::string& id) {
         if(id=="select"){tool_.clear();relocateSource_=-1;message_="Modo inspeccion";}
@@ -314,8 +315,8 @@ private:
         viewportCenterX_=20+viewportWidth*.5f;viewportCenterY_=20+viewportHeight*.5f;
         unit_=std::max(.01f,std::min(viewportWidth/isla::mapWidth,viewportHeight/isla::mapHeight))*zoom_;
         const float halfWidth=viewportWidth/(2*unit_),halfHeight=viewportHeight/(2*unit_);
-        centerX_=halfWidth>=64?64:std::clamp(centerX_,halfWidth,128-halfWidth);
-        centerY_=halfHeight>=48?48:std::clamp(centerY_,halfHeight,96-halfHeight);
+        centerX_=halfWidth>=isla::mapWidth*.5f?isla::mapWidth*.5f:std::clamp(centerX_,halfWidth,isla::mapWidth-halfWidth);
+        centerY_=halfHeight>=isla::mapHeight*.5f?isla::mapHeight*.5f:std::clamp(centerY_,halfHeight,isla::mapHeight-halfHeight);
         mapX_=viewportCenterX_-centerX_*unit_;mapY_=viewportCenterY_-centerY_*unit_;
     }
     void updateTerrain(ra::Engine& engine) {
@@ -333,7 +334,7 @@ private:
     std::size_t selected_{};
     int selectedProp_{-1}, speed_{1}, phase_{-1}, frames_{};
     SDL_Renderer* renderer_{};
-    float zoom_{1},centerX_{64},centerY_{48},viewportCenterX_{},viewportCenterY_{},lastMouseX_{},lastMouseY_{};
+    float zoom_{1},centerX_{isla::mapWidth*.5f},centerY_{isla::mapHeight*.5f},viewportCenterX_{},viewportCenterY_{},lastMouseX_{},lastMouseY_{};
     bool dragging_{};
     float mapX_{20},mapY_{20},unit_{8},accumulator_{};
     bool paused_{},raining_{},smoke_{};

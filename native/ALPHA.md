@@ -2,7 +2,7 @@
 
 Abre **Jugar.exe** con doble clic, en el proyecto o en el ZIP extraido. Es un lanzador grafico y el juego usa el subsistema Windows: no mantiene una consola CMD. Jugar.bat y Jugar-Alpha.bat solo delegan en ese lanzador y terminan. Jugar.vbs es otro acceso sin consola. Para desarrollo se conserva tools/run_native.ps1, que compila; Jugar.bat ya no compila al abrir una partida.
 
-La primera pantalla pide nombre y perfil de guardado; permite jugar individualmente, abrir una partida o conectar a una IPv4. Muestra la direccion local del anfitrion y permite copiarla. Se puede continuar una partida o marcar Nueva isla. Si no existe partida, se genera una isla por semilla. Un reinicio deliberado conserva la partida v8 previa como .bak.
+La primera pantalla pide nombre y perfil de guardado; permite jugar individualmente, abrir una partida o conectar a una IPv4. Muestra la direccion local del anfitrion y permite copiarla. Se puede continuar una partida o marcar Nueva isla. Si no existe partida, se genera una isla por semilla. Un reinicio deliberado conserva la partida v9 previa como .bak.
 
 ## Jugador y habitantes
 
@@ -22,8 +22,14 @@ Las partidas nuevas no tienen una red de caminos inicial. El uso reciente crea e
 
 Espacio pausa; E cambia velocidad; Q lluvia; rueda zoom; central/WASD desplaza; Enter encuadra. CHAT abre escritura; Enter envia y Esc cierra. Mientras escribes, las teclas no ordenan mover la camara ni cambian el clima.
 
-LOCALAPPDATA/IslaVivaNative contiene partidas v8 separadas por perfil. Se importa v7 y, para la partida individual antigua, v6. Conserva identidad, visitas pendientes, chat, edificios, alturas, semilla, geografia, ordenes y nacimiento elegido. Guardado manual, automatico y al cerrar. La importacion no mezcla las dos islas ni sus habitantes.
+LOCALAPPDATA/IslaVivaNative contiene partidas v9 separadas por perfil. Se importa v7 y, para la partida individual antigua, v6. Conserva identidad, visitas pendientes, chat, edificios, alturas, semilla, geografia, ordenes y nacimiento elegido. Guardado manual, automatico y al cerrar. La importacion no mezcla las dos islas ni sus habitantes.
 
 ## Estado
 
 Build Release y pruebas de simulacion, TCP real, chat, diplomacia/saqueo, deduplicacion, reconexion, guardado, islas por semilla, crecimiento, pendientes, obras y descanso nocturno. TERRENO.md describe geografia y arte. MULTIPLAYER.md describe conexion y alcance. El acabado visual aun esta en revision; no es una reproduccion aprobada de la isla de referencia.
+
+## Islas grandes
+
+Las partidas nuevas usan 256 x 192 celdas (49.152), cuatro veces la superficie anterior de 128 x 96. El generador amplía costas, cordilleras, valles y bosques; el tamaño físico de habitantes, construcciones y campos se conserva. La cámara encuadra toda la isla con Enter y permite zoom de 100 % a 800 % con la rueda y desplazamiento con WASD o botón central.
+
+Las partidas se guardan en archivos v9. Se pueden importar v6/v7/v8 de 128 x 96: se conserva la isla con sus coordenadas y se remapean los índices de celdas al nuevo ancho, dejando mar en el espacio adicional. El archivo antiguo queda intacto. Para obtener una isla nueva de mayor superficie, marca Nueva isla en la pantalla inicial.

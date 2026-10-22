@@ -10,7 +10,27 @@ void check(bool v,const char* m){if(!v)throw std::runtime_error(m);}
 void flat(isla::World& w){w.props.clear();w.crops.clear();w.animals.clear();w.jobs.clear();w.gifts.clear();w.ships.clear();w.forest.fill(false);w.pasture.fill(false);w.protectedLand.fill(false);w.fallow.fill(false);w.traffic.fill(0);w.elevation.fill(0);w.terrain.fill(isla::Terrain::Ground);for(int y=0;y<isla::mapHeight;++y)w.terrain[isla::cellId(0,y)]=isla::Terrain::Sea;w.terrain[isla::cellId(8,8)]=isla::Terrain::FreshWater;w.market=isla::cellId(5,20);w.granary=isla::cellId(6,20);w.grain=w.communityWood=w.treasury=200;w.ecologyClock=w.townClock=w.populationClock=-100000;w.elapsed=100;for(std::size_t i=0;i<w.residents.size();++i){auto& r=w.residents[i];r.x=5.5f+i*2;r.y=5.5f;r.home=r.goal=isla::cellId(static_cast<int>(r.x),5);r.hunger=r.thirst=r.energy=r.social=r.fun=r.hygiene=99;r.task=isla::Task::Idle;r.path.clear();r.next=0;r.decisionTimer=100000;r.hasOrder=false;}w.rebuildNavigation();}
 void finish(isla::World& w){check(!w.jobs.empty(),"No queued civic work");int id=w.jobs.back().id;w.orderUnit(0,"job",id);for(int i=0;i<4000&&!w.jobs.empty();++i){w.elapsed=100;w.tick(.1f);}check(w.jobs.empty(),"Civic work never completed");}
 int main(){try{
-    auto w=std::make_unique<isla::World>(),other=std::make_unique<isla::World>();w->generateIsland(42);other->generateIsland(42);check(w->terrain==other->terrain,"Island seed is not reproducible");other->generateIsland(43);check(w->terrain!=other->terrain,"Distinct seeds produce the same island");
+    {
+        auto legacy=std::make_unique<isla::World>(),loaded=std::make_unique<isla::World>();flat(*legacy);
+        legacy->terrain[isla::cellId(120,80)]=isla::Terrain::Road;
+        legacy->gifts.push_back({isla::cellId(120,82),12,8});
+        legacy->residents[0].path={isla::cellId(5,5),isla::cellId(6,5)};
+        check(legacy->save("legacy-size-test.json"),"Cannot write migration fixture");
+        json old;{std::ifstream input("legacy-size-test.json");input>>old;}
+        old["version"]=8;old.erase("mapWidth");old.erase("mapHeight");
+        auto oldCell=[](json& v){int k=v.get<int>();if(k>=0)v=k/isla::mapWidth*128+k%isla::mapWidth;};
+        for(const char* key:{"terrain","forest","pasture","protected","fallow","traffic","elevation"}){json grid=json::array();for(int y=0;y<96;++y)for(int x=0;x<128;++x)grid.push_back(old[key][isla::cellId(x,y)]);old[key]=std::move(grid);}
+        for(auto& r:old["residents"]){for(const char* key:{"goal","home","orderedCell","workCell"})oldCell(r[key]);for(auto& k:r["path"])oldCell(k);}
+        for(auto& d:old["dungeons"])oldCell(d["entrance"]);
+        for(auto& gift:old["gifts"])oldCell(gift["cell"]);
+        oldCell(old["market"]);oldCell(old["granary"]);
+        {std::ofstream output("legacy-size-test.json");output<<old.dump();}
+        check(loaded->load("legacy-size-test.json"),"128x96 legacy island cannot load into larger world");
+        check(loaded->terrain[isla::cellId(120,80)]==isla::Terrain::Road&&loaded->terrain[isla::cellId(180,80)]==isla::Terrain::Sea,"Legacy island cells or new sea were corrupted");
+        check(loaded->gifts[0].cell==isla::cellId(120,82)&&loaded->residents[0].path==legacy->residents[0].path&&loaded->market==legacy->market,"Legacy cell references were not remapped");
+        check(loaded->save("large-migrated-test.json")&&legacy->load("large-migrated-test.json")&&legacy->terrain==loaded->terrain,"Migrated large island does not persist");
+    }
+    auto w=std::make_unique<isla::World>(),other=std::make_unique<isla::World>();w->generateIsland(42);other->generateIsland(42);check(w->terrain==other->terrain,"Island seed is not reproducible");check(isla::mapWidth==256&&isla::mapHeight==192&&std::count(w->terrain.begin(),w->terrain.end(),isla::Terrain::Ground)>15000,"Generated island is not substantially larger");other->generateIsland(43);check(w->terrain!=other->terrain,"Distinct seeds produce the same island");
     check(std::none_of(w->terrain.begin(),w->terrain.end(),[](isla::Terrain t){return t==isla::Terrain::Road||t==isla::Terrain::Bridge;}),"Random island has predefined roads");
     for(unsigned seed:{1u,101u,8881u}){w->generateIsland(seed);for(const auto& r:w->residents){check(w->walkable(static_cast<int>(r.x),static_cast<int>(r.y)),"Generated resident intersects terrain/object");check(!w->route(static_cast<int>(r.x),static_cast<int>(r.y),[&](int x,int y){return w->besideFreshWater(x,y);}).empty(),"Generated settlement cannot reach water");}}
     int coast=-1;for(int k=isla::mapWidth+1;k<(isla::mapHeight-1)*isla::mapWidth-1;++k)if(w->terrain[k]==isla::Terrain::Sea&&w->terrain[k+1]==isla::Terrain::Ground){coast=k;break;}check(coast>=0,"No generated shore");int land=std::count(w->terrain.begin(),w->terrain.end(),isla::Terrain::Ground);w->growIsland(coast);check(std::count(w->terrain.begin(),w->terrain.end(),isla::Terrain::Ground)>land,"Island cannot expand");check(w->save("island-test.json")&&other->load("island-test.json")&&other->terrain==w->terrain&&other->islandSeed==w->islandSeed,"Expanded generated island does not persist");

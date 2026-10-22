@@ -20,11 +20,36 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Landform,kind,x,y,radiusX,radiusY,height,draw
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Gift,cell,grain,wood)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Visit,id,origin,kind,state,resident,originResident,clock,incoming,partner)
 bool World::save(const std::string& filename) const{try{
-    json data={{"version",8},{"playerName",playerName},{"chatLog",chatLog},{"chatSeen",chatSeen},{"procedural",procedural},{"islandSeed",islandSeed},{"terrainRevision",terrainRevision},{"elevation",elevation},{"landforms",landforms},{"riverCourse",riverCourse},{"roadPolicy",roadPolicy},{"worldId",worldId},{"relations",relations},{"raining",raining},{"chosenBirthAt",chosenBirthAt},{"chosenPatron",chosenPatron},{"gifts",gifts},{"visits",visits},{"outbox",outbox},{"terrain",terrain},{"forest",forest},{"pasture",pasture},{"protected",protectedLand},{"fallow",fallow},{"residents",residents},{"props",props},{"crops",crops},{"animals",animals},{"camps",camps},{"jobs",jobs},{"ships",ships},{"dungeons",dungeons},{"events",events},{"metrics",metrics},{"elapsed",elapsed},{"harvestClock",harvestClock},{"alarmSeconds",alarmSeconds},{"alarmX",alarmX},{"alarmY",alarmY},{"livestockClock",livestockClock},{"lastDispatch",lastDispatch},{"grain",grain},{"harvests",harvests},{"wood",communityWood},{"treasury",treasury},{"herbs",herbs},{"reserve",reserve},{"livestockFood",livestockFood},{"priority",priority},{"nextJob",nextJob},{"autoTrade",autoTrade},{"randomState",randomState_},{"ecologyClock",ecologyClock},{"townClock",townClock},{"populationClock",populationClock},{"nextProp",nextProp},{"traffic",traffic}};
+    json data={{"version",9},{"mapWidth",mapWidth},{"mapHeight",mapHeight},{"market",market},{"granary",granary},{"playerName",playerName},{"chatLog",chatLog},{"chatSeen",chatSeen},{"procedural",procedural},{"islandSeed",islandSeed},{"terrainRevision",terrainRevision},{"elevation",elevation},{"landforms",landforms},{"riverCourse",riverCourse},{"roadPolicy",roadPolicy},{"worldId",worldId},{"relations",relations},{"raining",raining},{"chosenBirthAt",chosenBirthAt},{"chosenPatron",chosenPatron},{"gifts",gifts},{"visits",visits},{"outbox",outbox},{"terrain",terrain},{"forest",forest},{"pasture",pasture},{"protected",protectedLand},{"fallow",fallow},{"residents",residents},{"props",props},{"crops",crops},{"animals",animals},{"camps",camps},{"jobs",jobs},{"ships",ships},{"dungeons",dungeons},{"events",events},{"metrics",metrics},{"elapsed",elapsed},{"harvestClock",harvestClock},{"alarmSeconds",alarmSeconds},{"alarmX",alarmX},{"alarmY",alarmY},{"livestockClock",livestockClock},{"lastDispatch",lastDispatch},{"grain",grain},{"harvests",harvests},{"wood",communityWood},{"treasury",treasury},{"herbs",herbs},{"reserve",reserve},{"livestockFood",livestockFood},{"priority",priority},{"nextJob",nextJob},{"autoTrade",autoTrade},{"randomState",randomState_},{"ecologyClock",ecologyClock},{"townClock",townClock},{"populationClock",populationClock},{"nextProp",nextProp},{"traffic",traffic}};
     std::filesystem::path path(filename);if(path.has_parent_path())std::filesystem::create_directories(path.parent_path());auto temp=path;temp+=".tmp";{std::ofstream out(temp,std::ios::binary|std::ios::trunc);out<<data.dump();out.flush();if(!out)return false;}return MoveFileExW(temp.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)!=0;
 }catch(...){return false;}}
+// Preserve the old 128x96 island at its original coordinates in the larger sea.
+// Entity coordinates stay unchanged; only row strides in cell IDs change.
+static void migrateMapDimensions(json& data){
+    int oldWidth=data.value("mapWidth",data.at("terrain").size()==128*96?128:mapWidth);
+    int oldHeight=data.value("mapHeight",data.at("terrain").size()==128*96?96:mapHeight);
+    if(oldWidth==mapWidth&&oldHeight==mapHeight)return;
+    if(oldWidth!=128||oldHeight!=96||data.at("terrain").size()!=128*96)throw std::runtime_error("Unsupported map dimensions");
+    auto cell=[&](json& value){int k=value.get<int>();if(k>=0){if(k>=oldWidth*oldHeight)throw std::runtime_error("Invalid legacy cell");value=(k/oldWidth)*mapWidth+k%oldWidth;}};
+    for(const char* name:{"terrain","forest","pasture","protected","fallow","traffic","elevation"})if(data.contains(name)){
+        json expanded=json::array();bool flag=std::string(name)=="forest"||std::string(name)=="pasture"||std::string(name)=="protected"||std::string(name)=="fallow";
+        for(int i=0;i<mapWidth*mapHeight;++i)expanded.push_back(flag?json(false):json(0));
+        if(data[name].size()!=static_cast<std::size_t>(oldWidth*oldHeight))throw std::runtime_error("Invalid legacy grid");
+        for(int y=0;y<oldHeight;++y)for(int x=0;x<oldWidth;++x)expanded[y*mapWidth+x]=data[name][y*oldWidth+x];
+        data[name]=std::move(expanded);
+    }
+    for(auto& r:data["residents"]){for(const char* key:{"goal","home","orderedCell","workCell"})if(r.contains(key))cell(r[key]);for(auto& k:r["path"])cell(k);}
+    for(const char* list:{"crops","camps","jobs","ships","gifts"})if(data.contains(list))for(auto& object:data[list]){
+        cell(object["cell"]);
+        if(std::string(list)=="jobs"){cell(object["goal"]);cell(object["source"]);}
+        if(std::string(list)=="ships"){cell(object["seaHome"]);for(auto& k:object["path"])cell(k);}
+    }
+    for(auto& d:data["dungeons"])cell(d["entrance"]);
+    for(const char* key:{"market","granary"})if(data.contains(key))cell(data[key]);
+    data["mapWidth"]=mapWidth;data["mapHeight"]=mapHeight;
+}
 bool World::load(const std::string& filename){try{
-    std::ifstream input(filename,std::ios::binary);if(!input)return false;auto data=json::parse(input);int version=data.at("version").get<int>();if(version!=6&&version!=7&&version!=8)return false;World next;
+    std::ifstream input(filename,std::ios::binary);if(!input)return false;auto data=json::parse(input);int version=data.at("version").get<int>();if(version!=6&&version!=7&&version!=8&&version!=9)return false;migrateMapDimensions(data);World next;
     if(version==6)for(auto& r:data["residents"]){r["away"]=false;r["visitor"]=false;r["chosen"]=false;r["ageDays"]=6480;r["inspiration"]="";r["inspirationUntil"]=0;}
     if(version>=7){next.worldId=data.at("worldId");data.at("relations").get_to(next.relations);next.raining=data.at("raining");next.chosenBirthAt=data.at("chosenBirthAt");next.chosenPatron=data.at("chosenPatron");data.at("gifts").get_to(next.gifts);data.at("visits").get_to(next.visits);data.at("outbox").get_to(next.outbox);
         if(next.worldId.size()!=32||!std::isfinite(next.chosenBirthAt)||next.visits.size()>4096||next.outbox.size()>8192)return false;
@@ -45,6 +70,7 @@ bool World::load(const std::string& filename){try{
     }
     if((next.residents.empty()||next.residents.size()>1000)||next.dungeons.size()!=3||next.ships.size()>128||!std::isfinite(next.elapsed)||next.grain<0||next.communityWood<0||next.treasury<0)return false;
     for(const auto& v:next.visits)if(v.resident<0||v.resident>=static_cast<int>(next.residents.size())||!std::isfinite(v.clock))return false;
+    next.market=data.value("market",next.market);next.granary=data.value("granary",next.granary);
     next.rebuildNavigation();for(const auto& r:next.residents){if(!std::isfinite(r.x)||!std::isfinite(r.y)||r.x<0||r.y<0||r.x>=mapWidth||r.y>=mapHeight||r.next>r.path.size()||r.mission<-1||r.mission>=3)return false;for(int k:r.path)if(k<0||k>=mapWidth*mapHeight)return false;if(r.alive&&!r.away&&!r.inDungeon&&!r.inBoat&&!next.walkable(static_cast<int>(r.x),static_cast<int>(r.y)))return false;}
     for(const auto& d:next.dungeons){if(d.room<1||d.room>3||(!d.party.empty()&&d.party.size()!=2))return false;for(int who:d.party)if(who<0||who>=static_cast<int>(next.residents.size()))return false;}
     for(const auto& c:next.crops)if(c.cell<0||c.cell>=mapWidth*mapHeight||c.worker<-1||c.worker>=static_cast<int>(next.residents.size())||c.stage<0||c.stage>3)return false;

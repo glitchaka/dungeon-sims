@@ -23,3 +23,7 @@ El multijugador directo abre un puerto TCP cuando el usuario elige alojar o cone
 ## Verificación funcional
 
 Compilación Release correcta. Cuatro pruebas existentes aprobadas y una nueva prueba aprobada para el terreno cenital: tamaño, opacidad, ausencia de desplazamiento por altura, cambio del render al modificar el mundo y rechazo de paquete ausente. El ejecutable compilado y el empaquetado arrancaron con semilla 1749, guardaron una captura real y terminaron con código 0.
+
+## Actualización de islas grandes
+
+Recompilado para mapas nuevos de 256 x 192 celdas y guardados v9. Las cinco pruebas pasaron con las nuevas dimensiones. La prueba de islas incluye migración de cuadrículas v8 de 128 x 96, caminos, regalos, rutas de habitantes y guardado posterior. El ejecutable empaquetado generó una isla grande con semilla 1749, guardó native/previews/game-large-island.bmp y terminó con código 0. Defender se volvió a ejecutar sobre el paquete actualizado; el JSON de evidencia incluye los hashes de ambos ejecutables.
