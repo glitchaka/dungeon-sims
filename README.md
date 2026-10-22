@@ -1,6 +1,14 @@
-# Isla Viva
+﻿# Isla Viva
 
-Abre **Jugar.bat**. Usa el Godot 4.7.2 incluido en `godot`. El proyecto editable es `project.godot`.
+Alpha C++ de desarrollo: [funciones y controles actuales](native/ALPHA.md). [Paquete portable](releases/IslaViva-alpha-wip.zip). El aspecto del mapa sigue en desarrollo y no esta aprobado como reproduccion identica de la referencia.
+
+Para abrir directamente la alpha con el mapa recreado, usa **Jugar-Alpha.bat**. Detalles y limites del mapa: [native/MAPA.md](native/MAPA.md). El proyecto Godot original esta apartado en `legacy/godot/project.godot`.
+
+Abre **Jugar.bat** para compilar y ejecutar el port C++ con los datos importados. Requiere CMake y Visual Studio 2022 con C++. Consulta [la integración nativa](native/INTEGRACION.md) para el alcance, controles y pruebas. `Jugar-Godot.bat` conserva el arranque anterior si dispones del ejecutable Godot correspondiente.
+
+## Versión anterior en Godot
+
+Las secciones siguientes describen la versión Godot; el port C++ todavía no incluye todas esas funciones.
 
 ## Presentación y controles
 
@@ -52,9 +60,9 @@ Esta versión usa `user://isla_viva_v2.json`. El archivo de la primera versión 
 Desde PowerShell, en la raíz:
 
 ```powershell
-.\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path . --script res://tests/simulation_test.gd
-.\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path . --script res://tests/farming_test.gd
-.\godot\Godot_v4.7.2-stable_win64_console.exe --path . --script res://tests/presentation_test.gd
+.\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path legacy/godot --script res://tests/simulation_test.gd
+.\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path legacy/godot --script res://tests/farming_test.gd
+.\godot\Godot_v4.7.2-stable_win64_console.exe --path legacy/godot --script res://tests/presentation_test.gd
 ```
 
 Las suites verifican supervivencia durante doce días, obstáculos, caza, agua, campamentos, conservación de semillas y grano, expansión agrícola, ciclos repetidos, guardado y controles mediante eventos de ratón. La última abre una ventana breve y comprueba también el modo sin decoración y la selección de los atlas correctos.
@@ -62,3 +70,4 @@ Las suites verifican supervivencia durante doce días, obstáculos, caza, agua, 
 La simulación todavía es una base: no incluye interiores habitables, familias ni la complejidad completa de Los Sims. Las tareas de construcción de campamentos, comercio y relaciones son sencillas. El mundo solo avanza mientras está abierto.
 
 Assets: **Aleksandr Makarov / IKnowKingRabbit**, Micro Asset Series. Se conservan todos los originales de `Res` y su `license.txt`. No se descargaron recursos gráficos externos.
+

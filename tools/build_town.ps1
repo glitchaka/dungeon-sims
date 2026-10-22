@@ -1,5 +1,5 @@
-$ErrorActionPreference='Stop'
-$root=Split-Path $PSScriptRoot -Parent
+﻿$ErrorActionPreference='Stop'
+$root=Join-Path (Split-Path $PSScriptRoot -Parent) 'legacy/godot'
 $mapPath=Join-Path $root 'Res/The Fan-tasy Tileset (Exteriores)/Tiled/Tilemaps/Beginning Fields.tmx'
 [xml]$map=Get-Content -LiteralPath $mapPath
 function ResourcePath($base,$relative){

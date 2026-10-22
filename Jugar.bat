@@ -1,3 +1,4 @@
 @echo off
 cd /d "%~dp0"
-start "Isla Viva" "godot\Godot_v4.7.2-stable_win64.exe" --path "%~dp0."
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\run_native.ps1" %*
+if errorlevel 1 pause

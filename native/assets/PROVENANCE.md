@@ -1,0 +1,9 @@
+﻿# Recursos de la alpha
+
+La referencia visual fue proporcionada por el usuario. geology.png, nature-pieces.png y building-pieces.png se generaron con la herramienta imagegen integrada, siguiendo esa referencia. No son graficos extraidos de C&C ni representan una coincidencia identica con el mapa original.
+
+La geologia excluye los objetos modificables; la mascara de colision se obtiene con tools/import_geography.ps1. pieces.json describe las regiones de los objetos independientes en los atlas; no se modifica el atlas para extraerlos.
+
+Los PNG pequenos de personajes y los recursos heredados proceden del proyecto Godot original y conservan la licencia ASSET-LICENSE.txt. Los datos XML adaptados de C&C tienen su propia licencia, conservada en cnc-license junto al ejecutable y en references/cnc-modding-support/LICENSE.md.
+
+Las imagenes completas usadas como referencia estan archivadas en native/reference; no se cargan como mapa jugable.

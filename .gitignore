@@ -5,3 +5,6 @@ verification.png
 verification-night.png
 inspection/
 verification-*.png
+
+native/build/
+dist/
