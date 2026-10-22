@@ -1,4 +1,4 @@
-﻿#include "World.h"
+#include "World.h"
 #include <algorithm>
 #include <cmath>
 namespace isla {
@@ -83,7 +83,7 @@ void World::completeJob(Resident& r){
         if(success){if(job.kind=="move_house"){auto* old=propAt(job.source);if(!old||old->tree)success=false;else{int owner=old->owner;old->x=k%mapWidth+1.0f;old->y=k/mapWidth+1.0f;if(owner>=0&&owner<static_cast<int>(residents.size()))residents[owner].home=k+2*mapWidth;}}else{int owner=static_cast<int>(&r-residents.data());props.push_back({k%mapWidth+1.0f,k/mapWidth+1.0f,.9f,.9f,3,false,"Casa",nextProp++,owner,100});r.home=k+2*mapWidth;}}
     }else if(job.kind=="farm"){success=freeCell();if(success)crops.push_back({k});}
     else if(job.kind=="fallow"){success=cropAt(k)!=nullptr;if(success){crops.erase(std::remove_if(crops.begin(),crops.end(),[=](const Crop& c){return c.cell==k;}),crops.end());fallow[k]=true;}}
-    else if(job.kind=="road"){success=!propAt(k)&&!cropAt(k)&&(terrain[k]==Terrain::Ground||terrain[k]==Terrain::FreshWater);if(success){terrain[k]=terrain[k]==Terrain::FreshWater?Terrain::Bridge:Terrain::Road;forest[k]=false;}}
+    else if(job.kind=="road"){success=!propAt(k)&&!cropAt(k)&&(terrain[k]==Terrain::Ground||terrain[k]==Terrain::FreshWater);if(success){terrain[k]=terrain[k]==Terrain::FreshWater?Terrain::Bridge:Terrain::Road;forest[k]=false;traffic[k]=12;}}
     else if(job.kind=="remove_road"){World trial=*this;trial.terrain[k]=terrain[k]==Terrain::Bridge?Terrain::FreshWater:Terrain::Ground;for(const auto& a:residents)if(a.alive&&!a.inDungeon&&(pos(a)==k||trial.route(static_cast<int>(a.x),static_cast<int>(a.y),[&](int x,int y){return trial.besideFreshWater(x,y);}).empty()))success=false;for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==k)success=false;if(success){terrain[k]=trial.terrain[k];++communityWood;}}
     else if(job.kind=="demolish"){auto* old=propAt(k);if(!old)success=false;else{const int id=old->uid;const bool tree=old->tree;const int owner=old->owner;props.erase(std::remove_if(props.begin(),props.end(),[=](const Prop& p){return p.uid==id;}),props.end());communityWood+=tree?4:6;if(tree)forest[k]=false;if(owner>=0&&owner<static_cast<int>(residents.size()))residents[owner].home=market;}}
     else if(job.kind=="move_farm"){auto* old=cropAt(job.source);success=old&&freeCell();if(success){old->cell=k;old->worker=-1;fallow[job.source]=true;}}
@@ -107,9 +107,22 @@ void World::updateEcology(float dt){
     if(ecologyClock>=30){ecologyClock-=30;for(int attempt=0;attempt<60;++attempt){int k=static_cast<int>(random()%(mapWidth*mapHeight));if(terrain[k]!=Terrain::Ground||protectedLand[k]||pasture[k]||fallow[k]||reserved(k)||cropAt(k)||!walkable(k%mapWidth,k/mapWidth))continue;bool adjacent=false;for(int d:{1,-1,mapWidth,-mapWidth})if(valid(k+d)&&forest[k+d])adjacent=true;if(!adjacent)continue;bool occupied=false;for(const auto& r:residents)if(r.alive&&(pos(r)==k||r.home==k||r.goal==k))occupied=true;for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==k)occupied=true;if(occupied)continue;World trial=*this;trial.props.push_back({k%mapWidth+.5f,k/mapWidth+.5f,.32f,.32f,2.7f,true,"Arbol joven",nextProp,-1,35});trial.rebuildNavigation();bool safe=true;for(const auto& r:residents)if(r.alive&&!r.inDungeon&&trial.route(static_cast<int>(r.x),static_cast<int>(r.y),[&](int x,int y){return trial.besideFreshWater(x,y);}).empty())safe=false;if(safe){props.push_back(trial.props.back());++nextProp;forest[k]=true;rebuildNavigation();++metrics["regrow"];}break;}}
     if(townClock<20)return;townClock-=20;if(jobs.size()>=8)return;
     for(std::size_t i=0;i<residents.size();++i){const auto& r=residents[i];if(!r.alive||r.inDungeon)continue;bool housed=false;for(const auto& p:props)if(!p.tree&&p.owner==static_cast<int>(i))housed=true;if(!housed&&communityWood>=12&&treasury>=15){for(int dy=-6;dy<=6;++dy)for(int dx=-6;dx<=6;++dx){int x=market%mapWidth+dx,y=market/mapWidth+dy;if(x<0||y<0||x>=mapWidth||y>=mapHeight)continue;int k=cellId(x,y);if(placeable(k)){designate("house",k);return;}}}}
-    if(communityWood>6&&treasury>6)for(int k=0;k<mapWidth*mapHeight;++k)if(traffic[k]>=12&&terrain[k]==Terrain::Ground&&!forest[k]&&!pasture[k]&&!protectedLand[k]&&!reserved(k)&&!cropAt(k)){designate("road",k);traffic[k]=0;break;}
+    // Recent use drives construction; obsolete roads are removed by a worker.
+    int busiest=-1;
+    for(int k=0;k<mapWidth*mapHeight;++k){
+        if(traffic[k]>0)--traffic[k];
+        if(terrain[k]==Terrain::Road&&traffic[k]==0&&!protectedLand[k]&&!reserved(k)){
+            bool occupied=false;for(const auto& r:residents)if(r.alive&&(pos(r)==k||r.home==k||r.goal==k))occupied=true;
+            for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==k)occupied=true;
+            if(!occupied){designate("remove_road",k);return;}
+        }
+        if(traffic[k]>=6&&terrain[k]==Terrain::Ground&&!forest[k]&&!pasture[k]&&!protectedLand[k]&&!reserved(k)&&!cropAt(k)
+           &&(busiest<0||traffic[k]>traffic[busiest]))busiest=k;
+    }
+    if(busiest>=0&&communityWood>6&&treasury>6)designate("road",busiest);
 }
 }
+
 
 
 

@@ -1,4 +1,4 @@
-﻿param([string]$Name='IslaViva-alpha-wip')
+param([string]$Name='IslaViva-alpha-roads')
 $ErrorActionPreference='Stop'
 if($Name -notmatch '^[A-Za-z0-9_-]+$'){throw 'Invalid package name'}
 $projectRoot=Split-Path $PSScriptRoot
@@ -17,6 +17,7 @@ $readme=@('Isla Viva - Alpha WIP de entorno modificable.','Extrae toda la carpet
 $readme | Set-Content -LiteralPath (Join-Path $packageRoot 'LEEME.txt') -Encoding UTF8
 Copy-Item -LiteralPath (Join-Path $projectRoot 'native/ALPHA.md') -Destination $packageRoot -Force
 Write-Output $packageRoot
+
 
 
 

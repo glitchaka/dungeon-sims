@@ -1,4 +1,4 @@
-﻿#include "World.h"
+#include "World.h"
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
@@ -24,8 +24,22 @@ int main(){try{
     auto world=std::make_unique<isla::World>();
     int mountain=0,water=0;for(auto t:world->terrain){mountain+=t==isla::Terrain::Mountain;water+=t==isla::Terrain::FreshWater;}
     check(mountain>100&&water>30,"Missing hard geology or river");
+    check(std::none_of(world->terrain.begin(),world->terrain.end(),[](isla::Terrain t){return t==isla::Terrain::Road||t==isla::Terrain::Bridge;}),"New islands must not contain predefined roads");
     for(const auto& r:world->residents){check(world->walkable(static_cast<int>(r.x),static_cast<int>(r.y)),"Invalid authored spawn");auto path=world->route(static_cast<int>(r.x),static_cast<int>(r.y),[&](int x,int y){return world->besideFreshWater(x,y);});check(!path.empty(),"Authored map has no route to fresh water");}
     for(const auto& p:world->props)check(!world->walkable(static_cast<int>(p.x),static_cast<int>(p.y)),"Visible object lacks collision");
+    fixture(*world);
+    // Demand must produce actual worker jobs, and abandoned roads must be reclaimed.
+    for(std::size_t i=1;i<world->residents.size();++i)world->residents[i].alive=false;
+    world->props.push_back({40.5f,40.5f,.3f,.3f,3,false,"Casa",9000,0,100});world->rebuildNavigation();
+    int usedRoad=isla::cellId(14,8),unusedGround=isla::cellId(16,8);
+    world->traffic[usedRoad]=8;world->townClock=0;world->updateEcology(20);
+    check(world->jobs.size()==1&&world->jobs[0].kind=="road"&&world->jobs[0].cell==usedRoad,"NPC road demand did not follow traffic");
+    check(world->terrain[usedRoad]==isla::Terrain::Ground,"Road appeared before worker construction");
+    finishJob(*world);
+    check(world->terrain[usedRoad]==isla::Terrain::Road&&world->terrain[unusedGround]==isla::Terrain::Ground,"Worker did not build only the needed road");
+    for(int i=0;i<12&&world->jobs.empty();++i){world->townClock=0;world->updateEcology(20);}
+    check(!world->jobs.empty()&&world->jobs[0].kind=="remove_road","Disused road did not create a removal job");
+    finishJob(*world);check(world->terrain[usedRoad]==isla::Terrain::Ground,"Worker did not reclaim an obsolete road");
     fixture(*world);
     const int house=isla::cellId(12,12),destination=isla::cellId(18,12);
     world->designate("house",house);finishJob(*world);
@@ -63,3 +77,4 @@ int main(){try{
     const std::string save="environment-test-save.json";check(world->save(save),"Cannot save modified environment");auto loaded=std::make_unique<isla::World>();check(loaded->load(save)&&loaded->residents.size()==7&&loaded->props.size()==world->props.size(),"Cannot restore modified environment and population");
     std::cout<<"PASS: object and animal collision, construction, demolition, relocation, fields, tree cutting/regrowth, direct orders, fishing risk, population and save/load\n";return 0;
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+

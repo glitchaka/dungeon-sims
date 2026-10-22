@@ -33,3 +33,6 @@ geology.png es una textura de geologia y agua fijas, sin casas, bosques, parcela
 ## Comprobacion
 
 Build Release y CTest: colision de habitantes y animales, huella de casas, construccion, demolicion, reubicacion conservando identidad, agricultura desde fuera, tala y regeneracion, caminos, ordenes directas, limite de riesgo del 25%, viaje maritimo real, fluctuacion de poblacion y guardado/carga. Otra prueba cambia una copia del XML para comprobar su propagacion al juego.
+
+## Caminos segun uso
+Las islas nuevas comienzan sin caminos ni puentes predefinidos. El transito reciente de habitantes genera encargos en los tramos mas usados, con coste de materiales y trabajo. El uso decae cada veinte segundos simulados; los caminos abandonados se retiran mediante encargos. Los terrenos protegidos quedan fuera de esta gestion. Los puentes no se retiran automaticamente, para no cortar conexiones. Las partidas existentes conservan sus caminos; los caminos sin uso entran en el mismo ciclo de retirada.

@@ -1,4 +1,4 @@
-﻿#include "World.h"
+#include "World.h"
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
@@ -107,12 +107,13 @@ void World::tick(float dt){
         bool urgent=(r.thirst<16&&r.task!=Task::Drink&&r.task!=Task::DrinkHome)||(r.hunger<14&&r.task!=Task::Eat&&r.task!=Task::Hunt&&r.task!=Task::Fetch&&r.task!=Task::Drink&&r.task!=Task::Harvest&&r.task!=Task::Tend);
         bool threat=alarmSeconds>0&&r.task!=Task::Flee&&std::hypot(r.x-alarmX,r.y-alarmY)<cnc::fleeRadius;
         if(centered&&(urgent||threat))plan(r);
-        if(r.next<r.path.size()){int k=r.path[r.next];bool occupied=false;if(k!=position(r)){for(const auto& other:residents)if(&other!=&r&&other.alive&&!other.inDungeon&&!other.inBoat&&position(other)==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;}if(occupied){r.actionTimer+=dt;if(r.actionTimer>2){Task prior=r.task;int goal=(prior==Task::Sow||prior==Task::Harvest||prior==Task::Till)?r.workCell:r.goal;begin(r,prior,goal);}continue;}r.actionTimer=0;if(!walkable(k%mapWidth,k/mapWidth)){r.path.clear();r.task=Task::Idle;continue;}float tx=k%mapWidth+.5f,ty=k/mapWidth+.5f,len=std::hypot(tx-r.x,ty-r.y);float top=(r.task==Task::Flee?cnc::panicSpeed:cnc::walkSpeed)*(hasBonus(r,"speed")?1.25f:1);r.speed=std::min(top,r.speed+top/std::max(.01f,cnc::accelerationSeconds)*dt);float step=std::min(len,r.speed*dt);if(len>.0001f){r.x+=(tx-r.x)/len*step;r.y+=(ty-r.y)/len*step;}if(len<=step+.0001f){r.x=tx;r.y=ty;if(terrain[k]==Terrain::Ground&&traffic[k]<65535)++traffic[k];++r.next;}continue;}
+        if(r.next<r.path.size()){int k=r.path[r.next];bool occupied=false;if(k!=position(r)){for(const auto& other:residents)if(&other!=&r&&other.alive&&!other.inDungeon&&!other.inBoat&&position(other)==k)occupied=true;for(const auto& animal:animals)if(animal.alive&&cellId(static_cast<int>(animal.x),static_cast<int>(animal.y))==k)occupied=true;}if(occupied){r.actionTimer+=dt;if(r.actionTimer>2){Task prior=r.task;int goal=(prior==Task::Sow||prior==Task::Harvest||prior==Task::Till)?r.workCell:r.goal;begin(r,prior,goal);}continue;}r.actionTimer=0;if(!walkable(k%mapWidth,k/mapWidth)){r.path.clear();r.task=Task::Idle;continue;}float tx=k%mapWidth+.5f,ty=k/mapWidth+.5f,len=std::hypot(tx-r.x,ty-r.y);float top=(r.task==Task::Flee?cnc::panicSpeed:cnc::walkSpeed)*(hasBonus(r,"speed")?1.25f:1);r.speed=std::min(top,r.speed+top/std::max(.01f,cnc::accelerationSeconds)*dt);float step=std::min(len,r.speed*dt);if(len>.0001f){r.x+=(tx-r.x)/len*step;r.y+=(ty-r.y)/len*step;}if(len<=step+.0001f){r.x=tx;r.y=ty;if((terrain[k]==Terrain::Ground||terrain[k]==Terrain::Road||terrain[k]==Terrain::Bridge)&&traffic[k]<60)++traffic[k];++r.next;}continue;}
         r.speed=0;if(r.task==Task::Idle){if(r.decisionTimer<=0)plan(r);}else act(r,dt);
     }
 }
 const char* World::taskName(Task task){switch(task){case Task::Move:return "MOVIMIENTO ORDENADO";case Task::Fish:return "PESCANDO";case Task::Wander:return "EXPLORANDO";case Task::Drink:return "BEBER AGUA DULCE";case Task::Eat:return "COMIENDO";case Task::Rest:return "DESCANSANDO";case Task::Flee:return "HUYENDO";case Task::Bathe:return "LAVANDOSE";case Task::Social:return "CONVERSANDO";case Task::Gather:return "RECOLECTANDO MADERA";case Task::Camp:return "CONSTRUYENDO REFUGIO";case Task::Trade:return "COMERCIANDO";case Task::Till:return "PREPARANDO TIERRA";case Task::Sow:return "SEMBRANDO";case Task::Harvest:return "COSECHANDO";case Task::Deposit:return "DEPOSITANDO COSECHA";case Task::Fetch:return "BUSCANDO PROVISIONES";case Task::Hunt:return "CAZANDO";case Task::Tend:return "CUIDANDO GANADO";case Task::DrinkHome:return "BEBIENDO EN CASA";case Task::Project:return "REALIZANDO ENCARGO";case Task::Expedition:return "EN EXPEDICION";case Task::SellLoot:return "VENDIENDO ARTEFACTOS";default:return "OBSERVANDO";}}
 }
+
 
 
 
