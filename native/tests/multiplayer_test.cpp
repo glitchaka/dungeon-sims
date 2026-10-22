@@ -11,12 +11,23 @@
 using nlohmann::json;
 void check(bool condition,const char* message){if(!condition)throw std::runtime_error(message);}
 void clean(isla::World& w){
-    w.props.clear();w.crops.clear();w.animals.clear();w.jobs.clear();w.gifts.clear();w.visits.clear();w.outbox.clear();w.forest.fill(false);w.pasture.fill(false);w.protectedLand.fill(false);w.fallow.fill(false);
+    w.ships.clear();w.props.clear();w.crops.clear();w.animals.clear();w.jobs.clear();w.gifts.clear();w.visits.clear();w.outbox.clear();w.forest.fill(false);w.pasture.fill(false);w.protectedLand.fill(false);w.fallow.fill(false);
     w.terrain.fill(isla::Terrain::Ground);w.terrain[isla::cellId(8,8)]=isla::Terrain::FreshWater;w.market=isla::cellId(20,20);w.granary=isla::cellId(21,20);w.grain=100;w.treasury=100;w.elapsed=0;
     w.ecologyClock=w.townClock=w.populationClock=-100000;
     for(std::size_t i=0;i<w.residents.size();++i){auto& r=w.residents[i];r.x=10.5f+static_cast<float>(i);r.y=10.5f;r.home=r.goal=isla::cellId(static_cast<int>(r.x),10);r.health=isla::cnc::maxHealth;r.hunger=r.thirst=r.energy=90;r.alive=true;r.away=r.visitor=r.inBoat=r.inDungeon=false;r.path.clear();r.next=0;r.task=isla::Task::Idle;r.hasOrder=false;r.decisionTimer=100000;r.money=12;r.grain=r.wood=r.fish=0;r.inspiration.clear();r.inspirationUntil=0;}
+    for(int y=0;y<isla::mapHeight;++y)for(int x=0;x<7;++x)w.terrain[isla::cellId(x,y)]=isla::Terrain::Sea;
+    isla::Ship boat;boat.cell=isla::cellId(7,10);boat.seaHome=isla::cellId(6,10);boat.x=6.5f;boat.y=10.5f;w.ships.push_back(boat);
     w.rebuildNavigation();
 }
+void depart(isla::World& w,int who,const std::string& kind){
+    w.sendVisit(who,kind);check(!w.visits.empty()&&w.visits.back().state=="boarding"&&w.outbox.empty()&&!w.residents[who].away,"Visit transferred before boarding and actual sailing");
+    auto resumed=std::make_unique<isla::World>();check(w.save("naval-boarding-test.json")&&resumed->load("naval-boarding-test.json")&&resumed->ships[0].state=="visit_boarding"&&resumed->outbox.empty(),"Boarding voyage did not persist without transferring visitor early");
+    for(int i=0;i<4000&&resumed->outbox.empty();++i){resumed->elapsed=100;resumed->tick(.1f);}check(!resumed->outbox.empty()&&resumed->ships[0].state=="visit_waiting","Restored boarding voyage did not resume sailing");
+    auto count=w.visits.size();w.sendVisit(who,kind);check(w.visits.size()==count,"Boarding resident assigned to multiple voyages");
+    for(int i=0;i<4000&&w.outbox.empty();++i){w.elapsed=100;w.tick(.1f);}
+    check(w.residents[who].away&&w.residents[who].inBoat&&!w.outbox.empty()&&w.ships[0].state=="visit_waiting","Visitor never sailed to high sea");
+}
+void returnHome(isla::World& w,int who){for(int i=0;i<4000&&w.residents[who].away;++i){w.elapsed=100;w.tick(.1f);}check(!w.residents[who].away&&!w.residents[who].inBoat&&w.ships[0].state=="docked","Visitor did not physically sail home and disembark");}
 int main(){try{
     auto a=std::make_unique<isla::World>(),b=std::make_unique<isla::World>();clean(*a);clean(*b);check(a->worldId!=b->worldId,"Independent islands share an identity");
     a->miracle("chosen",0);float birth=a->chosenBirthAt;check(birth==9*30*300,"Chosen gestation is not nine game months");
@@ -46,21 +57,22 @@ int main(){try{
     a->playerName="Manuel";b->playerName="Otra deidad";a->sendChat("Hola desde mi isla");check(a->outbox.size()==1,"Chat was not queued");auto chatId=a->outbox.begin()->first;auto text=a->outbox.begin()->second;
     deliver(client,host,*b,a->worldId,text);deliver(client,host,*b,a->worldId,text);check(b->chatLog.size()==1&&b->chatLog[0]=="Manuel: Hola desde mi isla","Real TCP chat lost player name or duplicated text");
     deliver(host,client,*a,b->worldId,b->outbox.at("ack:"+chatId));check(a->outbox.empty(),"Chat acknowledgement did not clear pending message");
-    a->sendVisit(0,"diplomacy");check(a->residents[0].away&&a->outbox.size()==1,"Sending a visitor failed to suspend the original resident");
+    depart(*a,0,"diplomacy");check(a->residents[0].away&&a->outbox.size()==1,"Sending a visitor failed to suspend the original resident");
     check(a->save("active-outgoing-test.json")&&restored->load("active-outgoing-test.json")&&restored->residents[0].away&&restored->outbox.size()==1,"Outgoing resident duplicated after restart");
     const std::string id=a->visits[0].id,payload=a->outbox.at(id);deliver(client,host,*b,a->worldId,payload);deliver(client,host,*b,a->worldId,payload);
     check(b->residents.size()==7&&b->visits.size()==1&&b->residents.back().visitor,"Repeated packet duplicated visiting resident");
     check(b->save("visitor-test.json")&&restored->load("visitor-test.json"),"Incoming visit cannot survive save/load");
     restored->updateVisits(45);check(restored->outbox.count("result:"+id)==1&&restored->treasury==97,"Receiving island did not resolve diplomacy exactly once");
     std::string result=restored->outbox.at("result:"+id);int before=a->residents[0].money;
-    a->terrain[isla::cellId(10,10)]=isla::Terrain::Mountain;
+    a->terrain[a->ships[0].cell]=isla::Terrain::Mountain;
     deliver(host,client,*a,b->worldId,result);deliver(host,client,*a,b->worldId,result);
+    check(a->residents[0].away&&a->ships[0].state=="visit_returning","Result teleported visitor home instead of sailing");returnHome(*a,0);
     check(a->walkable(static_cast<int>(a->residents[0].x),static_cast<int>(a->residents[0].y)),"Returning visitor landed inside a new obstacle");
     check(a->relations[b->worldId]==10&&restored->relations[a->worldId]==10&&!a->residents[0].away&&a->residents[0].money==before+3&&a->metrics["visits_returned"]==1,"Return repeated or duplicated diplomatic resources");
     deliver(client,host,*restored,a->worldId,a->outbox.at("ack:"+id));check(!restored->outbox.count("result:"+id),"Result acknowledgement did not complete delivery");
-    a->sendVisit(1,"raid");std::string raid=a->visits.back().id;deliver(client,host,*restored,a->worldId,a->outbox.at(raid));int targetGold=restored->treasury,targetFood=restored->grain;restored->updateVisits(45);
+    a->outbox.clear();depart(*a,1,"raid");std::string raid=a->visits.back().id;deliver(client,host,*restored,a->worldId,a->outbox.at(raid));int targetGold=restored->treasury,targetFood=restored->grain;restored->updateVisits(45);
     check(restored->treasury==targetGold-12&&restored->grain==targetFood-8,"Raid did not debit resources on the receiving island");
-    result=restored->outbox.at("result:"+raid);deliver(host,client,*a,b->worldId,result);check(a->relations[b->worldId]==-10&&a->residents[1].money==24&&a->residents[1].grain==8,"Raid spoils did not return to their actual owner");
+    result=restored->outbox.at("result:"+raid);deliver(host,client,*a,b->worldId,result);returnHome(*a,1);check(a->relations[b->worldId]==-10&&a->residents[1].money==24&&a->residents[1].grain==8,"Raid spoils did not return to their actual owner");
     check(a->save("outgoing-test.json")&&restored->load("outgoing-test.json")&&restored->worldId==a->worldId,"Island identity and completed visits did not persist");
     check(client.join("127.0.0.1",port),"Cannot reconnect after replacing a TCP connection");
     for(int i=0;i<1000;++i){host.poll();client.poll();if(host.connected()&&client.connected()&&i>10)break;std::this_thread::sleep_for(std::chrono::milliseconds(1));}

@@ -83,7 +83,7 @@ void World::completeJob(Resident& r){
     if(job.kind=="house"||job.kind=="move_house"||job.kind=="dock"||job.kind=="townhall"||job.kind=="altar"){
         World trial=*this;trial.jobs.erase(std::remove_if(trial.jobs.begin(),trial.jobs.end(),[&](const Job& j){return j.id==job.id;}),trial.jobs.end());
         success=trial.placeable(k,job.source);
-        if(success){if(job.kind=="move_house"){auto* old=propAt(job.source);if(!old||old->tree)success=false;else{int owner=old->owner;old->x=k%mapWidth+1.0f;old->y=k/mapWidth+1.0f;if(owner>=0&&owner<static_cast<int>(residents.size()))residents[owner].home=k+2*mapWidth;}}else{int owner=static_cast<int>(&r-residents.data());props.push_back({k%mapWidth+1.0f,k/mapWidth+1.0f,.9f,.9f,3,false,"Casa",nextProp++,owner,100});r.home=k+2*mapWidth;
+        if(success){if(job.kind=="move_house"){auto* old=propAt(job.source);if(!old||old->tree)success=false;else{int owner=old->owner;old->x=k%mapWidth+1.0f;old->y=k/mapWidth+1.0f;if(owner>=0&&owner<static_cast<int>(residents.size()))residents[owner].home=k+2*mapWidth;}}else{int owner=-1;if(job.kind=="house")for(std::size_t person=0;person<residents.size();++person){const auto& candidate=residents[person];if(!candidate.alive||candidate.away||candidate.visitor||candidate.ageDays<4320)continue;bool housed=std::any_of(props.begin(),props.end(),[&](const Prop& p){return !p.tree&&p.kind=="house"&&p.owner==static_cast<int>(person);});if(!housed){owner=static_cast<int>(person);break;}}props.push_back({k%mapWidth+1.0f,k/mapWidth+1.0f,.9f,.9f,3,false,"Casa",nextProp++,owner,100});if(owner>=0)residents[owner].home=k+2*mapWidth;
             if(job.kind!="house"){
                 auto& building=props.back();building.kind=job.kind;building.id=job.kind;building.owner=-1;
                 r.home=previousHome;
@@ -112,10 +112,35 @@ std::string World::orderUnit(int who,const std::string& command,int target){
         else if(terrain[target]==Terrain::FreshWater){task=Task::Drink;goal=nearest(r,[&](int x,int y){return besideFreshWater(x,y)&&std::abs(x-target%mapWidth)+std::abs(y-target/mapWidth)<=2;});}}
     if(!begin(r,task,goal))return "Destino bloqueado o inaccesible";r.hasOrder=true;r.orderedTask=task;r.orderedCell=target;if(task==Task::Gather)r.workCell=target;return "Orden dada a "+r.name;
 }
+bool World::planCivicWork(){
+    if(night()||jobs.size()>=8)return false;
+    auto exists=[&](const std::string& kind){return std::any_of(props.begin(),props.end(),[&](const Prop& p){return !p.tree&&p.kind==kind;})||std::any_of(jobs.begin(),jobs.end(),[&](const Job& j){return j.kind==kind;});};
+    int adults=0;float social=0;bool inspired=false,voyageNeeded=false;
+    for(const auto& r:residents)if(r.alive&&!r.away&&!r.visitor&&!r.inBoat&&!r.inDungeon&&r.ageDays>=4320){++adults;social+=r.social;inspired|=r.inspiration=="build"&&r.inspirationUntil>=elapsed;voyageNeeded|=(r.inspiration=="diplomacy"||r.inspiration=="raid")&&r.inspirationUntil>=elapsed;}
+    if(adults==0)return false;
+    std::string kind;
+    if((grain<reserve||voyageNeeded)&&!exists("dock")&&communityWood>=20&&treasury>=16)kind="dock";
+    else if(social/adults<45&&!exists("altar")&&grain>=reserve&&communityWood>=12&&treasury>=14)kind="altar";
+    else if((adults>=8||inspired)&&!exists("townhall")&&grain>=reserve&&communityWood>=28&&treasury>=29)kind="townhall";
+    else if(grain>=reserve+12&&communityWood>=16&&treasury>=24&&residents.size()<24){
+        bool vacant=false;for(const auto& p:props)if(!p.tree&&p.kind=="house"&&(p.owner<0||p.owner>=static_cast<int>(residents.size())||!residents[p.owner].alive))vacant=true;
+        if(!vacant&&!std::any_of(jobs.begin(),jobs.end(),[](const Job& j){return j.kind=="house";}))kind="house";
+    }
+    if(kind.empty())return false;
+    std::vector<std::pair<int,int>> sites;
+    for(int y=1;y<mapHeight-2;++y)for(int x=1;x<mapWidth-2;++x){int k=cellId(x,y),distance=std::abs(x-market%mapWidth)+std::abs(y-market/mapWidth);
+        if(distance>(kind=="dock"?100:12)||terrain[k]!=Terrain::Ground||protectedLand[k]||forest[k]||pasture[k]||reserved(k))continue;
+        if(kind=="dock"){bool coastal=false;for(int yy=std::max(0,y-2);yy<std::min(mapHeight,y+4);++yy)for(int xx=std::max(0,x-2);xx<std::min(mapWidth,x+4);++xx)if(terrain[cellId(xx,yy)]==Terrain::Sea)coastal=true;if(!coastal)continue;}
+        sites.push_back({distance,k});
+    }
+    std::sort(sites.begin(),sites.end());int attempts=0;
+    for(const auto& site:sites){if(++attempts>64)break;auto count=jobs.size();designate(kind,site.second);if(jobs.size()>count){++metrics["autonomous_"+kind];record("Los habitantes decidieron construir "+kind+" por una necesidad de la comunidad");return true;}}
+    return false;
+}
 void World::updateEcology(float dt){
     ecologyClock+=dt;townClock+=dt;
     if(ecologyClock>=30){ecologyClock-=30;for(int attempt=0;attempt<60;++attempt){int k=static_cast<int>(random()%(mapWidth*mapHeight));if(terrain[k]!=Terrain::Ground||protectedLand[k]||pasture[k]||fallow[k]||reserved(k)||cropAt(k)||!walkable(k%mapWidth,k/mapWidth))continue;bool adjacent=false;for(int d:{1,-1,mapWidth,-mapWidth})if(valid(k+d)&&forest[k+d])adjacent=true;if(!adjacent)continue;bool occupied=false;for(const auto& r:residents)if(r.alive&&(pos(r)==k||r.home==k||r.goal==k))occupied=true;for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==k)occupied=true;if(occupied)continue;World trial=*this;trial.props.push_back({k%mapWidth+.5f,k/mapWidth+.5f,.32f,.32f,2.7f,true,"Arbol joven",nextProp,-1,35});trial.rebuildNavigation();bool safe=true;for(const auto& r:residents)if(r.alive&&!r.inDungeon&&!r.away&&trial.route(static_cast<int>(r.x),static_cast<int>(r.y),[&](int x,int y){return trial.besideFreshWater(x,y);}).empty())safe=false;if(safe){props.push_back(trial.props.back());++nextProp;forest[k]=true;rebuildNavigation();++metrics["regrow"];}break;}}
-    if(townClock<20)return;townClock-=20;if(jobs.size()>=8)return;
+    if(townClock<20)return;townClock-=20;if(jobs.size()>=8||night())return;
     for(std::size_t i=0;i<residents.size();++i){const auto& r=residents[i];if(!r.alive||r.away||r.visitor||r.ageDays<4320||r.inDungeon)continue;bool housed=false;for(const auto& p:props)if(!p.tree&&p.kind=="house"&&p.owner==static_cast<int>(i))housed=true;if(!housed&&communityWood>=12&&treasury>=15){for(int dy=-6;dy<=6;++dy)for(int dx=-6;dx<=6;++dx){int x=market%mapWidth+dx,y=market/mapWidth+dy;if(x<0||y<0||x>=mapWidth||y>=mapHeight)continue;int k=cellId(x,y);if(placeable(k)){designate("house",k);return;}}}}
     // Residents condemn unsafe buildings and bring repeatedly worked, remote plots closer to supplies.
     for(const auto& p:props)if(!p.tree&&p.health<30){int k=cellId(static_cast<int>(p.x),static_cast<int>(p.y));if(!protectedLand[k]&&!reserved(k)){designate("demolish",k);return;}}
@@ -139,7 +164,8 @@ void World::updateEcology(float dt){
         if(traffic[k]>=6&&terrain[k]==Terrain::Ground&&!forest[k]&&!pasture[k]&&!protectedLand[k]&&!reserved(k)&&!cropAt(k)
            &&(busiest<0||traffic[k]>traffic[busiest]))busiest=k;
     }
-    if(busiest>=0&&communityWood>6&&treasury>6)designate("road",busiest);
+    if(busiest>=0&&communityWood>6&&treasury>6){designate("road",busiest);return;}
+    planCivicWork();
 }
 }
 

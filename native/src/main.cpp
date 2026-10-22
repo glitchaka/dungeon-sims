@@ -165,7 +165,14 @@ public:
         y+=10;
         const auto& r=world_.residents[selected_];
         text(r.name,color(isla::cnc::residentColors[selected_%isla::cnc::residentColors.size()]));
-        text(r.away?"DE VISITA EN OTRA ISLA":r.visitor?"VISITANTE DE OTRA ISLA":r.ageDays<4320?"MENOR AL CUIDADO DE LA ALDEA":isla::World::taskName(r.task),white);
+        std::string activity=r.away?"DE VISITA EN OTRA ISLA":r.visitor?"VISITANTE DE OTRA ISLA":r.ageDays<4320?"MENOR AL CUIDADO DE LA ALDEA":isla::World::taskName(r.task);
+        for(const auto& boat:world_.ships)if(boat.passenger==static_cast<int>(selected_)){
+            if(boat.state=="visit_boarding")activity="CAMINANDO AL MUELLE";
+            else if(boat.state=="visit_outbound")activity="NAVEGANDO A OTRA ISLA";
+            else if(boat.state=="visit_waiting")activity="DE VISITA EN OTRA ISLA";
+            else if(boat.state=="visit_returning")activity="REGRESANDO EN BARCO";
+        }
+        text(activity,white);
         text("COMIDA "+std::to_string(static_cast<int>(r.hunger))+"  AGUA "+std::to_string(static_cast<int>(r.thirst)),white);
         text("ENERGIA "+std::to_string(static_cast<int>(r.energy)),white);
         text("SOCIAL "+std::to_string(static_cast<int>(r.social))+"  DIVERSION "+std::to_string(static_cast<int>(r.fun)),white);

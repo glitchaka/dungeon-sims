@@ -27,6 +27,37 @@ std::string World::startFishing(int who,int boat){
 void World::updateFishing(float dt){
     for(auto& s:ships){
         if(s.seaHome<0){float best=1e9f;int dock=-1,sea=-1;for(int k=0;k<mapWidth*mapHeight;++k){if(!walkable(k%mapWidth,k/mapWidth)||reserved(k))continue;for(int d:{1,-1,mapWidth,-mapWidth}){int n=k+d;if(n<0||n>=mapWidth*mapHeight||std::abs(n%mapWidth-k%mapWidth)+std::abs(n/mapWidth-k/mapWidth)!=1||terrain[n]!=Terrain::Sea)continue;float dist=std::hypot(static_cast<float>(k%mapWidth-s.cell%mapWidth),static_cast<float>(k/mapWidth-s.cell/mapWidth));if(dist<best){best=dist;dock=k;sea=n;}}}if(dock>=0){s.cell=dock;s.seaHome=sea;s.x=sea%mapWidth+.5f;s.y=sea/mapWidth+.5f;}}
+        if(s.state.rfind("visit_",0)==0){
+            if(s.passenger<0||s.passenger>=static_cast<int>(residents.size())){s.state="docked";s.passenger=-1;continue;}
+            auto& traveler=residents[s.passenger];auto trip=std::find_if(visits.begin(),visits.end(),[&](const Visit& v){return !v.incoming&&v.resident==s.passenger&&v.state!="complete"&&v.state!="cancelled";});
+            if(trip==visits.end()){traveler.inBoat=traveler.away=false;s.state="docked";s.passenger=-1;continue;}
+            if(s.state=="visit_boarding"){
+                if(night())continue;
+                if(!traveler.alive){trip->state="cancelled";traveler.hasOrder=false;s.state="docked";s.passenger=-1;continue;}
+                if(at(traveler)!=s.cell||traveler.next<traveler.path.size()){
+                    if(!night()&&traveler.hunger>45&&traveler.thirst>45&&traveler.energy>45&&!traveler.hasOrder&&begin(traveler,Task::Move,s.cell)){traveler.hasOrder=true;traveler.orderedTask=Task::Move;traveler.orderedCell=s.cell;}continue;
+                }
+                const int home=s.seaHome;s.path=seaRoute(*this,home,[=](int k){return std::abs(k%mapWidth-home%mapWidth)+std::abs(k/mapWidth-home/mapWidth)>=12;});
+                if(s.path.empty()){trip->state="cancelled";traveler.hasOrder=false;traveler.task=Task::Idle;s.state="docked";s.passenger=-1;record("Visita cancelada: no existe salida navegable al mar");continue;}
+                s.next=0;s.state="visit_outbound";trip->state="sailing";traveler.inBoat=true;traveler.hasOrder=false;traveler.path.clear();traveler.next=0;++metrics["naval_departures"];
+            }
+            if(s.state=="visit_outbound"||s.state=="visit_returning"){
+                if(s.next<s.path.size()){int k=s.path[s.next];if(terrain[k]!=Terrain::Sea){const int destination=s.state=="visit_returning"?s.seaHome:s.path.back();auto rerouted=seaRoute(*this,cellId(static_cast<int>(s.x),static_cast<int>(s.y)),[=](int c){return c==destination;});if(rerouted.empty())continue;s.path=std::move(rerouted);s.next=0;k=s.path[0];}float tx=k%mapWidth+.5f,ty=k/mapWidth+.5f,len=std::hypot(tx-s.x,ty-s.y),step=std::min(len,1.25f*dt);if(len>.0001f){s.x+=(tx-s.x)/len*step;s.y+=(ty-s.y)/len*step;}if(len<=step+.0001f){s.x=tx;s.y=ty;++s.next;}continue;}
+                if(s.state=="visit_outbound"){s.state="visit_waiting";trip->state="travel";traveler.away=true;traveler.inBoat=true;record(traveler.name+" alcanzo alta mar rumbo a otra isla");}
+                else {
+                    int landing=s.cell;
+                    auto freeLanding=[&](int k){if(!walkable(k%mapWidth,k/mapWidth))return false;for(const auto& p:residents)if(&p!=&traveler&&p.alive&&!p.away&&!p.inBoat&&!p.inDungeon&&at(p)==k)return false;for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==k)return false;return true;};
+                    if(!freeLanding(landing)){
+                        auto routeToShore=seaRoute(*this,cellId(static_cast<int>(s.x),static_cast<int>(s.y)),[&](int k){for(int step:{1,-1,mapWidth,-mapWidth}){int n=k+step;if(n>=0&&n<mapWidth*mapHeight&&std::abs(n%mapWidth-k%mapWidth)+std::abs(n/mapWidth-k/mapWidth)==1&&freeLanding(n))return true;}return false;});
+                        if(routeToShore.empty())continue;s.path=std::move(routeToShore);s.next=0;int end=s.path.back();for(int step:{1,-1,mapWidth,-mapWidth}){int n=end+step;if(n>=0&&n<mapWidth*mapHeight&&std::abs(n%mapWidth-end%mapWidth)+std::abs(n/mapWidth-end/mapWidth)==1&&freeLanding(n)){s.cell=n;break;}}continue;
+                    }
+
+                    traveler.x=landing%mapWidth+.5f;traveler.y=landing/mapWidth+.5f;traveler.away=traveler.inBoat=false;traveler.task=Task::Idle;traveler.decisionTimer=0;if(!walkable(traveler.home%mapWidth,traveler.home/mapWidth))traveler.home=landing;
+                    trip->state="complete";++metrics["visits_returned"];++metrics["naval_returns"];s.state="docked";s.passenger=-1;record(traveler.name+(traveler.alive?" desembarco de regreso de su visita":" no sobrevivio a su visita"));
+                }
+            }
+            continue;
+        }
         if(s.passenger<0||s.passenger>=static_cast<int>(residents.size()))continue;auto& r=residents[s.passenger];
         if(!r.alive){r.inBoat=false;s.passenger=-1;s.state="lost";continue;}
         if(s.state=="boarding"){if(at(r)!=s.cell||r.next<r.path.size())continue;int home=s.seaHome;s.path=seaRoute(*this,home,[=](int k){return std::abs(k%mapWidth-home%mapWidth)+std::abs(k/mapWidth-home/mapWidth)>=12;});if(s.path.empty()){r.hasOrder=false;r.task=Task::Idle;s.passenger=-1;s.state="docked";record("Pesca cancelada: ruta maritima no disponible");continue;}s.next=0;s.state="outbound";r.inBoat=true;r.path.clear();r.next=0;}

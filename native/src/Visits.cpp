@@ -9,13 +9,18 @@ std::string World::sendVisit(int who,const std::string& kind){
     if(kind!="diplomacy"&&kind!="raid")return "Mision desconocida";
     if(who<0||who>=static_cast<int>(residents.size()))return "Habitante inexistente";auto& r=residents[who];
     if(!r.alive||r.visitor||r.away||r.inBoat||r.inDungeon||r.mission>=0||r.ageDays<4320||r.health<cnc::maxHealth*.7f||r.energy<50||r.hunger<50||r.thirst<50)return "El habitante debe prepararse antes de viajar";
-    int present=0;for(const auto& p:residents)if(p.alive&&!p.away&&!p.visitor)++present;if(present<3)return "Deben quedar dos habitantes en la isla";
+    auto committed=[&](int who){return std::any_of(visits.begin(),visits.end(),[&](const Visit& v){return !v.incoming&&v.resident==who&&v.state!="complete"&&v.state!="cancelled";});};
+    if(committed(who))return "El habitante ya tiene un viaje asignado";
+    int present=0;for(std::size_t i=0;i<residents.size();++i){const auto& p=residents[i];if(p.alive&&!p.away&&!p.visitor&&!p.inBoat&&!p.inDungeon&&!committed(static_cast<int>(i)))++present;}if(present<3)return "Deben quedar dos habitantes en la isla";
+    Ship* transport=nullptr;
+    for(auto& boat:ships)if(boat.passenger<0&&boat.remaining<=0&&boat.state=="docked"&&boat.seaHome>=0&&begin(r,Task::Move,boat.cell)){transport=&boat;break;}
+    if(!transport)return "La visita necesita un barco libre y un muelle accesible";
     const std::string id=worldId+":"+std::to_string(++metrics["visit_sequence"]);
-    visits.push_back({id,worldId,kind,"travel",who,who,0,false,peerId});
-    json message={{"protocol",1},{"type","visit"},{"id",id},{"from",worldId},{"to",peerId},{"who",who},{"kind",kind},{"name",r.name},{"trait",r.trait},{"health",r.health},{"chosen",r.chosen}};
-    outbox[id]=message.dump();r.away=true;r.inspiration.clear();r.hasOrder=false;r.task=Task::Idle;r.path.clear();r.next=0;
+    visits.push_back({id,worldId,kind,"boarding",who,who,0,false,peerId});
+    transport->passenger=who;transport->state="visit_boarding";transport->path.clear();transport->next=0;
+    r.inspiration.clear();r.hasOrder=true;r.orderedTask=Task::Move;r.orderedCell=transport->cell;
     for(auto& c:crops)if(c.worker==who)c.worker=-1;for(auto& j:jobs)if(j.worker==who)j.worker=-1;
-    record(r.name+" partio hacia otra isla: "+kind);return "El habitante partio de visita";
+    record(r.name+" partio hacia otra isla: "+kind);return "El habitante camina al muelle para embarcar";
 }
 std::string World::receivePeer(const std::string& raw,const std::string& peer){try{
     if(raw.size()>16384||peer.empty()||peer==worldId)return "Mensaje de red rechazado";
@@ -37,7 +42,8 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
         for(int k=0;k<mapWidth*mapHeight;++k)if(walkable(k%mapWidth,k/mapWidth)){
             bool occupied=false;for(const auto& r:residents)if(r.alive&&!r.away&&!r.inBoat&&!r.inDungeon&&cellId(static_cast<int>(r.x),static_cast<int>(r.y))==k)occupied=true;
             for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==k)occupied=true;
-            float d=std::hypot(static_cast<float>(k%mapWidth-market%mapWidth),static_cast<float>(k/mapWidth-market/mapWidth));if(!occupied&&d<distance){distance=d;spawn=k;}
+                        bool coast=false;for(int step:{1,-1,mapWidth,-mapWidth}){int n=k+step;if(n>=0&&n<mapWidth*mapHeight&&std::abs(n%mapWidth-k%mapWidth)+std::abs(n/mapWidth-k/mapWidth)==1&&terrain[n]==Terrain::Sea)coast=true;}
+            float d=std::hypot(static_cast<float>(k%mapWidth-market%mapWidth),static_cast<float>(k/mapWidth-market/mapWidth));if(!occupied&&coast&&d<distance&&!route(k%mapWidth,k/mapWidth,[&](int x,int y){return cellId(x,y)==market;}).empty()){distance=d;spawn=k;}
         }
         if(spawn<0)return "No hay lugar para desembarcar";
         float health=m.at("health").get<float>();if(!std::isfinite(health)||health<=0||health>cnc::maxHealth)return "Estado de visitante invalido";
@@ -47,10 +53,19 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
     }
     if(trip==visits.end()||trip->partner!=peer)return "Viaje desconocido";
     if(type=="result"&&!trip->incoming){
+        if(trip->state!="travel"&&trip->state!="returning"&&trip->state!="complete")return "El viaje todavia no llego a destino";
         if(trip->origin!=worldId||trip->resident<0||trip->resident>=static_cast<int>(residents.size()))return "Retorno invalido";
-        if(trip->state!="complete"){
+        if(trip->state!="complete"&&trip->state!="returning"){
             int gold=m.at("gold").get<int>(),food=m.at("food").get<int>();float health=m.at("health").get<float>();if(gold<0||gold>12||food<0||food>8||!std::isfinite(health)||health<0||health>cnc::maxHealth)return "Resultado invalido";
-            auto& r=residents[trip->resident];int spawn=-1,best=100000;
+            auto& r=residents[trip->resident];
+            auto boat=std::find_if(ships.begin(),ships.end(),[&](const Ship& s){return s.passenger==trip->resident&&s.state=="visit_waiting";});
+            if(boat!=ships.end()){
+                r.health=health;r.alive=health>0;r.money+=gold;r.grain+=food;trip->state="returning";outbox.erase(id);
+                relations[peer]=std::clamp(relations[peer]+(trip->kind=="diplomacy"?10:-20),-100,100);
+                std::reverse(boat->path.begin(),boat->path.end());boat->next=0;boat->state="visit_returning";
+                outbox["ack:"+id]=json{{"protocol",1},{"type","confirmed"},{"id",id},{"from",worldId},{"to",peer}}.dump();return "El barco inicio el regreso a la isla";
+            }
+            int spawn=-1,best=100000;
             for(int k=0;k<mapWidth*mapHeight;++k)if(walkable(k%mapWidth,k/mapWidth)){
                 bool occupied=false;for(const auto& p:residents)if(p.alive&&!p.away&&!p.inBoat&&!p.inDungeon&&cellId(static_cast<int>(p.x),static_cast<int>(p.y))==k)occupied=true;
                 for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==k)occupied=true;
@@ -67,6 +82,10 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
     return "Mensaje no aplicable";
 }catch(...){return "Mensaje de red invalido";}}
 void World::updateVisits(float dt){
+    for(auto& trip:visits)if(!trip.incoming&&trip.state=="travel"&&!outbox.count(trip.id)){
+        const auto& r=residents[trip.resident];
+        outbox[trip.id]=json{{"protocol",1},{"type","visit"},{"id",trip.id},{"from",worldId},{"to",trip.partner},{"who",trip.originResident},{"kind",trip.kind},{"name",r.name},{"trait",r.trait},{"health",r.health},{"chosen",r.chosen}}.dump();
+    }
     for(auto& trip:visits)if(trip.incoming&&trip.state!="complete"){
         auto& r=residents[trip.resident];trip.clock+=dt;
         // Guests walk using local collision and priorities; the receiving island resolves outcomes.

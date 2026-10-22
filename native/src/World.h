@@ -82,7 +82,7 @@ public:
     int market{cellId(59,46)},granary{cellId(58,47)};bool autoTrade{};float ecologyClock{},townClock{},populationClock{};int nextProp{};std::array<unsigned short,mapWidth*mapHeight> traffic{};
 private:
     std::array<bool,mapWidth*mapHeight> blocked_{};std::uint32_t randomState_{1749};
-    std::uint32_t random();void plan(Resident& r);void addProp(Prop p);
+    std::uint32_t random();void plan(Resident& r);bool planCivicWork();void addProp(Prop p);
     bool begin(Resident& r,Task task,int goal);void finish(Resident& r,const std::string& metric,const std::string& note);
     void act(Resident& r,float dt);void updateRealm(float dt);void updateDungeons(float dt);
     void updateCrops(float dt);void updateAnimals(float dt);void completeJob(Resident& r);

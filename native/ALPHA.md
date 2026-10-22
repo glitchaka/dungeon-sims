@@ -33,3 +33,9 @@ Build Release y pruebas de simulacion, TCP real, chat, diplomacia/saqueo, dedupl
 Las partidas nuevas usan 256 x 192 celdas (49.152), cuatro veces la superficie anterior de 128 x 96. El generador amplía costas, cordilleras, valles y bosques; el tamaño físico de habitantes, construcciones y campos se conserva. La cámara encuadra toda la isla con Enter y permite zoom de 100 % a 800 % con la rueda y desplazamiento con WASD o botón central.
 
 Las partidas se guardan en archivos v9. Se pueden importar v6/v7/v8 de 128 x 96: se conserva la isla con sus coordenadas y se remapean los índices de celdas al nuevo ancho, dejando mar en el espacio adicional. El archivo antiguo queda intacto. Para obtener una isla nueva de mayor superficie, marca Nueva isla en la pantalla inicial.
+
+## Decisiones cívicas autónomas
+
+Los habitantes pueden iniciar un muelle si falta comida o una inspiración diplomática/de saqueo necesita transporte; un altar si el bienestar social es bajo y hay provisiones; un townhall si crece la comunidad o existe inspiración de edificación; y una vivienda adicional cuando hay recursos para admitir nuevos pobladores. Se eligen terrenos válidos, se reservan recursos y se ejecutan trabajos reales, con prioridad para necesidades urgentes, viviendas ausentes y caminos necesarios. No se duplican obras cívicas ya existentes o en cola ni se inicia esta planificación de noche.
+
+La vivienda se entrega primero a un adulto sin casa. Si todos tienen vivienda, queda libre para un inmigrante: el constructor conserva su casa anterior. Los encargos manuales siguen disponibles como intervención opcional.

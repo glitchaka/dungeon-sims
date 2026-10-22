@@ -27,3 +27,7 @@ Compilación Release correcta. Cuatro pruebas existentes aprobadas y una nueva p
 ## Actualización de islas grandes
 
 Recompilado para mapas nuevos de 256 x 192 celdas y guardados v9. Las cinco pruebas pasaron con las nuevas dimensiones. La prueba de islas incluye migración de cuadrículas v8 de 128 x 96, caminos, regalos, rutas de habitantes y guardado posterior. El ejecutable empaquetado generó una isla grande con semilla 1749, guardó native/previews/game-large-island.bmp y terminó con código 0. Defender se volvió a ejecutar sobre el paquete actualizado; el JSON de evidencia incluye los hashes de ambos ejecutables.
+
+## Actualización de autonomía y visitas navales
+
+La compilación de esta revisión incluye obras cívicas por necesidad, viviendas realmente vacantes para inmigración y salida/regreso en barco para nuevas visitas. Cinco pruebas aprobadas; las pruebas de multijugador usan dos conexiones TCP reales y comprueban embarque persistido, salida al mar antes de transferir al visitante, mensajes repetidos y desembarco alternativo al bloquear el muelle. La alpha empaquetada arrancó y terminó con código 0. El análisis Defender del paquete actualizado se registra con hashes en native/previews/defender-review.json. Se mantienen las limitaciones de firma y conexión directa documentadas arriba.

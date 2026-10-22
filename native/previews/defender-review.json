@@ -8,10 +8,7 @@
     "detections":  [
 
                    ],
-    "mapDimensions":  [
-                          256,
-                          192
-                      ],
-    "gameSHA256":  "D220FA8D56C0BAD6A9BAE2E7E1D10ADE5D9298FEBEE5EF91D913FFBDA423ED18",
+    "build":  "autonomous-civic-naval-visits",
+    "gameSHA256":  "57A5506F85239BA1828BF52D3722EBF25E096611A8BACE8A08A8EFF5B32D908E",
     "launcherSHA256":  "5459BEE4079F05030B54BC6EDD8DB7B3CA4C5BA03845C16FA131BE3B9D823D37"
 }
