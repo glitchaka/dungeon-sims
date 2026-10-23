@@ -1,5 +1,6 @@
 #pragma once
-#include "CncData.h"
+#include "ResidentRegistry.h"
+#include "entities/WorldEntities.h"
 #include <array>
 #include <cstdint>
 #include <functional>
@@ -10,34 +11,6 @@ namespace isla {
 constexpr int mapWidth=256,mapHeight=192;
 constexpr int cellId(int x,int y){return y*mapWidth+x;}
 enum class Terrain {Sea,Ground,FreshWater,Road,Bridge,Mountain};
-enum class Task {Idle,Wander,Drink,Eat,Rest,Flee,Bathe,Social,Gather,Camp,Trade,Till,Sow,Harvest,Deposit,Fetch,Hunt,Tend,DrinkHome,Project,Expedition,SellLoot,Move,Fish};
-struct Artifact {std::string name,bonus;int value{};bool rare{};};
-struct Resident {
-    std::string name,trait;
-    float x{},y{},hunger{75},thirst{80},energy{85},health{cnc::maxHealth},social{65},fun{65},hygiene{80};
-    float speed{},decisionTimer{},actionTimer{},homeWater{4};
-    Task task{Task::Idle};std::vector<int> path;std::size_t next{};
-    int goal{},target{-1},home{},wood{},meat{},grain{},seeds{12},money{12},eggs{},fish{},job{-1},mission{-1};
-    bool alive{true},inDungeon{},inBoat{},resumeRest{},hasOrder{}; Task orderedTask{Task::Idle}; int orderedCell{-1},workCell{-1};
-    bool female{};int insideHouse{-1},mother{-1},father{-1},pregnancyFather{-1};float pregnancyDue{-1},postpartumUntil{},naturalDeathAge{90*360.0f},familySeekAfter{};int familyPartner{-1};
-    bool away{},visitor{},chosen{};double ageDays{6480};std::string inspiration;float inspirationUntil{};
-    std::vector<int> relationships=std::vector<int>(6,0);std::vector<Artifact> artifacts,loot;
-};
-struct Prop {float x,y,halfWidth,halfDepth,height;bool tree;std::string id;int uid{-1},owner{-1};float health{100};std::string kind{"house"};};
-struct Crop {int cell{},stage{},cycles{},worker{-1};float growth{},ripeAge{};};
-struct Animal {float x{},y{},timer{},respawn{};int kind{4};bool alive{true};};
-struct Camp {int cell{},owner{};float created{};};
-struct Job {int id{},cell{},goal{},worker{-1};std::string kind;int source{-1},phase{},woodCost{},moneyCost{};};
-struct Ship {int cell{},voyages{};float remaining{};int passenger{-1},seaHome{-1};float x{},y{},fishingClock{};std::string state{"docked"};std::vector<int> path;std::size_t next{};bool riskResolved{};};
-struct Dungeon {
-    std::string name,state{"idle"};int entrance{},level{1},room{1},runs{},kills{};
-    std::vector<int> party;std::array<float,2> x{{6.5f,6.5f}},y{{5.5f,5.5f}};
-    std::array<float,3> enemies{};std::array<bool,3> opened{};
-    float clock{},cooldown{};std::vector<std::string> log;
-};
-struct Landform {std::string kind;float x{},y{},radiusX{},radiusY{},height{},drawWidth{};int sprite{};};
-struct Gift {int cell{},grain{12},wood{8};};
-struct Visit {std::string id,origin,kind,state;int resident{-1},originResident{-1};float clock{};bool incoming{};std::string partner;};
 class World {
 public:
     World();void tick(float seconds);
@@ -74,7 +47,9 @@ public:
     static const char* taskName(Task task);
     std::array<Terrain,mapWidth*mapHeight> terrain{};
     std::array<bool,mapWidth*mapHeight> forest{},pasture{},protectedLand{},fallow{};
-    std::vector<Resident> residents;std::vector<Prop> props;std::vector<Crop> crops;
+    ResidentRegistry residents;std::vector<Prop> props;std::vector<Crop> crops;
+    std::vector<SeaFish> seaFish;
+    double mysteriousReadyAt{};
     std::vector<Animal> animals;std::vector<Camp> camps;std::vector<Job> jobs;
     std::vector<Ship> ships;std::vector<Dungeon> dungeons;std::vector<std::string> events;
     std::map<std::string,int> metrics;
@@ -82,13 +57,15 @@ public:
     int grain{12},harvests{},communityWood{24},treasury{60},herbs{},reserve{30},livestockFood{6},priority{},nextJob{};
     int market{cellId(59,46)},granary{cellId(58,47)};bool autoTrade{};float ecologyClock{},townClock{},populationClock{};int nextProp{};std::array<unsigned short,mapWidth*mapHeight> traffic{};
 private:
+    friend class ResidentController;
+    friend class ResidentActions;
+    friend class ResidentSimulation;
     std::array<bool,mapWidth*mapHeight> blocked_{};std::uint32_t randomState_{1749};
-    std::uint32_t random();void plan(Resident& r);bool planCivicWork();bool seekFamily(Resident& resident);void addProp(Prop p);
+    std::uint32_t random();bool planCivicWork();bool seekFamily(Resident& resident);void addProp(Prop p);
     bool begin(Resident& r,Task task,int goal);void finish(Resident& r,const std::string& metric,const std::string& note);
-    void act(Resident& r,float dt);void updateRealm(float dt);void updateDungeons(float dt);
+    void updateRealm(float dt);void updateDungeons(float dt);
     void updateCrops(float dt);void updateAnimals(float dt);void completeJob(Resident& r);
     int nearest(const Resident& r,const std::function<bool(int,int)>& predicate) const;
-    void feed(Resident& r);void rest(Resident& r);bool farmTask(Resident& r);bool gatherTask(Resident& r);
 };
 }
 

@@ -20,7 +20,17 @@ add_custom_command(OUTPUT "${CNC_GENERATED}/CncData.h" "${CNC_GENERATED}/cnc-imp
         -SourceRoot "${CNC_SOURCE}" -OutputRoot "${CNC_GENERATED}"
     DEPENDS ${CNC_INPUTS} "${CMAKE_CURRENT_SOURCE_DIR}/../tools/import_cnc_data.ps1"
     COMMENT "Importing C&C XML into native game data" VERBATIM)
-add_library(isla_sim STATIC src/World.cpp "${CNC_GENERATED}/CncData.h")
+add_library(isla_resident_model STATIC
+    src/ResidentRegistry.cpp
+    src/ResidentDecision.cpp
+    src/ResidentAnimation.cpp
+    src/PresentationMotion.cpp
+    src/FamilySoundEvents.cpp
+    src/entities/Task.cpp
+    "${CNC_GENERATED}/CncData.h")
+target_include_directories(isla_resident_model PUBLIC src "${CNC_GENERATED}")
+add_library(isla_sim STATIC src/World.cpp)
+target_link_libraries(isla_sim PUBLIC isla_resident_model)
 target_include_directories(isla_sim PUBLIC src "${CNC_GENERATED}")
 include(FetchContent)
 set(RA_BUILD_SANDBOX OFF CACHE BOOL "" FORCE)
@@ -35,6 +45,11 @@ add_custom_command(TARGET isla_viva_native POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_SOURCE}/LICENSE.md" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-license/LICENSE.md"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_SOURCE}/README.md" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-license/README.md"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_GENERATED}/cnc-import.json" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-import.json")
+add_library(isla_terrain_renderer STATIC src/TerrainRenderer.cpp src/TerrainProjection.cpp)
+target_link_libraries(isla_terrain_renderer PUBLIC isla_sim)
+target_link_libraries(isla_viva_native PRIVATE isla_terrain_renderer)
+add_executable(isla_geography_preview tools/geography_preview.cpp src/TerrainMaterials.cpp)
+target_link_libraries(isla_geography_preview PRIVATE isla_terrain_renderer RA::Engine)
 include(CTest)
 if(BUILD_TESTING)
     add_executable(isla_sim_tests tests/simulation_test.cpp)
@@ -45,7 +60,7 @@ if(BUILD_TESTING)
         -SourceRoot "${CNC_SOURCE}" -BuildRoot "${CMAKE_CURRENT_BINARY_DIR}")
 endif()
 if(MSVC)
-    foreach(target isla_sim isla_viva_native)
+    foreach(target isla_resident_model isla_sim isla_viva_native)
         target_compile_options(${target} PRIVATE /W4 /permissive- /utf-8)
     endforeach()
 endif()
@@ -54,7 +69,22 @@ FetchContent_MakeAvailable(nlohmann_json)
 target_link_libraries(isla_sim PUBLIC nlohmann_json::nlohmann_json)
 target_sources(isla_sim PRIVATE src/Life.cpp src/Realm.cpp src/Persistence.cpp)
 target_compile_definitions(isla_viva_native PRIVATE ISLA_VIVA_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/..")
-add_custom_command(TARGET isla_viva_native POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/assets" "$<TARGET_FILE_DIR:isla_viva_native>/assets")
+set(ISLA_RUNTIME_ASSETS
+    sea-fish-v8.png MYSTERY-V8-PROMPTS.md
+    ara-ara-girl.mp3 yameteh-kodasai.mp3 kyaaaaaaaa.mp3
+    menu-island.png residents.png
+    residents-women-v6.png residents-men-v6.png residents-children-v6.png
+    residents-work-women-v7.png residents-work-men-v7.png residents-pregnancy-v7.png
+    boats-women-v7.png boats-men-v7.png boats-empty-v7.png family-cloud-v7.png ANIMATION-V7-PROMPTS.md
+    terrain-materials-v5.png nature-reference-v5.png
+    buildings-reference-v5.png civic-reference-v5.png
+    ASSET-LICENSE.txt PROVENANCE.md REFERENCE-V5-PROMPTS.md RESIDENT-V6-PROMPTS.md)
+add_custom_command(TARGET isla_viva_native POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:isla_viva_native>/assets")
+foreach(asset IN LISTS ISLA_RUNTIME_ASSETS)
+    add_custom_command(TARGET isla_viva_native POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/assets/${asset}" "$<TARGET_FILE_DIR:isla_viva_native>/assets/${asset}")
+endforeach()
 target_sources(isla_sim PRIVATE src/Environment.cpp)
 target_sources(isla_sim PRIVATE src/Fishing.cpp)
 add_custom_command(OUTPUT "${CNC_GENERATED}/Geography.h"
@@ -72,8 +102,30 @@ if(BUILD_TESTING)
     add_test(NAME divine_multiplayer COMMAND isla_multiplayer_tests)
 endif()
 
-target_sources(isla_viva_native PRIVATE src/SessionDialog.cpp src/TerrainPack.cpp)
-target_link_libraries(isla_viva_native PRIVATE user32 gdi32)
+target_sources(isla_viva_native PRIVATE src/SessionDialog.cpp src/TerrainMaterials.cpp src/SceneTexture.cpp src/ResidentSprites.cpp src/ResidentEffects.cpp)
+target_sources(isla_viva_native PRIVATE src/ActionPreview.cpp)
+target_sources(isla_viva_native PRIVATE src/FamilyAudio.cpp)
+target_sources(isla_viva_native PRIVATE src/MysteriousView.cpp)
+target_sources(isla_sim PRIVATE src/SeaLife.cpp src/MysteriousPower.cpp src/MysteriousGesture.cpp)
+
+if(BUILD_TESTING)
+    add_executable(isla_resident_sprite_tests tests/resident_sprite_test.cpp src/ResidentSprites.cpp src/SceneTexture.cpp src/ResidentEffects.cpp src/TerrainProjection.cpp)
+    target_link_libraries(isla_resident_sprite_tests PRIVATE isla_sim RA::Engine SDL3_image::SDL3_image)
+    add_test(NAME detailed_resident_sprites COMMAND isla_resident_sprite_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+    add_executable(isla_animation_tests tests/resident_animation_test.cpp)
+    target_link_libraries(isla_animation_tests PRIVATE isla_sim)
+    add_test(NAME resident_action_transitions COMMAND isla_animation_tests)
+    add_executable(isla_mysterious_tests tests/mysterious_test.cpp)
+    target_link_libraries(isla_mysterious_tests PRIVATE isla_sim)
+    if(MSVC)
+        target_link_options(isla_mysterious_tests PRIVATE /STACK:16777216)
+    endif()
+    add_test(NAME mysterious_divine_drag COMMAND isla_mysterious_tests)
+    add_executable(isla_family_audio_tests tests/family_audio_test.cpp src/FamilyAudio.cpp)
+    target_link_libraries(isla_family_audio_tests PRIVATE isla_sim winmm)
+    add_test(NAME family_voice_events COMMAND isla_family_audio_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+endif()
+target_link_libraries(isla_viva_native PRIVATE user32 gdi32 winmm)
 if(MSVC)
     target_link_options(isla_viva_native PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
 endif()
@@ -95,9 +147,9 @@ target_sources(isla_launcher PRIVATE src/ProductVersion.rc)
 
 
 if(BUILD_TESTING)
-    add_executable(isla_terrain_tests tests/terrain_pack_test.cpp src/TerrainPack.cpp)
-    target_link_libraries(isla_terrain_tests PRIVATE isla_sim RA::Engine)
-    add_test(NAME topdown_mutable_terrain COMMAND isla_terrain_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets/terrain-topdown-v4.pck")
+    add_executable(isla_terrain_tests tests/terrain_pack_test.cpp)
+    target_link_libraries(isla_terrain_tests PRIVATE isla_terrain_renderer)
+    add_test(NAME topdown_mutable_terrain COMMAND isla_terrain_tests)
 endif()
 
 if(MSVC)
@@ -116,6 +168,20 @@ if(BUILD_TESTING)
 endif()
 
 target_sources(isla_sim PRIVATE src/Family.cpp)
+
+target_sources(isla_sim PRIVATE
+    src/SettlementLayout.cpp
+    src/IslandGeography.cpp
+    src/ResidentContext.cpp
+    src/ResidentController.cpp
+    src/ResidentActions.cpp
+    src/ResidentSimulation.cpp)
+
+if(BUILD_TESTING)
+    add_executable(isla_resident_tests tests/resident_test.cpp)
+    target_link_libraries(isla_resident_tests PRIVATE isla_resident_model)
+    add_test(NAME resident_ownership_and_decisions COMMAND isla_resident_tests)
+endif()
 
 if(BUILD_TESTING)
     add_executable(isla_family_tests tests/family_test.cpp)

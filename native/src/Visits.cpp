@@ -18,7 +18,7 @@ std::string World::sendVisit(int who,const std::string& kind){
     if(!transport)return "La visita necesita un barco libre y un muelle accesible";
     const std::string id=worldId+":"+std::to_string(++metrics["visit_sequence"]);
     visits.push_back({id,worldId,kind,"boarding",who,who,0,false,peerId});
-    transport->passenger=who;transport->state="visit_boarding";transport->path.clear();transport->next=0;
+    transport->passenger=who;transport->state="visit_boarding";transport->fishingClock=0;transport->path.clear();transport->next=0;
     r.inspiration.clear();r.hasOrder=true;r.orderedTask=Task::Move;r.orderedCell=transport->cell;
     for(auto& c:crops)if(c.worker==who)c.worker=-1;for(auto& j:jobs)if(j.worker==who)j.worker=-1;
     record(r.name+" partio hacia otra isla: "+kind);return "El habitante camina al muelle para embarcar";
@@ -49,8 +49,8 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
         if(spawn<0)return "No hay lugar para desembarcar";
         float health=m.at("health").get<float>();if(!std::isfinite(health)||health<=0||health>cnc::maxHealth)return "Estado de visitante invalido";
         float visitorAge=m.value("ageDays",World::adultAgeDays),visitorLifespan=m.value("naturalDeathAge",90*360.0f);if(!std::isfinite(visitorAge)||visitorAge<World::adultAgeDays||!std::isfinite(visitorLifespan)||visitorLifespan<World::adultAgeDays)return "Edad de visitante invalida";
-        Resident guest;guest.ageDays=visitorAge;guest.naturalDeathAge=visitorLifespan;guest.female=m.value("female",false);guest.name=name;guest.trait="Visitante";guest.visitor=true;guest.seeds=guest.money=0;guest.chosen=m.value("chosen",false);guest.health=health;guest.home=guest.goal=spawn;guest.x=spawn%mapWidth+.5f;guest.y=spawn/mapWidth+.5f;guest.relationships.resize(residents.size()+1);
-        int index=static_cast<int>(residents.size());residents.push_back(guest);for(auto& r:residents)r.relationships.resize(residents.size());
+        Resident guest;guest.ageDays=visitorAge;guest.naturalDeathAge=visitorLifespan;guest.female=m.value("female",false);guest.name=name;guest.trait="Visitante";guest.visitor=true;guest.seeds=guest.money=0;guest.chosen=m.value("chosen",false);guest.health=health;guest.home=guest.goal=spawn;guest.x=spawn%mapWidth+.5f;guest.y=spawn/mapWidth+.5f;
+        int index=static_cast<int>(residents.size());residents.add(guest);
         visits.push_back({id,peer,kind,"arrived",index,m.at("who").get<int>(),0,true,peer});record(name+" llego desde otra isla: "+kind);return "Visitante recibido";
     }
     if(trip==visits.end()||trip->partner!=peer)return "Viaje desconocido";

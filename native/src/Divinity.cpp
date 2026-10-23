@@ -46,9 +46,9 @@ void World::updateDivinity(float dt){
         int d=std::abs(k%mapWidth-desired%mapWidth)+std::abs(k/mapWidth-desired/mapWidth);if(!occupied&&d<distance){spawn=k;distance=d;}
     }
     if(spawn<0)return;
-    Resident child;child.female=random()%2==0;child.naturalDeathAge=(75+random()%21)*360.0f;child.name="Elegido "+std::to_string(metrics["chosen_births"]+1);child.trait="Elegido";child.ageDays=0;child.chosen=true;child.home=child.goal=spawn;child.x=spawn%mapWidth+.5f;child.y=spawn/mapWidth+.5f;child.seeds=child.money=0;child.relationships.resize(residents.size()+1);
+    Resident child;child.female=random()%2==0;child.naturalDeathAge=(75+random()%21)*360.0f;child.name="Elegido "+std::to_string(metrics["chosen_births"]+1);child.trait="Elegido";child.ageDays=0;child.chosen=true;child.home=child.goal=spawn;child.x=spawn%mapWidth+.5f;child.y=spawn/mapWidth+.5f;child.seeds=child.money=0;
     if(chosenPatron>=0&&chosenPatron<static_cast<int>(residents.size())&&residents[chosenPatron].ageDays>=World::adultAgeDays){if(residents[chosenPatron].female)child.mother=chosenPatron;else child.father=chosenPatron;child.home=residents[chosenPatron].home;child.insideHouse=residents[chosenPatron].insideHouse;}
-    residents.push_back(std::move(child));for(auto& r:residents)r.relationships.resize(residents.size());chosenBirthAt=-1;chosenPatron=-1;++metrics["chosen_births"];record("Nacio el elegido despues de nueve meses. Es un recien nacido, no un trabajador adulto.");
+    residents.add(std::move(child));chosenBirthAt=-1;chosenPatron=-1;++metrics["chosen_births"];record("Nacio el elegido despues de nueve meses. Es un recien nacido, no un trabajador adulto.");
 }
 }
 

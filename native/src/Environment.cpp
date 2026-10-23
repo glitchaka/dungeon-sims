@@ -1,6 +1,7 @@
 #include "World.h"
 #include <algorithm>
 #include <cmath>
+#include <memory>
 namespace isla {
 namespace {bool valid(int k){return k>=0&&k<mapWidth*mapHeight;}int pos(const Resident& r){return cellId(static_cast<int>(r.x),static_cast<int>(r.y));}bool touches(const Prop& p,int k){return valid(k)&&k%mapWidth>=static_cast<int>(std::floor(p.x-p.halfWidth))&&k%mapWidth<=static_cast<int>(std::floor(p.x+p.halfWidth))&&k/mapWidth>=static_cast<int>(std::floor(p.y-p.halfDepth))&&k/mapWidth<=static_cast<int>(std::floor(p.y+p.halfDepth));}}
 Prop* World::propAt(int k){for(auto& p:props)if(touches(p,k))return &p;return nullptr;}
@@ -15,7 +16,7 @@ bool World::placeable(int k,int ignoreSource) const {
         for(const auto& r:residents)if(r.alive&&!r.inDungeon&&!r.away&&(pos(r)==c||r.home==c||r.goal==c))return false;
         for(const auto& a:animals)if(a.alive&&cellId(static_cast<int>(a.x),static_cast<int>(a.y))==c)return false;
     }
-    World trial=*this;
+    auto candidate=std::make_unique<World>(*this);auto& trial=*candidate;
     if(ignoreSource>=0)trial.props.erase(std::remove_if(trial.props.begin(),trial.props.end(),[&](const Prop& p){return touches(p,ignoreSource);}),trial.props.end());
     trial.props.push_back({k%mapWidth+1.0f,k/mapWidth+1.0f,.9f,.9f,3,false,"Casa"});trial.rebuildNavigation();
     for(const auto& r:trial.residents)if(r.alive&&!r.inDungeon&&!r.away){

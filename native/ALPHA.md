@@ -4,6 +4,8 @@ Abre **Jugar.exe** con doble clic, en el proyecto o en el ZIP extraido. Es un la
 
 La primera pantalla pide tu nombre y permite continuar o crear una isla. Opciones de isla contiene perfil y semilla. Durante la partida puedes ABRIR MI ISLA / CERRAR MI ISLA o CONECTAR ISLA. No son modos de juego.
 
+`Jugar-Alpha.bat` selecciona el perfil nuevo `geografia-v5` para mostrar la geografía actual. Las partidas anteriores se conservan en sus perfiles y se pueden abrir desde Opciones de isla. TERRENO.md describe el relieve proyectado, los materiales v5 y la referencia vigente del usuario.
+
 ## Jugador y habitantes
 
 Clic inspecciona. El jugador puede inspirar sustento, edificacion, diplomacia o saqueo; enviar lluvia; sanar; dejar un regalo; anunciar el elegido. El regalo ocupa espacio y se recoge desde fuera. El elegido nace tras 270 dias de juego, no inmediatamente; el contador se guarda. Un dia son 300 segundos simulados.
@@ -41,3 +43,9 @@ Los habitantes pueden iniciar un muelle si falta comida o una inspiración diplo
 La vivienda se entrega primero a un adulto sin casa. Si todos tienen vivienda, queda libre para un inmigrante: el constructor conserva su casa anterior. Los encargos manuales siguen disponibles como intervención opcional.
 
 Familias y ciclo de vida implementados: detalles en FAMILIAS.md. Descanso nocturno dentro de viviendas, con salida por necesidades urgentes.
+
+Los habitantes usan los sprites detallados v6, con cuatro direcciones, dos pasos adultos y arte separado para menores. Se aplican tambien al cargar partidas existentes, sin migrar ni reiniciar el perfil.
+
+Animaciones v7: labranza con azadon, tala con hacha, botadura de tres segundos y remo segun rumbo. Cortejo adulto de ocho segundos (sorpresa inicial y saludo reciproco), nube opaca con corazones durante seis segundos y embarazo visible desde el segundo trimestre, con otra silueta en el tercero. Tras el parto se recupera el sprite normal. Cortejo y botadura se guardan; partidas v9 anteriores reciben valores por defecto. Capturas reproducibles: --capture ruta.png --seed 1749 --actions-preview 0 (herramientas levantadas/cortejo), 1 (golpe/aceptacion), 2 (nube). Esos escenarios solo funcionan en captura y no guardan partidas.
+
+Zoom ampliado: rueda hasta 3200% (antes 800%). El zoom conserva el punto bajo el cursor. Los pasos, remos y efectos usan un reloj visual independiente de 1x/4x/12x, y las posiciones se interpolan entre pasos de simulacion de 100 ms. La pausa detiene tambien las animaciones. Los objetos fuera de la vista se descartan antes de comprobar su ocultacion por el relieve.

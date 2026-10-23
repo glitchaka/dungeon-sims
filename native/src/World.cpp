@@ -29,7 +29,7 @@ World::World(){
     constexpr std::array<const char*,6> names{{"Luna","Bruno","Alma","Teo","Vera","Nico"}};
     constexpr std::array<const char*,6> traits{{"Exploradora","Sociable","Cazadora","Trabajador","Agricultora","Explorador"}};
     constexpr std::array<int,6> homes{{cellId(55,46),cellId(56,46),cellId(57,46),cellId(59,46),cellId(60,46),cellId(61,46)}};
-    for(std::size_t i=0;i<names.size();++i){Resident r;r.female=i%2==0;r.name=names[i];r.trait=traits[i];r.home=freeNear(homes[i]);r.goal=r.home;r.x=r.home%mapWidth+.5f;r.y=r.home/mapWidth+.5f;residents.push_back(r);}
+    for(std::size_t i=0;i<names.size();++i){Resident r;r.female=i%2==0;r.name=names[i];r.trait=traits[i];r.home=freeNear(homes[i]);r.goal=r.home;r.x=r.home%mapWidth+.5f;r.y=r.home/mapWidth+.5f;residents.add(r);}
 
     for(int center:std::array<int,5>{{cellId(49,35),cellId(96,38),cellId(88,48),cellId(56,63),cellId(55,80)}})
         for(int dy=-1;dy<=1;++dy)for(int dx=-2;dx<=2;++dx){int x=center%mapWidth+dx,y=center/mapWidth+dy,k=cellId(x,y);if(x<0||y<0||x>=mapWidth||y>=mapHeight||terrain[k]!=Terrain::Ground)continue;forest[k]=false;crops.push_back({k,(x%4==0?0:3),0,-1,(x%4==0?0.0f:120.0f),0});}

@@ -11,3 +11,6 @@ Un dia dura 300 segundos simulados, un mes 30 dias y un ano 360 dias. Edad y rel
 Por la noche buscan vivienda y entran: no se dibujan descansando fuera. Los hijos pueden usar la casa de sus padres. Salen al amanecer o por necesidades urgentes. Las travesias iniciadas se completan.
 
 La prueba automatizada verifica privacidad, exclusion de menores y familiares, busqueda de pareja, embarazo guardado, nacimiento, etapas, muerte natural, descanso interior y envejecimiento en partidas largas.
+El encuentro incluye ocho segundos de cortejo: gesto de interes, sorpresa inicial y respuesta alegre. Si se separan o falta privacidad, se interrumpe. Despues se muestra una nube opaca con corazones durante seis segundos; el contenido queda fuera de plano. Ambos contadores se guardan. El embarazo usa siluetas distintas en el segundo y tercer trimestre y termina visualmente al nacer el bebe. No intervienen menores.
+
+Voces: al comenzar la nube suenan ara-ara-girl.mp3 (mujer) y yameteh-kodasai.mp3 (hombre). Al terminar se detienen las voces iniciales que sigan reproduciendose y suena kyaaaaaaaa.mp3 (hombre). Cada transicion dispara sus voces una vez, la pausa tambien pausa el sonido y cargar una partida no repite las voces de inicio de un encuentro ya comenzado.

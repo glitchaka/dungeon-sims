@@ -11,7 +11,7 @@ foreach($folder in @('assets','cnc-license')){
     [IO.Directory]::CreateDirectory($target) | Out-Null
     $source=if($folder -eq 'assets'){Join-Path $projectRoot 'native/assets'}else{Join-Path $releaseRoot $folder}
     if($folder -eq 'assets'){
-        $runtimeAssets=@('menu-island.png','building-pieces.png','civic-buildings.png','civic-pieces.json','fields.png','house.png','nature-pieces.png','objects.png','pieces.json','residents.png','road-tiles.png','terrain-topdown-v4.pck','ASSET-LICENSE.txt','PROVENANCE.md')
+        $runtimeAssets=@('sea-fish-v8.png','MYSTERY-V8-PROMPTS.md','ara-ara-girl.mp3','yameteh-kodasai.mp3','kyaaaaaaaa.mp3','menu-island.png','nature-reference-v5.png','buildings-reference-v5.png','civic-reference-v5.png','terrain-materials-v5.png','residents.png','residents-women-v6.png','residents-men-v6.png','residents-children-v6.png','residents-work-women-v7.png','residents-work-men-v7.png','residents-pregnancy-v7.png','boats-women-v7.png','boats-men-v7.png','boats-empty-v7.png','family-cloud-v7.png','ASSET-LICENSE.txt','PROVENANCE.md','REFERENCE-V5-PROMPTS.md','RESIDENT-V6-PROMPTS.md','ANIMATION-V7-PROMPTS.md')
         foreach($asset in $runtimeAssets){Copy-Item -LiteralPath (Join-Path $source $asset) -Destination $target -Force}
         Get-ChildItem -LiteralPath $target -File | Where-Object {$_.Name -notin $runtimeAssets} | ForEach-Object {Remove-Item -LiteralPath $_.FullName}
     }else{Get-ChildItem -LiteralPath $source -File | Copy-Item -Destination $target -Force}

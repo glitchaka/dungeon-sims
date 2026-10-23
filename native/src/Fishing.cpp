@@ -37,6 +37,7 @@ void World::updateFishing(float dt){
                 if(at(traveler)!=s.cell||traveler.next<traveler.path.size()){
                     if(!night()&&traveler.hunger>45&&traveler.thirst>45&&traveler.energy>45&&!traveler.hasOrder&&begin(traveler,Task::Move,s.cell)){traveler.hasOrder=true;traveler.orderedTask=Task::Move;traveler.orderedCell=s.cell;}continue;
                 }
+                s.fishingClock+=dt;if(s.fishingClock<3)continue;
                 const int home=s.seaHome;s.path=seaRoute(*this,home,[=](int k){return std::abs(k%mapWidth-home%mapWidth)+std::abs(k/mapWidth-home/mapWidth)>=12;});
                 if(s.path.empty()){trip->state="cancelled";traveler.hasOrder=false;traveler.task=Task::Idle;s.state="docked";s.passenger=-1;record("Visita cancelada: no existe salida navegable al mar");continue;}
                 s.next=0;s.state="visit_outbound";trip->state="sailing";traveler.inBoat=true;traveler.hasOrder=false;traveler.path.clear();traveler.next=0;++metrics["naval_departures"];
@@ -60,7 +61,7 @@ void World::updateFishing(float dt){
         }
         if(s.passenger<0||s.passenger>=static_cast<int>(residents.size()))continue;auto& r=residents[s.passenger];
         if(!r.alive){r.inBoat=false;s.passenger=-1;s.state="lost";continue;}
-        if(s.state=="boarding"){if(at(r)!=s.cell||r.next<r.path.size())continue;int home=s.seaHome;s.path=seaRoute(*this,home,[=](int k){return std::abs(k%mapWidth-home%mapWidth)+std::abs(k/mapWidth-home/mapWidth)>=12;});if(s.path.empty()){r.hasOrder=false;r.task=Task::Idle;s.passenger=-1;s.state="docked";record("Pesca cancelada: ruta maritima no disponible");continue;}s.next=0;s.state="outbound";r.inBoat=true;r.path.clear();r.next=0;}
+        if(s.state=="boarding"){if(at(r)!=s.cell||r.next<r.path.size())continue;s.fishingClock+=dt;if(s.fishingClock<3)continue;int home=s.seaHome;s.path=seaRoute(*this,home,[=](int k){return std::abs(k%mapWidth-home%mapWidth)+std::abs(k/mapWidth-home/mapWidth)>=12;});if(s.path.empty()){r.hasOrder=false;r.task=Task::Idle;s.passenger=-1;s.state="docked";record("Pesca cancelada: ruta maritima no disponible");continue;}s.next=0;s.state="outbound";r.inBoat=true;r.path.clear();r.next=0;}
         r.hunger=std::max(0.0f,r.hunger-.03f*dt);r.thirst=std::max(0.0f,r.thirst-.04f*dt);r.energy=std::max(0.0f,r.energy-.06f*dt);
         if(s.state=="outbound"||s.state=="returning"){
             if(s.next<s.path.size()){int k=s.path[s.next];float tx=k%mapWidth+.5f,ty=k/mapWidth+.5f,len=std::hypot(tx-s.x,ty-s.y),step=std::min(len,1.25f*dt);if(len>.0001f){s.x+=(tx-s.x)/len*step;s.y+=(ty-s.y)/len*step;}if(len<=step+.0001f){s.x=tx;s.y=ty;++s.next;}continue;}
@@ -75,7 +76,7 @@ void World::updateFishing(float dt){
     auto house=std::find_if(props.begin(),props.end(),[&](const Prop& p){return !p.tree&&p.kind=="house"&&(p.owner<0||p.owner>=static_cast<int>(residents.size())||!residents[p.owner].alive);});if(house==props.end())return;
     int home=cellId(static_cast<int>(house->x),static_cast<int>(house->y+1));if(!walkable(home%mapWidth,home/mapWidth))return;
     bool occupied=false;for(const auto& r:residents)if(r.alive&&!r.inBoat&&!r.inDungeon&&!r.away&&at(r)==home)occupied=true;if(occupied)return;
-    Resident newcomer;newcomer.female=random()%2==0;newcomer.name="Habitante "+std::to_string(residents.size()+1);newcomer.trait=alive%2?"Trabajador":"Agricultora";newcomer.home=home;newcomer.goal=home;newcomer.x=home%mapWidth+.5f;newcomer.y=home/mapWidth+.5f;newcomer.grain=2;newcomer.relationships.resize(residents.size()+1);house->owner=static_cast<int>(residents.size());grain-=2;treasury-=8;residents.push_back(std::move(newcomer));for(auto& r:residents)r.relationships.resize(residents.size());++metrics["arrivals"];record("Llego un nuevo habitante: hay vivienda y provisiones");
+    Resident newcomer;newcomer.female=random()%2==0;newcomer.name="Habitante "+std::to_string(residents.size()+1);newcomer.trait=alive%2?"Trabajador":"Agricultora";newcomer.home=home;newcomer.goal=home;newcomer.x=home%mapWidth+.5f;newcomer.y=home/mapWidth+.5f;newcomer.grain=2;house->owner=static_cast<int>(residents.size());grain-=2;treasury-=8;residents.add(std::move(newcomer));++metrics["arrivals"];record("Llego un nuevo habitante: hay vivienda y provisiones");
 }
 }
 

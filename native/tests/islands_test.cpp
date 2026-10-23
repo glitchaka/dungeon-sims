@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <memory>
+#include <set>
 #include <stdexcept>
 using nlohmann::json;
 void check(bool v,const char* m){if(!v)throw std::runtime_error(m);}
@@ -35,6 +36,11 @@ int main(){try{
     auto w=std::make_unique<isla::World>(),other=std::make_unique<isla::World>();w->generateIsland(42);other->generateIsland(42);check(w->terrain==other->terrain,"Island seed is not reproducible");check(isla::mapWidth==256&&isla::mapHeight==192&&std::count(w->terrain.begin(),w->terrain.end(),isla::Terrain::Ground)>15000,"Generated island is not substantially larger");other->generateIsland(43);check(w->terrain!=other->terrain,"Distinct seeds produce the same island");
     check(std::none_of(w->terrain.begin(),w->terrain.end(),[](isla::Terrain t){return t==isla::Terrain::Road||t==isla::Terrain::Bridge;}),"Random island has predefined roads");
     for(unsigned seed:{1u,101u,8881u}){w->generateIsland(seed);for(const auto& r:w->residents){check(w->walkable(static_cast<int>(r.x),static_cast<int>(r.y)),"Generated resident intersects terrain/object");check(!w->route(static_cast<int>(r.x),static_cast<int>(r.y),[&](int x,int y){return w->besideFreshWater(x,y);}).empty(),"Generated settlement cannot reach water");}}
+    std::set<int> residentRows,houseRows,houseColumns;
+    for(const auto& resident:w->residents)residentRows.insert(static_cast<int>(resident.y));
+    for(const auto& prop:w->props)if(prop.kind=="house"){houseRows.insert(static_cast<int>(prop.y));houseColumns.insert(static_cast<int>(prop.x));}
+    check(residentRows.size()>2&&houseRows.size()>2&&houseColumns.size()>2,"Settlement is still arranged in a fixed row");
+    check(*std::max_element(w->elevation.begin(),w->elevation.end())>20,"Island has no substantial mountain relief");
     int coast=-1;for(int k=isla::mapWidth+1;k<(isla::mapHeight-1)*isla::mapWidth-1;++k)if(w->terrain[k]==isla::Terrain::Sea&&w->terrain[k+1]==isla::Terrain::Ground){coast=k;break;}check(coast>=0,"No generated shore");int land=std::count(w->terrain.begin(),w->terrain.end(),isla::Terrain::Ground);w->growIsland(coast);check(std::count(w->terrain.begin(),w->terrain.end(),isla::Terrain::Ground)>land,"Island cannot expand");check(w->save("island-test.json")&&other->load("island-test.json")&&other->terrain==w->terrain&&other->islandSeed==w->islandSeed,"Expanded generated island does not persist");
     flat(*w);w->elevation[isla::cellId(9,5)]=3;check(!w->canStep(8,5,9,5),"Resident can climb a vertical terrain drop");w->elevation[isla::cellId(12,12)]=3;check(!w->placeable(isla::cellId(12,12)),"Construction accepts an uneven cliff foundation");
     flat(*w);w->designate("townhall",isla::cellId(12,12));finish(*w);check(w->propAt(isla::cellId(12,12))->kind=="townhall"&&w->market==isla::cellId(12,14),"Townhall does not become the civic center");
