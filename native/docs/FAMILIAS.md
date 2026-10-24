@@ -15,3 +15,4 @@ El encuentro incluye ocho segundos de cortejo: gesto de interes, sorpresa inicia
 
 Voces: al comenzar la nube suenan ara-ara-girl.mp3 (mujer) y yameteh-kodasai.mp3 (hombre). Al terminar se detienen las voces iniciales que sigan reproduciendose y suena kyaaaaaaaa.mp3 (hombre). Cada transicion dispara sus voces una vez, la pausa tambien pausa el sonido y cargar una partida no repite las voces de inicio de un encuentro ya comenzado.
 
+

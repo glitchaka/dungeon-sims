@@ -48,3 +48,4 @@ Las pruebas comprueban rutas continuas a agua, colisiones, recuperacion de sed, 
 
 Fuente fijada en 3aad8e412961ab543192ae70f8503dc8e178e095 de glitchaka/CnC_Modding_Support_oups. El material importado conserva GPL v3 y los terminos adicionales originales. CMake copia LICENSE.md, README.md de origen y el informe cnc-import.json junto al ejecutable. Esta adaptacion es de Isla Viva y no un producto original de Electronic Arts.
 
+

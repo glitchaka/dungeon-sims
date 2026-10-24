@@ -246,3 +246,4 @@ bool ResidentController::satisfyNeed(Resident& r) {
 }
 }
 
+

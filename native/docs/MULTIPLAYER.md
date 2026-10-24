@@ -22,3 +22,4 @@ Las nuevas visitas necesitan un barco libre y un muelle accesible. El habitante 
 
 Al recibir el resultado, el barco inicia su regreso y el original sigue fuera de la isla hasta desembarcar. Si el desembarco original quedo bloqueado, busca otra costa libre; no atraviesa una construccion. Los estados de embarque, navegacion y espera se guardan. Los mensajes repetidos durante el regreso no duplican recompensas. Los viajes de versiones anteriores conservan su ruta de compatibilidad al recibir resultados.
 
+

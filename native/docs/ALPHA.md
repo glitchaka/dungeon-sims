@@ -50,3 +50,4 @@ Animaciones v7: labranza con azadon, tala con hacha, botadura de tres segundos y
 
 Zoom ampliado: rueda hasta 3200% (antes 800%). El zoom conserva el punto bajo el cursor. Los pasos, remos y efectos usan un reloj visual independiente de 1x/4x/12x, y las posiciones se interpolan entre pasos de simulacion de 100 ms. La pausa detiene tambien las animaciones. Los objetos fuera de la vista se descartan antes de comprobar su ocultacion por el relieve.
 
+

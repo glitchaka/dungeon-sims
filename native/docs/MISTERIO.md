@@ -14,3 +14,4 @@ Residents, land animals, props (including homes and trees), crops, camps, gifts,
 isla_viva_native.exe --capture preview.png --seed 1749 --mystery-preview
 ```
 
+

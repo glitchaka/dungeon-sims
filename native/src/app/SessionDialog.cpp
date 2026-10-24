@@ -76,3 +76,4 @@ bool menu(ra::Engine& engine,SessionOptions& o,bool connection,const std::string
 bool chooseSession(ra::Engine& engine,SessionOptions& options,const std::string& capture){return menu(engine,options,false,capture);}
 bool chooseConnection(ra::Engine& engine,std::string& ip,unsigned short& port){SessionOptions options;options.ip=ip;options.port=port;if(!menu(engine,options,true,""))return false;ip=options.ip;port=options.port;return true;}
 
+

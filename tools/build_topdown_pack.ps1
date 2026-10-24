@@ -24,3 +24,4 @@ try {
 } finally {$reader.Dispose()}
 Write-Output "IVTPACK4: 9 regions; PNG hash verified; $out"
 
+

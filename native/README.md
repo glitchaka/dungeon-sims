@@ -17,3 +17,4 @@ El mundo avanza en pasos fijos de 100 ms. El dibujo interpola posiciones y usa s
 Los dos fotogramas originales por direccion se mezclan brevemente al pasar de uno a otro, con escala constante y los pies anclados. Esto suaviza las poses disponibles sin inventar una hoja de animacion nueva. La direccion se conserva cuando el habitante se detiene. El terreno modificado se calcula en segundo plano; la carga de la textura SDL se realiza en el hilo del dibujo.
 
 `assets/runtime/` es la fuente unica de recursos del ejecutable y del empaquetado. `assets/archive/` conserva los recursos anteriores sin incluirlos en el juego. [Indice de sprites](assets/README.md).
+

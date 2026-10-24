@@ -15,3 +15,4 @@ int main(){try{
  std::cout<<"Integrated menu: text entry, invalid IP, connection action, custom port and cancellation passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
 
+

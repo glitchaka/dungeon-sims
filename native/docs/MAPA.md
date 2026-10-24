@@ -16,3 +16,4 @@ Verificacion realizada: compilacion Release, carga y captura de 180 cuadros desd
 
 Camara: rueda del raton de 100% a 200%, anclada al cursor; boton central y WASD desplazan; Enter vuelve al mapa completo. El panel lateral queda fuera del area de dibujo y los clics sobre el panel no seleccionan objetos del mapa. La alpha actual esta en dist/IslaViva-alpha-zoom.
 
+

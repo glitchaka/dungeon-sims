@@ -112,3 +112,4 @@ No se identificÃ³ un archivo LICENSE en el Ã¡rbol revisado; conviene resolve
 
 El criterio de aceptaciÃ³n es conducta observable y persistente, con trazas que expliquen la elecciÃ³n; compilar y enlazar la biblioteca es solo una parte del trabajo.
 
+

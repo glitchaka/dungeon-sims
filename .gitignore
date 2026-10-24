@@ -1,10 +1,8 @@
-﻿.godot/
+.godot/
+.godot-root-cache/
 *.log
 inspect-*.png
-verification.png
-verification-night.png
-inspection/
-verification-*.png
-
+verification*.png
+.local/
 native/build/
-dist/
+distribution/packages/

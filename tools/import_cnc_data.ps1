@@ -129,3 +129,4 @@ $lines | Set-Content -LiteralPath (Join-Path $OutputRoot 'CncData.h') -Encoding 
 [ordered]@{ revision = '3aad8e412961ab543192ae70f8503dc8e178e095'; source = 'glitchaka/CnC_Modding_Support_oups'; unitsPerTile = 24; parameters = $values; buildings = $props; trees = $trees; unsupported = @($unsupported); terrainAssets = $assets.Count; terrainClasses = $classes; adaptation = 'Original numeric XML values; SAGE distance units divided by 24. Buildings use 2D geometry proxies. No original ART resources or SAGE shaders are executed.' } | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $OutputRoot 'cnc-import.json') -Encoding UTF8
 Write-Output "Imported civilian locomotion, health, shadows, tree geometry, water, palette, weather, $($props.Count) buildings, $($trees.Count) trees and $($assets.Count) terrain definitions."
 
+

@@ -61,3 +61,4 @@ ResidentAnimation selecciona poses a partir de un estado de solo lectura, sin SD
 
 PresentationClock mantiene el tiempo visual; PresentationMotion conserva dos posiciones para interpolar residentes y barcos sin modificar el estado ni el guardado. ResidentAnimation recibe por separado el reloj de gestacion y el tiempo visual para evitar fotogramas repetidos por aliasing al acelerar la simulacion.
 
+

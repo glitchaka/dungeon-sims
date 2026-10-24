@@ -39,3 +39,4 @@ ResidentAnimation ResidentAnimation::select(const Resident& r,double elapsed,dou
 }
 
 
+

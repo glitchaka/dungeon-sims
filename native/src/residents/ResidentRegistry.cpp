@@ -26,3 +26,4 @@ void ResidentRegistry::restore(std::vector<Resident> residents) {
 }
 }
 
+

@@ -4,3 +4,4 @@ enum class Task {Idle,Wander,Drink,Eat,Rest,Flee,Bathe,Social,Gather,Camp,Trade,
 const char* taskName(Task task);
 }
 
+

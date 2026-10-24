@@ -32,3 +32,4 @@ int main(int argc,char** argv){try{
     std::cout<<"PASS: MP3 decoding/playback, one-shot transitions, pause, restore and adult-only events\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
 
+

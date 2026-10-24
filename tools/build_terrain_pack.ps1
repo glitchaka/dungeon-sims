@@ -7,3 +7,4 @@ $stream=[IO.File]::Create((Join-Path $root 'native/assets/archive/terrain-island
 try{$writer=[IO.BinaryWriter]::new($stream);$writer.Write([Text.Encoding]::ASCII.GetBytes('IVTPACK2'));$writer.Write([uint32]$metadata.Length);$writer.Write([uint32]$png.Length);$writer.Write($metadata);$writer.Write($png);$relief=[IO.File]::ReadAllBytes((Join-Path $root 'native/assets/archive/terrain-pack/natural-relief.png'));$writer.Write([uint32]$relief.Length);$writer.Write($relief);$writer.Flush()}finally{$stream.Dispose()}
 
 
+

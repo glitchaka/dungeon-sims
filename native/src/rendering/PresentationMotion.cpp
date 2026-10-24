@@ -24,3 +24,4 @@ ScreenPosition PresentationMotion::boat(const Ship& ship,std::size_t index,float
 }
 }
 
+

@@ -1,31 +1,37 @@
 ﻿# Isla Viva
 
-Abre **Jugar.exe** o **Jugar.bat**. Ambos abren la misma version nativa; no compilan al jugar. **Jugar-Alpha.bat** abre el perfil geografia-v5. Las partidas se conservan en `%LOCALAPPDATA%/IslaVivaNative`.
+**Jugar:** abre `Jugar.exe` o `Jugar.bat` en esta carpeta. Ambos abren el mismo juego y no compilan al iniciar. Las partidas permanecen en `%LOCALAPPDATA%/IslaVivaNative`.
 
-## Estructura del proyecto
+## Carpetas
 
-- `native/src/`: codigo C++ por modulo: app, world, simulation, residents, rendering, network, powers, audio y entities.
-- `native/assets/runtime/`: unicos recursos que carga y empaqueta el juego, separados por categoria.
-- `native/assets/source/`: entradas de generacion necesarias para compilar.
-- `native/assets/archive/`: arte anterior y experimentos; no se carga en el juego.
-- `native/docs/`: documentacion actual de mecanicas, controles y arquitectura.
-- `native/tests/`: pruebas existentes; separadas del codigo de juego.
-- `native/build/`: compilacion local y ejecutables generados; ignorado por Git.
-- `dist/IslaViva-alpha-family-life/`: paquete jugable activo.
-- `releases/`: paquetes ZIP historicos.
-- `tools/`: herramientas de compilacion, importacion y empaquetado.
-- `legacy/godot/`: proyecto original de Godot, independiente del C++.
-- `references/`: material externo de consulta e importacion, incluido C&C.
-- `inspection/`: archivos temporales de trabajo y referencias extraidas; ignorado por Git.
+| Carpeta | Contenido |
+| --- | --- |
+| native | Proyecto C++, codigo por modulos, recursos activos y documentacion |
+| tools | Compilacion, importacion y empaquetado; accesos secundarios en launchers |
+| external | Material externo de consulta e importacion de C&C |
+| legacy/godot | Proyecto original Godot y su acceso de arranque |
+| distribution/packages/current | Paquete jugable actual |
+| distribution/packages/archive | Paquetes locales anteriores conservados |
+| distribution/releases | ZIP publicados e historicos |
+| licenses | Licencias y agradecimientos originales |
+| .local | Capturas anteriores, logs y archivos temporales de trabajo; no se publica |
+| .vscode | Configuracion del editor |
 
-## Sprites y animaciones
+`.git` y `.gitignore` pertenecen al control de versiones.
 
-Los personajes detallados del video estan en [native/assets/runtime/characters](native/assets/runtime/characters). Las hojas v6 son adultos y menores; las v7 contienen trabajo, cortejo y embarazo. Barcos y remeros estan en `runtime/boats`; la nube en `runtime/effects`. [Indice de recursos](native/assets/README.md).
+## Accesos secundarios
 
-## Documentacion
+- `tools/launchers/Jugar-Alpha.bat`: perfil geografia-v5.
+- `tools/launchers/Jugar-Multijugador.bat`: abre el juego para conectar islas desde su interfaz.
+- `tools/launchers/Jugar.vbs`: acceso alternativo sin consola.
+- `legacy/godot/Jugar-Godot.bat`: version Godot original; requiere el motor Godot.
 
-[Funciones y controles](native/docs/ALPHA.md) · [Familias](native/docs/FAMILIAS.md) · [Multijugador](native/docs/MULTIPLAYER.md) · [Terreno](native/docs/TERRENO.md) · [Organizacion del C++](native/README.md).
+## Sprites y documentacion
+
+[Personajes y recursos del video](native/assets/README.md) · [Estructura del C++](native/README.md) · [Controles](native/docs/ALPHA.md) · [Familias](native/docs/FAMILIAS.md) · [Multijugador](native/docs/MULTIPLAYER.md).
 
 ## Desarrollo
 
-`powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_native.ps1 -BuildOnly` compila. `tools/package_alpha.ps1` copia el ejecutable y el arbol runtime al paquete activo. El lanzador de la raiz utiliza primero `native/build/Release/isla_viva_native.exe`.
+`powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_native.ps1 -BuildOnly` compila. `tools/package_alpha.ps1` actualiza `distribution/packages/current`.
+
+El lanzador principal utiliza primero `native/build/Release/isla_viva_native.exe`; si no existe, busca `distribution/packages/current/isla_viva_native.exe`.

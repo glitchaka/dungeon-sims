@@ -19,3 +19,4 @@ int main(){try{
  std::cout<<"PASS: adult autonomous pregnancy, privacy, parentage, nine-month birth, saved pregnancy, indoor sleep and morning exit\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
 
+

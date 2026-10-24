@@ -7,3 +7,4 @@ class World;
 ResidentDecisionContext residentDecisionContext(const World& world, const Resident& resident);
 }
 
+

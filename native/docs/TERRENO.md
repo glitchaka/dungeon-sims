@@ -59,3 +59,4 @@ El render del terreno tiene 3072 x 2304 pÃ­xeles. La cÃ¡mara permite zoom de
 a 800 %. Las pruebas comprueban generaciÃ³n reproducible, acceso al agua,
 dispersiÃ³n de viviendas y habitantes, efecto visual de la altura e inversiÃ³n de
 la proyecciÃ³n para el ratÃ³n, ademÃ¡s de los flujos de simulaciÃ³n existentes.
+

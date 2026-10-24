@@ -22,3 +22,4 @@ struct Gift {int cell{},grain{12},wood{8};};
 struct Visit {std::string id,origin,kind,state;int resident{-1},originResident{-1};float clock{};bool incoming{};std::string partner;};
 }
 
+

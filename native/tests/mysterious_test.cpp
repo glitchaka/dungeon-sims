@@ -64,3 +64,4 @@ int main(){try{
     std::cout<<"PASS: draggable residents/animals/houses/crops/fish/water, valid destinations, atomic cancellation, 180-second saved cooldown and hidden mouse gesture\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
 
+

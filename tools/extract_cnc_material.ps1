@@ -1,8 +1,8 @@
 ﻿param([switch]$Refresh)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot
-$sourceRoot = Join-Path $projectRoot 'inspection/cnc-modding-support-source'
-$targetRoot = Join-Path $projectRoot 'references/cnc-modding-support'
+$sourceRoot = Join-Path $projectRoot '.local/inspection/cnc-modding-support-source'
+$targetRoot = Join-Path $projectRoot 'external/cnc-modding-support'
 $revision = '3aad8e412961ab543192ae70f8503dc8e178e095'
 $repository = 'https://github.com/glitchaka/CnC_Modding_Support_oups.git'
 function Invoke-GitChecked {
@@ -59,6 +59,7 @@ try {
 } finally { $sha1.Dispose() }
 [ordered]@{ repository = $repository; revision = $revision; files = $selected } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $targetRoot 'MANIFEST.json') -Encoding UTF8
 Write-Output "Extracted and verified $($selected.Count) files."
+
 
 
 

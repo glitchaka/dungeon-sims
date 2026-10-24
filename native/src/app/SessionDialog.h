@@ -5,3 +5,4 @@ struct SessionOptions {std::string name{"Deidad"},profile{"default"},ip;unsigned
 bool chooseSession(ra::Engine& engine,SessionOptions& options,const std::string& capture="");
 bool chooseConnection(ra::Engine& engine,std::string& ip,unsigned short& port);
 
+

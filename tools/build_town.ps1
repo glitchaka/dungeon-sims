@@ -52,3 +52,4 @@ $json=$data|ConvertTo-Json -Depth 24 -Compress
 [IO.File]::WriteAllText((Join-Path $root 'data/town.json'),$json,(New-Object Text.UTF8Encoding $false))
 Write-Output "Converted $($layers.Count) layers, $($objects.Count) objects, $($tiles.Count) tile definitions."
 
+

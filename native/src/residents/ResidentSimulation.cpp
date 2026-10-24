@@ -100,3 +100,4 @@ bool ResidentSimulation::move(Resident& r, float dt) {
 }
 }
 
+

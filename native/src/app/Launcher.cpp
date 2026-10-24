@@ -15,7 +15,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR arguments, int) {
         L"native/build/Release/isla_viva_native.exe",
         L"native/build/Debug/isla_viva_native.exe",
         L"native/build/isla_viva_native.exe",
-        L"dist/IslaViva-alpha-family-life/isla_viva_native.exe"
+        L"distribution/packages/current/isla_viva_native.exe"
     }) {
         const auto candidate = root / relative;
         if (std::filesystem::is_regular_file(candidate)) {
@@ -42,4 +42,5 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR arguments, int) {
     CloseHandle(process.hProcess);
     return 0;
 }
+
 

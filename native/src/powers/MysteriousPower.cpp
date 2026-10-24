@@ -152,3 +152,4 @@ bool MysteriousPower::move(World& w,MysteryTarget t,int destination,double now) 
 }
 }
 
+

@@ -30,3 +30,4 @@ try {
 Write-Output "Rendered $($map.placements.Count) existing atlas pieces to $Output"
 
 
+

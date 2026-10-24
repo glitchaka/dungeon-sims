@@ -1,9 +1,9 @@
-﻿param([string]$Name='IslaViva-alpha-family-life', [switch]$SkipHashes)
+﻿param([string]$Name='current', [switch]$SkipHashes)
 $ErrorActionPreference='Stop'
 if($Name -notmatch '^[A-Za-z0-9_-]+$'){throw 'Invalid package name'}
 $projectRoot=Split-Path $PSScriptRoot
 $releaseRoot=Join-Path $projectRoot 'native/build/Release'
-$packageRoot=Join-Path $projectRoot ('dist/'+$Name)
+$packageRoot=Join-Path $projectRoot ('distribution/packages/'+$Name)
 [IO.Directory]::CreateDirectory($packageRoot) | Out-Null
 foreach($file in @('isla_viva_native.exe','Jugar.exe','cnc-import.json')){Copy-Item -LiteralPath (Join-Path $releaseRoot $file) -Destination $packageRoot -Force}
 foreach($folder in @('assets','cnc-license')){
@@ -22,6 +22,7 @@ $hashLines=Get-ChildItem -LiteralPath $resolvedPackage -File -Recurse | Where-Ob
 $hashLines | Set-Content -LiteralPath (Join-Path $resolvedPackage 'SHA256SUMS.txt') -Encoding ASCII
 }
 Write-Output $packageRoot
+
 
 
 

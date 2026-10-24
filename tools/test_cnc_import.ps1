@@ -25,3 +25,4 @@ try { & (Join-Path $PSScriptRoot 'import_cnc_data.ps1') -SourceRoot (Join-Path $
 if(!$failed) { throw 'Importer accepted missing XML sources' }
 'PASS: source XML mutations propagate and missing inputs fail'
 
+

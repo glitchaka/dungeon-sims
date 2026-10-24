@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 find_program(POWERSHELL_EXECUTABLE NAMES powershell REQUIRED)
-set(CNC_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../references/cnc-modding-support")
+set(CNC_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../external/cnc-modding-support")
 set(CNC_GENERATED "${CMAKE_CURRENT_BINARY_DIR}/generated")
 file(GLOB_RECURSE CNC_INPUTS CONFIGURE_DEPENDS
     "${CNC_SOURCE}/Red Alert 3/Xml/BaseObjects/*.xml"
@@ -187,4 +187,5 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME families_and_indoor_sleep COMMAND isla_family_tests)
 endif()
+
 

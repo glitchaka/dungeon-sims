@@ -14,3 +14,4 @@ El multijugador sigue siendo directo entre dos islas con conectividad TCP. No se
 
 Actualizacion: menu integrado sin roles de conexion al inicio; apertura/cierre de isla durante la partida; descanso interior real; familias autonomas adultas, embarazo de nueve meses, parentesco y ciclo de vida hasta muerte natural. Siete pruebas aprobadas.
 
+

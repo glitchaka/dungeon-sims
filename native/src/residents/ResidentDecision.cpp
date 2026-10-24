@@ -81,3 +81,4 @@ ResidentPreference ResidentDecision::evaluate(const Resident& r,
 }
 }
 
+

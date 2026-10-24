@@ -72,3 +72,4 @@ void ResidentActions::act(Resident& r,float dt){
 }
 }
 
+

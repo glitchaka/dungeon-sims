@@ -44,3 +44,4 @@ $header='#pragma once'+[Environment]::NewLine+'#include <array>'+[Environment]::
 'Imported terrain collision mask from geology asset'
 
 
+

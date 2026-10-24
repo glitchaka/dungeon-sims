@@ -9,3 +9,4 @@ foreach($p in $layout.placements){foreach($v in @($p.tile,$p.x,$p.y,$p.width,$p.
 [TopDownIsland]::Render((Join-Path $root 'native/assets/archive/terrain-topdown-v4/regions.png'),(Join-Path $root $Output),$Seed,$regions.ToArray())
 Get-FileHash (Join-Path $root $Output) -Algorithm SHA256 | Select-Object Hash,Path
 
+

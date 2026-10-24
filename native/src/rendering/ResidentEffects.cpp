@@ -40,3 +40,4 @@ void ResidentEffects::impact(SDL_Renderer* r,float x,float y,float size,double p
 }
 }
 
+

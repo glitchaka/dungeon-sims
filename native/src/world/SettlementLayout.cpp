@@ -58,3 +58,4 @@ void SettlementLayout::placeHomes(World& world, std::uint32_t seed) {
 }
 }
 
+

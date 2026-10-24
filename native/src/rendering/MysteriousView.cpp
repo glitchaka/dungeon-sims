@@ -83,3 +83,4 @@ void MysteriousView::drawEffect(SDL_Renderer* r,const World& w,ra::Rect viewport
 }
 }
 
+

@@ -23,3 +23,4 @@ try{$reader=[IO.BinaryReader]::new($stream);if([Text.Encoding]::ASCII.GetString(
 }finally{$stream.Dispose()}
 Write-Output "Verified: 24 blocks, source rectangles, transparency and $count archive entries"
 
+

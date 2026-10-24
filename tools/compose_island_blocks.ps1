@@ -39,3 +39,4 @@ if(-not $Output){$Output="native/assets/archive/terrain-blocks-v3/layouts/$Patte
 ConvertTo-Json -InputObject $result -Depth 8 | Set-Content -LiteralPath (Join-Path $root $Output) -Encoding UTF8
 Write-Output "$Pattern : $($placements.Count) modules; coverage and shoreline connections verified"
 
+
