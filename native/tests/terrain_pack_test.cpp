@@ -1,4 +1,4 @@
-#include "TerrainRenderer.h"
+﻿#include "TerrainRenderer.h"
 #include "TerrainProjection.h"
 #include <cmath>
 #include <iostream>
@@ -25,3 +25,4 @@ int main(){
   std::cout<<"Procedural relief responds to physical elevation without a terrain atlas\n";return 0;
  }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }
+

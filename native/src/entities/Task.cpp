@@ -1,4 +1,5 @@
-#include "Task.h"
+﻿#include "Task.h"
 namespace isla {
 const char* taskName(Task task){switch(task){case Task::Move:return "DESPLAZANDOSE";case Task::Fish:return "PESCANDO";case Task::Wander:return "EXPLORANDO";case Task::Drink:return "BEBER AGUA DULCE";case Task::Eat:return "COMIENDO";case Task::Rest:return "DESCANSANDO";case Task::Flee:return "HUYENDO";case Task::Bathe:return "LAVANDOSE";case Task::Social:return "CONVERSANDO";case Task::Gather:return "RECOLECTANDO MADERA";case Task::Camp:return "CONSTRUYENDO REFUGIO";case Task::Trade:return "COMERCIANDO";case Task::Till:return "PREPARANDO TIERRA";case Task::Sow:return "SEMBRANDO";case Task::Harvest:return "COSECHANDO";case Task::Deposit:return "DEPOSITANDO COSECHA";case Task::Fetch:return "BUSCANDO PROVISIONES";case Task::Hunt:return "CAZANDO";case Task::Tend:return "CUIDANDO GANADO";case Task::DrinkHome:return "BEBIENDO EN CASA";case Task::Project:return "REALIZANDO ENCARGO";case Task::Expedition:return "EN EXPEDICION";case Task::SellLoot:return "VENDIENDO ARTEFACTOS";default:return "OBSERVANDO";}}
 }
+

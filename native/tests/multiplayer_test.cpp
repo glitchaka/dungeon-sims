@@ -1,4 +1,4 @@
-#include "World.h"
+﻿#include "World.h"
 #include "Multiplayer.h"
 #include <nlohmann/json.hpp>
 #include <algorithm>
@@ -82,6 +82,7 @@ int main(){try{
     check(host.hosting(),"Open island did not expose hosting state");host.stop();check(!host.hosting()&&!host.connected(),"Closing island kept listener or peer open");check(host.host(port),"Island cannot reopen from gameplay after closing");host.stop();
     std::cout<<"PASS: nine-month birth deadline, newborn, pregnancy save/load, rain, gift collision/collection, autonomous needs, two TCP peers, diplomacy, raid, duplicate delivery, return and persistence\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+
 
 
 

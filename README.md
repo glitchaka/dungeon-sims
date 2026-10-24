@@ -1,81 +1,31 @@
-Abre **Jugar.exe**: elige nombre y modo en una pantalla grafica, sin consola. [Controles actuales](native/ALPHA.md), [conexion y chat](native/MULTIPLAYER.md), [terrenos](native/TERRENO.md).
+ï»¿# Isla Viva
 
-## Alpha de autonomia y visitas multijugador
+Abre **Jugar.exe** o **Jugar.bat**. Ambos abren la misma version nativa; no compilan al jugar. **Jugar-Alpha.bat** abre el perfil geografia-v5. Las partidas se conservan en `%LOCALAPPDATA%/IslaVivaNative`.
 
-Abre Jugar-Alpha.bat para jugar o Jugar-Multijugador.bat para conectar dos islas por IP. El panel contiene poderes divinos; los habitantes deciden sus trabajos. Hay diplomacia, saqueo y un elegido que nace tras nueve meses del calendario del juego. Alcance, controles y limites: [ALPHA](native/ALPHA.md) y [multijugador](native/MULTIPLAYER.md).
+## Estructura del proyecto
 
-# Isla Viva
+- `native/src/`: codigo C++ por modulo: app, world, simulation, residents, rendering, network, powers, audio y entities.
+- `native/assets/runtime/`: unicos recursos que carga y empaqueta el juego, separados por categoria.
+- `native/assets/source/`: entradas de generacion necesarias para compilar.
+- `native/assets/archive/`: arte anterior y experimentos; no se carga en el juego.
+- `native/docs/`: documentacion actual de mecanicas, controles y arquitectura.
+- `native/tests/`: pruebas existentes; separadas del codigo de juego.
+- `native/build/`: compilacion local y ejecutables generados; ignorado por Git.
+- `dist/IslaViva-alpha-family-life/`: paquete jugable activo.
+- `releases/`: paquetes ZIP historicos.
+- `tools/`: herramientas de compilacion, importacion y empaquetado.
+- `legacy/godot/`: proyecto original de Godot, independiente del C++.
+- `references/`: material externo de consulta e importacion, incluido C&C.
+- `inspection/`: archivos temporales de trabajo y referencias extraidas; ignorado por Git.
 
-Alpha C++ de desarrollo: [funciones y controles actuales](native/ALPHA.md). [Paquete portable](releases/IslaViva-alpha-wip.zip). El aspecto del mapa sigue en desarrollo y no esta aprobado como reproduccion identica de la referencia.
+## Sprites y animaciones
 
-Para abrir directamente la alpha con el mapa recreado, usa **Jugar-Alpha.bat**. Detalles y limites del mapa: [native/MAPA.md](native/MAPA.md). El proyecto Godot original esta apartado en `legacy/godot/project.godot`.
+Los personajes detallados del video estan en [native/assets/runtime/characters](native/assets/runtime/characters). Las hojas v6 son adultos y menores; las v7 contienen trabajo, cortejo y embarazo. Barcos y remeros estan en `runtime/boats`; la nube en `runtime/effects`. [Indice de recursos](native/assets/README.md).
 
-Abre **Jugar.bat** para compilar y ejecutar el port C++ con los datos importados. Requiere CMake y Visual Studio 2022 con C++. Consulta [la integración nativa](native/INTEGRACION.md) para el alcance, controles y pruebas. `Jugar-Godot.bat` conserva el arranque anterior si dispones del ejecutable Godot correspondiente.
+## Documentacion
 
-## Versión anterior en Godot
+[Funciones y controles](native/docs/ALPHA.md) Â· [Familias](native/docs/FAMILIAS.md) Â· [Multijugador](native/docs/MULTIPLAYER.md) Â· [Terreno](native/docs/TERRENO.md) Â· [Organizacion del C++](native/README.md).
 
-Las secciones siguientes describen la versión Godot; el port C++ todavía no incluye todas esas funciones.
+## Desarrollo
 
-## Presentación y controles
-
-La ventana es **sin bordes ni barra de título**. La interfaz está dentro del juego y tiene controles propios; no utiliza temas, controles, fuentes ni iconos predeterminados de Godot. El texto pixelado se compone con un píxel del atlas original. Los terrenos, personajes, animales y construcciones usan sus celdas de 8×8, ampliadas con nearest.
-
-El mapa es una isla compacta diseñada por zonas: aldea, lago y río, bosques con claros, montañas, campos, playas y caminos conectados con curvas, cruces y puentes. La vista inicial amplía los sprites a escala entera 2×. Los habitantes usan las personas de `MAS-Characters-P8.png` y `MAS-Characters-DB.png`; el personaje anterior ya no aparece.
-
-- **Retratos / clic en un habitante / Tab:** cambiar la persona inspeccionada. Su nombre, intención, inventario y seis necesidades aparecen en el panel inferior.
-- **Necesidades:** tienen nombre y valor numérico. Pasar el ratón o hacer clic explica qué significan y cómo se satisfacen.
-- **Clic en trigo:** abre el estado real de la parcela, crecimiento, cosechas completadas y trabajador actual.
-- **Clic en un animal:** identifica la especie y su relación con la caza.
-- **PAUSA / Espacio:** detener o continuar el tiempo.
-- **1×, 4×, 12×, 32× / teclas 1–4:** cambiar velocidad.
-- **SEGUIR / ISLA / F / rueda:** seguir al habitante seleccionado o volver al mapa completo.
-- **DIARIO / J:** ver las acciones recientes realizadas por los habitantes.
-- **GUARDAR / F5 y CARGAR / F9:** persistir o recuperar la partida.
-- **SALIR / Esc:** guardar y cerrar. **F11:** alternar pantalla completa.
-
-Los clics de inspección no dan órdenes de movimiento. Todos los habitantes deciden por sí mismos.
-
-## Agricultura conectada con la vida de la aldea
-
-Cada celda cultivada tiene estado persistente: tierra preparada, sembrada, creciendo o madura. La apariencia cambia con ese estado.
-
-1. Un agricultor reserva una parcela accesible; otro no puede trabajar simultáneamente el mismo lugar.
-2. Sembrar consume **una semilla del inventario**.
-3. El trigo pasa por brote, crecimiento y maduración. Tarda 120 segundos simulados de crecimiento; de noche crece más despacio.
-4. Cosechar retira el trigo visible y produce **3 de grano y 2 semillas**. Un cultivo inmaduro no puede cosecharse.
-5. Los habitantes llevan la cosecha al granero y conservan provisiones. Otros habitantes retiran grano de ese almacén para comer. Comer consume una unidad y aumenta la saciedad.
-6. Los agricultores vuelven a sembrar la tierra cosechada y preparan **parcelas nuevas**, gradualmente, en suelo cercano apto. No pueden cultivar encima de caminos, edificios, árboles o agua. La ampliación está limitada a 24 celdas adicionales en esta versión.
-7. El grano maduro no recogido se pierde con el tiempo. Con suficientes reservas, reducen la siembra; la prioridad de cosecha protege las reservas de semillas.
-
-No se suman comida o semillas simplemente por estar en un bosque o sobre un campo. Inventario, almacén, producción y consumo están conectados y sus cantidades se verifican en las pruebas.
-
-## Supervivencia autónoma
-
-Hay seis habitantes con personalidad, hambre, sed, energía, sociabilidad, diversión, higiene, salud y relaciones. Cazan animales del bosque para obtener raciones; la fauna se desplaza y repuebla gradualmente. Buscan agua dulce en orillas accesibles, se lavan, conversan, exploran y comercian madera. La sed o el hambre urgente pueden interrumpir otras tareas.
-
-Lejos de la aldea, el cansancio puede llevarlos a recolectar madera y montar un campamento: recolectar da cuatro unidades y construir consume tres. Los campamentos permanecen y pueden reutilizarse. El ciclo día/noche cambia gradualmente la iluminación y las prioridades de descanso. Un día dura cinco minutos a velocidad normal.
-
-## Guardado
-
-El guardado conserva necesidades, inventarios, relaciones, fauna, hora, campamentos, parcelas ampliadas, etapas de crecimiento, historial de cosechas y grano comunitario. Se realiza cada 45 segundos reales y al cerrar normalmente.
-
-Esta versión usa `user://isla_viva_v2.json`. El archivo de la primera versión no se sobrescribe: sus posiciones corresponden a otro mapa. En Windows, `user://` está dentro de `%APPDATA%\Godot\app_userdata\DUNGEON SIMS · Isla viva`.
-
-## Verificación
-
-Desde PowerShell, en la raíz:
-
-```powershell
-.\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path legacy/godot --script res://tests/simulation_test.gd
-.\godot\Godot_v4.7.2-stable_win64_console.exe --headless --path legacy/godot --script res://tests/farming_test.gd
-.\godot\Godot_v4.7.2-stable_win64_console.exe --path legacy/godot --script res://tests/presentation_test.gd
-```
-
-Las suites verifican supervivencia durante doce días, obstáculos, caza, agua, campamentos, conservación de semillas y grano, expansión agrícola, ciclos repetidos, guardado y controles mediante eventos de ratón. La última abre una ventana breve y comprueba también el modo sin decoración y la selección de los atlas correctos.
-
-La simulación todavía es una base: no incluye interiores habitables, familias ni la complejidad completa de Los Sims. Las tareas de construcción de campamentos, comercio y relaciones son sencillas. El mundo solo avanza mientras está abierto.
-
-Assets: **Aleksandr Makarov / IKnowKingRabbit**, Micro Asset Series. Se conservan todos los originales de `Res` y su `license.txt`. No se descargaron recursos gráficos externos.
-
-
-
+`powershell -NoProfile -ExecutionPolicy Bypass -File tools/run_native.ps1 -BuildOnly` compila. `tools/package_alpha.ps1` copia el ejecutable y el arbol runtime al paquete activo. El lanzador de la raiz utiliza primero `native/build/Release/isla_viva_native.exe`.

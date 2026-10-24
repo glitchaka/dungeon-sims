@@ -2,7 +2,7 @@
 $ErrorActionPreference='Stop'
 Add-Type -AssemblyName System.Drawing
 $root=Split-Path $PSScriptRoot
-$assets=Join-Path $root 'native/assets/terrain-blocks-v3'
+$assets=Join-Path $root 'native/assets/archive/terrain-blocks-v3'
 $catalog=Get-Content (Join-Path $assets 'manifest.json') -Raw | ConvertFrom-Json
 $map=Get-Content (Join-Path $root $Layout) -Raw | ConvertFrom-Json
 $blocks=@{};foreach($b in $catalog.blocks){$blocks[$b.id]=$b}
@@ -28,4 +28,5 @@ try {
  $canvas.Save((Join-Path $root $Output),[Drawing.Imaging.ImageFormat]::Png)
 } finally {$g.Dispose();$canvas.Dispose();foreach($i in $images.Values){$i.Dispose()}}
 Write-Output "Rendered $($map.placements.Count) existing atlas pieces to $Output"
+
 

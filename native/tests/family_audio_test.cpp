@@ -1,4 +1,4 @@
-#include "FamilyAudio.h"
+﻿#include "FamilyAudio.h"
 #include "World.h"
 #include <iostream>
 #include <memory>
@@ -28,6 +28,7 @@ int main(int argc,char** argv){try{
     audio.update(*w,true);check(audio.playing()==2,"Pause closed active voice clips");audio.update(*w,false);
     woman.familyMomentRemaining=0;audio.update(*w,false);check(audio.playing()==1,"Final MP3 did not replace initial voices");
     audio.reset();check(audio.playing()==0,"Audio resources leaked after shutdown");
-    for(const char* file:{"ara-ara-girl.mp3","yameteh-kodasai.mp3","kyaaaaaaaa.mp3"})std::cout<<file<<": "<<FamilyAudio::duration(std::filesystem::path(argv[1])/file)<<" ms\n";
+    for(const char* file:{"audio/ara-ara-girl.mp3","audio/yameteh-kodasai.mp3","audio/kyaaaaaaaa.mp3"})std::cout<<file<<": "<<FamilyAudio::duration(std::filesystem::path(argv[1])/file)<<" ms\n";
     std::cout<<"PASS: MP3 decoding/playback, one-shot transitions, pause, restore and adult-only events\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+

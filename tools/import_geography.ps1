@@ -43,3 +43,4 @@ $header='#pragma once'+[Environment]::NewLine+'#include <array>'+[Environment]::
 [IO.File]::WriteAllText($Output,$header,[Text.UTF8Encoding]::new($false))
 'Imported terrain collision mask from geology asset'
 
+

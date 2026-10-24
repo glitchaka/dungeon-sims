@@ -1,4 +1,4 @@
-#include "SessionDialog.h"
+﻿#include "SessionDialog.h"
 #include <ra/Engine.h>
 #include <SDL3/SDL.h>
 #include <iostream>
@@ -14,3 +14,4 @@ int main(){try{
  std::string ip;unsigned short port=32145;text("999.1.1.1");key(SDLK_RETURN);key(SDLK_A,SDL_KMOD_CTRL);text("10.0.0.4");key(SDLK_TAB);text("40000");key(SDLK_RETURN);check(chooseConnection(engine,ip,port)&&ip=="10.0.0.4"&&port==40000,"In-game connection menu lost address or custom port");
  std::cout<<"Integrated menu: text entry, invalid IP, connection action, custom port and cancellation passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+

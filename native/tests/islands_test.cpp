@@ -1,4 +1,4 @@
-#include "World.h"
+﻿#include "World.h"
 #include <nlohmann/json.hpp>
 #include <algorithm>
 #include <fstream>
@@ -60,4 +60,5 @@ int main(){try{
     village(*w);w->communityWood=19;w->grain=0;w->updateEcology(.2f);check(w->jobs.empty(),"Autonomous planner spent emergency resource reserve");
     std::cout<<"PASS: random seeded islands, navigability, growth/save, civic work, functional docks, night sleep and one-time road migration\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+
 

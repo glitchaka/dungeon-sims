@@ -1,4 +1,4 @@
-#include "World.h"
+﻿#include "World.h"
 #include "ResidentActions.h"
 #include <algorithm>
 #include <filesystem>
@@ -98,4 +98,5 @@ int main(){try{
     const std::string save="environment-test-save.json";check(world->save(save),"Cannot save modified environment");auto loaded=std::make_unique<isla::World>();check(loaded->load(save)&&loaded->residents.size()==7&&loaded->props.size()==world->props.size(),"Cannot restore modified environment and population");
     std::cout<<"PASS: object and animal collision, construction, demolition, relocation, fields, tree cutting/regrowth, direct orders, fishing risk, population and save/load\n";return 0;
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}
+
 

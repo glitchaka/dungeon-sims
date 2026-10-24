@@ -1,4 +1,4 @@
-#include "TerrainRenderer.h"
+﻿#include "TerrainRenderer.h"
 #include "TerrainMaterials.h"
 #include <filesystem>
 #include <algorithm>
@@ -14,7 +14,7 @@ int main(int argc,char** argv) {
         auto world=std::make_unique<isla::World>();
         world->generateIsland(argc>2?static_cast<std::uint32_t>(std::stoul(argv[2])):1749u);
         isla::TerrainRenderer renderer;
-        isla::loadTerrainMaterials(renderer,(std::filesystem::absolute(argv[0]).parent_path()/"assets/terrain-materials-v5.png").string());
+        isla::loadTerrainMaterials(renderer,(std::filesystem::absolute(argv[0]).parent_path()/"assets/terrain/terrain-materials-v5.png").string());
         auto pixels=renderer.render(*world);
         for(std::size_t i=0;i<pixels.size();i+=4) std::swap(pixels[i],pixels[i+2]);
         std::array<unsigned char,54> header{};
@@ -36,3 +36,4 @@ int main(int argc,char** argv) {
         return 0;
     } catch(const std::exception& error) {std::cerr<<error.what()<<'\n';return 1;}
 }
+

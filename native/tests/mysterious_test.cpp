@@ -1,4 +1,4 @@
-#include "MysteriousPower.h"
+﻿#include "MysteriousPower.h"
 #include "MysteriousGesture.h"
 #include "SeaLife.h"
 #include "World.h"
@@ -63,3 +63,4 @@ int main(){try{
     check(loaded->load("mystery-old-save.json")&&loaded->mysteriousReadyAt==0&&!loaded->seaFish.empty(),"Existing v9 island cannot gain the hidden power and sea life");
     std::cout<<"PASS: draggable residents/animals/houses/crops/fish/water, valid destinations, atomic cancellation, 180-second saved cooldown and hidden mouse gesture\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+

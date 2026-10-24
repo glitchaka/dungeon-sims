@@ -1,4 +1,4 @@
-#include "World.h"
+﻿#include "World.h"
 #include <memory>
 #include <iostream>
 #include <stdexcept>
@@ -18,3 +18,4 @@ int main(){try{
  fixture(*w);w->residents[0].ageDays=w->residents[0].naturalDeathAge;w->jobs.push_back({1,isla::cellId(20,20),isla::cellId(19,20),0,"house"});w->updateLifecycle(.1f);check(!w->residents[0].alive&&w->residents[0].health==0&&w->jobs[0].worker==-1&&w->metrics["natural_deaths"]>0,"Natural death did not free the resident and pending work");
  std::cout<<"PASS: adult autonomous pregnancy, privacy, parentage, nine-month birth, saved pregnancy, indoor sleep and morning exit\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+

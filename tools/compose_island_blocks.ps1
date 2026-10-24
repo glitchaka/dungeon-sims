@@ -2,7 +2,7 @@
 $ErrorActionPreference='Stop'
 if($Width -lt 8 -or $Height -lt 8 -or $Width -gt 128 -or $Height -gt 128){throw 'Layout dimensions must be 8..128'}
 $root=Split-Path $PSScriptRoot
-$catalog=Get-Content -LiteralPath (Join-Path $root 'native/assets/terrain-blocks-v3/manifest.json') -Raw | ConvertFrom-Json
+$catalog=Get-Content -LiteralPath (Join-Path $root 'native/assets/archive/terrain-blocks-v3/manifest.json') -Raw | ConvertFrom-Json
 $vertices=[bool[]]::new(($Width+1)*($Height+1));$phase=($Seed%10000)*.011
 for($y=0;$y -le $Height;$y++){for($x=0;$x -le $Width;$x++){
     $nx=($x-$Width/2.0)/($Width/2.0-1);$ny=($y-$Height/2.0)/($Height/2.0-1)
@@ -35,6 +35,7 @@ for($y=0;$y -lt $Height;$y++){for($x=0;$x -lt $Width;$x++){
 for($i=0;$i -lt $masks.Length;$i++){if($masks[$i] -ne 0 -and -not $used[$i]){throw "Uncovered terrain cell $i"}}
 for($y=0;$y -lt $Height;$y++){for($x=0;$x -lt $Width;$x++){$m=$masks[$y*$Width+$x];if($x+1 -lt $Width){$n=$masks[$y*$Width+$x+1];if((($m -shr 1) -band 1) -ne ($n -band 1) -or (($m -shr 2) -band 1) -ne (($n -shr 3) -band 1)){throw 'Horizontal shoreline connection mismatch'}};if($y+1 -lt $Height){$n=$masks[($y+1)*$Width+$x];if((($m -shr 3) -band 1) -ne ($n -band 1) -or (($m -shr 2) -band 1) -ne (($n -shr 1) -band 1)){throw 'Vertical shoreline connection mismatch'}}}}
 $result=[ordered]@{format='IslaViva modular layout';pattern=$Pattern;seed=$Seed;width=$Width;height=$Height;catalog='../manifest.json';status='logical_composition_not_runtime_island';placements=$placements.ToArray()}
-if(-not $Output){$Output="native/assets/terrain-blocks-v3/layouts/$Pattern.json"}
+if(-not $Output){$Output="native/assets/archive/terrain-blocks-v3/layouts/$Pattern.json"}
 ConvertTo-Json -InputObject $result -Depth 8 | Set-Content -LiteralPath (Join-Path $root $Output) -Encoding UTF8
 Write-Output "$Pattern : $($placements.Count) modules; coverage and shoreline connections verified"
+

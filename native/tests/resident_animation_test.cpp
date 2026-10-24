@@ -1,4 +1,4 @@
-#include "ResidentAnimation.h"
+﻿#include "ResidentAnimation.h"
 #include "PresentationMotion.h"
 #include "World.h"
 #include <iostream>
@@ -48,3 +48,4 @@ int main(){try{
     saved->updateFishing(2);check(saved->residents[0].inBoat&&saved->ships[0].state=="outbound","Launching did not transition into rowing");
     std::cout<<"PASS: action selection, age boundaries, pregnancy stages and saved launch-to-row transition\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+

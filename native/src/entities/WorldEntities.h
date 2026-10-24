@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <array>
 #include <cstddef>
 #include <string>
@@ -21,3 +21,4 @@ struct Landform {std::string kind;float x{},y{},radiusX{},radiusY{},height{},dra
 struct Gift {int cell{},grain{12},wood{8};};
 struct Visit {std::string id,origin,kind,state;int resident{-1},originResident{-1};float clock{};bool incoming{};std::string partner;};
 }
+

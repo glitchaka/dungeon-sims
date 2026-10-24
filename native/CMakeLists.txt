@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+﻿cmake_minimum_required(VERSION 3.25)
 project(IslaVivaNative VERSION 0.2.0 LANGUAGES C CXX)
 if(NOT WIN32)
     message(FATAL_ERROR "The Red Alert framework currently targets Windows only.")
@@ -21,15 +21,17 @@ add_custom_command(OUTPUT "${CNC_GENERATED}/CncData.h" "${CNC_GENERATED}/cnc-imp
     DEPENDS ${CNC_INPUTS} "${CMAKE_CURRENT_SOURCE_DIR}/../tools/import_cnc_data.ps1"
     COMMENT "Importing C&C XML into native game data" VERBATIM)
 add_library(isla_resident_model STATIC
-    src/ResidentRegistry.cpp
-    src/ResidentDecision.cpp
-    src/ResidentAnimation.cpp
-    src/PresentationMotion.cpp
-    src/FamilySoundEvents.cpp
+    src/residents/ResidentRegistry.cpp
+    src/residents/ResidentDecision.cpp
+    src/residents/ResidentAnimation.cpp
+    src/rendering/PresentationMotion.cpp
+    src/residents/FamilySoundEvents.cpp
     src/entities/Task.cpp
     "${CNC_GENERATED}/CncData.h")
-target_include_directories(isla_resident_model PUBLIC src "${CNC_GENERATED}")
-add_library(isla_sim STATIC src/World.cpp)
+target_include_directories(isla_resident_model PUBLIC
+    src src/app src/world src/simulation src/residents src/rendering
+    src/network src/powers src/audio "${CNC_GENERATED}")
+add_library(isla_sim STATIC src/world/World.cpp)
 target_link_libraries(isla_sim PUBLIC isla_resident_model)
 target_include_directories(isla_sim PUBLIC src "${CNC_GENERATED}")
 include(FetchContent)
@@ -38,17 +40,17 @@ FetchContent_Declare(red_alert_framework
     GIT_REPOSITORY https://github.com/glitchaka/CnC_Red_Alert_PVersion.git
     GIT_TAG 3184c20c33eb9877fe2ce39e2d8954b480cb35a7)
 FetchContent_MakeAvailable(red_alert_framework)
-add_executable(isla_viva_native src/main.cpp)
+add_executable(isla_viva_native src/app/main.cpp)
 target_link_libraries(isla_viva_native PRIVATE isla_sim RA::Engine)
 add_custom_command(TARGET isla_viva_native POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:isla_viva_native>/cnc-license"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_SOURCE}/LICENSE.md" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-license/LICENSE.md"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_SOURCE}/README.md" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-license/README.md"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_GENERATED}/cnc-import.json" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-import.json")
-add_library(isla_terrain_renderer STATIC src/TerrainRenderer.cpp src/TerrainProjection.cpp)
+add_library(isla_terrain_renderer STATIC src/rendering/TerrainRenderer.cpp src/rendering/TerrainProjection.cpp)
 target_link_libraries(isla_terrain_renderer PUBLIC isla_sim)
 target_link_libraries(isla_viva_native PRIVATE isla_terrain_renderer)
-add_executable(isla_geography_preview tools/geography_preview.cpp src/TerrainMaterials.cpp)
+add_executable(isla_geography_preview tools/geography_preview.cpp src/rendering/TerrainMaterials.cpp)
 target_link_libraries(isla_geography_preview PRIVATE isla_terrain_renderer RA::Engine)
 include(CTest)
 if(BUILD_TESTING)
@@ -67,33 +69,27 @@ endif()
 FetchContent_Declare(nlohmann_json GIT_REPOSITORY https://github.com/nlohmann/json.git GIT_TAG v3.11.3 GIT_SHALLOW TRUE)
 FetchContent_MakeAvailable(nlohmann_json)
 target_link_libraries(isla_sim PUBLIC nlohmann_json::nlohmann_json)
-target_sources(isla_sim PRIVATE src/Life.cpp src/Realm.cpp src/Persistence.cpp)
+target_sources(isla_sim PRIVATE src/simulation/Life.cpp src/simulation/Realm.cpp src/simulation/Persistence.cpp)
 target_compile_definitions(isla_viva_native PRIVATE ISLA_VIVA_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/..")
-set(ISLA_RUNTIME_ASSETS
-    sea-fish-v8.png MYSTERY-V8-PROMPTS.md
-    ara-ara-girl.mp3 yameteh-kodasai.mp3 kyaaaaaaaa.mp3
-    menu-island.png residents.png
-    residents-women-v6.png residents-men-v6.png residents-children-v6.png
-    residents-work-women-v7.png residents-work-men-v7.png residents-pregnancy-v7.png
-    boats-women-v7.png boats-men-v7.png boats-empty-v7.png family-cloud-v7.png ANIMATION-V7-PROMPTS.md
-    terrain-materials-v5.png nature-reference-v5.png
-    buildings-reference-v5.png civic-reference-v5.png
-    ASSET-LICENSE.txt PROVENANCE.md REFERENCE-V5-PROMPTS.md RESIDENT-V6-PROMPTS.md)
-add_custom_command(TARGET isla_viva_native POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:isla_viva_native>/assets")
+# Only this tree is loaded by the game; archive/ never enters a build or package.
+set(ISLA_ASSET_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/assets/runtime")
+file(GLOB_RECURSE ISLA_RUNTIME_ASSETS CONFIGURE_DEPENDS
+    RELATIVE "${ISLA_ASSET_ROOT}" "${ISLA_ASSET_ROOT}/*")
 foreach(asset IN LISTS ISLA_RUNTIME_ASSETS)
+    get_filename_component(asset_dir "${asset}" DIRECTORY)
     add_custom_command(TARGET isla_viva_native POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/assets/${asset}" "$<TARGET_FILE_DIR:isla_viva_native>/assets/${asset}")
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:isla_viva_native>/assets/${asset_dir}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "${ISLA_ASSET_ROOT}/${asset}" "$<TARGET_FILE_DIR:isla_viva_native>/assets/${asset}")
 endforeach()
-target_sources(isla_sim PRIVATE src/Environment.cpp)
-target_sources(isla_sim PRIVATE src/Fishing.cpp)
+target_sources(isla_sim PRIVATE src/world/Environment.cpp)
+target_sources(isla_sim PRIVATE src/simulation/Fishing.cpp)
 add_custom_command(OUTPUT "${CNC_GENERATED}/Geography.h"
     COMMAND "${POWERSHELL_EXECUTABLE}" -NoProfile -ExecutionPolicy Bypass -File "${CMAKE_CURRENT_SOURCE_DIR}/../tools/import_geography.ps1"
-        -Image "${CMAKE_CURRENT_SOURCE_DIR}/assets/geology.png" -Output "${CNC_GENERATED}/Geography.h"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/geology.png" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/import_geography.ps1" VERBATIM)
+        -Image "${CMAKE_CURRENT_SOURCE_DIR}/assets/source/geology.png" -Output "${CNC_GENERATED}/Geography.h"
+    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/assets/source/geology.png" "${CMAKE_CURRENT_SOURCE_DIR}/../tools/import_geography.ps1" VERBATIM)
 target_sources(isla_sim PRIVATE "${CNC_GENERATED}/Geography.h")
 
-target_sources(isla_sim PRIVATE src/Divinity.cpp src/Visits.cpp src/Multiplayer.cpp)
+target_sources(isla_sim PRIVATE src/powers/Divinity.cpp src/simulation/Visits.cpp src/network/Multiplayer.cpp)
 target_link_libraries(isla_sim PUBLIC ws2_32)
 
 if(BUILD_TESTING)
@@ -102,16 +98,16 @@ if(BUILD_TESTING)
     add_test(NAME divine_multiplayer COMMAND isla_multiplayer_tests)
 endif()
 
-target_sources(isla_viva_native PRIVATE src/SessionDialog.cpp src/TerrainMaterials.cpp src/SceneTexture.cpp src/ResidentSprites.cpp src/ResidentEffects.cpp)
-target_sources(isla_viva_native PRIVATE src/ActionPreview.cpp)
-target_sources(isla_viva_native PRIVATE src/FamilyAudio.cpp)
-target_sources(isla_viva_native PRIVATE src/MysteriousView.cpp)
-target_sources(isla_sim PRIVATE src/SeaLife.cpp src/MysteriousPower.cpp src/MysteriousGesture.cpp)
+target_sources(isla_viva_native PRIVATE src/app/SessionDialog.cpp src/rendering/TerrainMaterials.cpp src/rendering/SceneTexture.cpp src/rendering/ResidentSprites.cpp src/rendering/ResidentEffects.cpp)
+target_sources(isla_viva_native PRIVATE src/app/ActionPreview.cpp)
+target_sources(isla_viva_native PRIVATE src/audio/FamilyAudio.cpp)
+target_sources(isla_viva_native PRIVATE src/rendering/MysteriousView.cpp)
+target_sources(isla_sim PRIVATE src/world/SeaLife.cpp src/powers/MysteriousPower.cpp src/powers/MysteriousGesture.cpp)
 
 if(BUILD_TESTING)
-    add_executable(isla_resident_sprite_tests tests/resident_sprite_test.cpp src/ResidentSprites.cpp src/SceneTexture.cpp src/ResidentEffects.cpp src/TerrainProjection.cpp)
+    add_executable(isla_resident_sprite_tests tests/resident_sprite_test.cpp src/rendering/ResidentSprites.cpp src/rendering/SceneTexture.cpp src/rendering/ResidentEffects.cpp src/rendering/TerrainProjection.cpp)
     target_link_libraries(isla_resident_sprite_tests PRIVATE isla_sim RA::Engine SDL3_image::SDL3_image)
-    add_test(NAME detailed_resident_sprites COMMAND isla_resident_sprite_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+    add_test(NAME detailed_resident_sprites COMMAND isla_resident_sprite_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets/runtime")
     add_executable(isla_animation_tests tests/resident_animation_test.cpp)
     target_link_libraries(isla_animation_tests PRIVATE isla_sim)
     add_test(NAME resident_action_transitions COMMAND isla_animation_tests)
@@ -121,19 +117,19 @@ if(BUILD_TESTING)
         target_link_options(isla_mysterious_tests PRIVATE /STACK:16777216)
     endif()
     add_test(NAME mysterious_divine_drag COMMAND isla_mysterious_tests)
-    add_executable(isla_family_audio_tests tests/family_audio_test.cpp src/FamilyAudio.cpp)
+    add_executable(isla_family_audio_tests tests/family_audio_test.cpp src/audio/FamilyAudio.cpp)
     target_link_libraries(isla_family_audio_tests PRIVATE isla_sim winmm)
-    add_test(NAME family_voice_events COMMAND isla_family_audio_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets")
+    add_test(NAME family_voice_events COMMAND isla_family_audio_tests "${CMAKE_CURRENT_SOURCE_DIR}/assets/runtime")
 endif()
 target_link_libraries(isla_viva_native PRIVATE user32 gdi32 winmm)
 if(MSVC)
     target_link_options(isla_viva_native PRIVATE /SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup)
 endif()
-add_executable(isla_launcher WIN32 src/Launcher.cpp)
+add_executable(isla_launcher WIN32 src/app/Launcher.cpp)
 set_target_properties(isla_launcher PROPERTIES OUTPUT_NAME "Jugar")
 add_custom_command(TARGET isla_launcher POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:isla_launcher>" "${CMAKE_CURRENT_SOURCE_DIR}/../Jugar.exe")
 
-target_sources(isla_sim PRIVATE src/Islands.cpp)
+target_sources(isla_sim PRIVATE src/simulation/Islands.cpp)
 
 if(BUILD_TESTING)
     add_executable(isla_islands_tests tests/islands_test.cpp)
@@ -142,8 +138,8 @@ if(BUILD_TESTING)
 endif()
 
 enable_language(RC)
-target_sources(isla_viva_native PRIVATE src/ProductVersion.rc)
-target_sources(isla_launcher PRIVATE src/ProductVersion.rc)
+target_sources(isla_viva_native PRIVATE src/app/ProductVersion.rc)
+target_sources(isla_launcher PRIVATE src/app/ProductVersion.rc)
 
 
 if(BUILD_TESTING)
@@ -161,21 +157,21 @@ if(MSVC)
 endif()
 
 if(BUILD_TESTING)
-    add_executable(isla_menu_tests tests/session_menu_test.cpp src/SessionDialog.cpp)
+    add_executable(isla_menu_tests tests/session_menu_test.cpp src/app/SessionDialog.cpp)
     target_link_libraries(isla_menu_tests PRIVATE isla_sim RA::Engine)
     add_test(NAME integrated_session_menu COMMAND isla_menu_tests)
     set_tests_properties(integrated_session_menu PROPERTIES ENVIRONMENT "SDL_VIDEODRIVER=dummy;SDL_RENDER_DRIVER=software" TIMEOUT 15)
 endif()
 
-target_sources(isla_sim PRIVATE src/Family.cpp)
+target_sources(isla_sim PRIVATE src/simulation/Family.cpp)
 
 target_sources(isla_sim PRIVATE
-    src/SettlementLayout.cpp
-    src/IslandGeography.cpp
-    src/ResidentContext.cpp
-    src/ResidentController.cpp
-    src/ResidentActions.cpp
-    src/ResidentSimulation.cpp)
+    src/world/SettlementLayout.cpp
+    src/world/IslandGeography.cpp
+    src/residents/ResidentContext.cpp
+    src/residents/ResidentController.cpp
+    src/residents/ResidentActions.cpp
+    src/residents/ResidentSimulation.cpp)
 
 if(BUILD_TESTING)
     add_executable(isla_resident_tests tests/resident_test.cpp)
@@ -191,3 +187,4 @@ if(BUILD_TESTING)
     endif()
     add_test(NAME families_and_indoor_sleep COMMAND isla_family_tests)
 endif()
+

@@ -1,4 +1,4 @@
-param([Parameter(Mandatory=$true)][string]$SourceRoot,[Parameter(Mandatory=$true)][string]$BuildRoot)
+﻿param([Parameter(Mandatory=$true)][string]$SourceRoot,[Parameter(Mandatory=$true)][string]$BuildRoot)
 $ErrorActionPreference='Stop'
 $testRoot=Join-Path $BuildRoot ('import-test-'+[Guid]::NewGuid().ToString('N'))
 $inputRoot=Join-Path $testRoot 'source'
@@ -24,3 +24,4 @@ $failed=$false
 try { & (Join-Path $PSScriptRoot 'import_cnc_data.ps1') -SourceRoot (Join-Path $testRoot 'missing') -OutputRoot (Join-Path $testRoot 'invalid') } catch { $failed=$true }
 if(!$failed) { throw 'Importer accepted missing XML sources' }
 'PASS: source XML mutations propagate and missing inputs fail'
+

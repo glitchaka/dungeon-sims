@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "Artifact.h"
 #include "Task.h"
 #include "CncData.h"
@@ -48,3 +48,4 @@ struct Resident {
     float inspirationUntil{};
 };
 }
+

@@ -1,4 +1,4 @@
-param([switch]$BuildOnly, [switch]$SmokeTest)
+﻿param([switch]$BuildOnly, [switch]$SmokeTest)
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path $PSScriptRoot
 $buildRoot=Join-Path $projectRoot 'native/build'
@@ -15,3 +15,4 @@ try {
         if($LASTEXITCODE -ne 0) { throw 'El juego nativo termino con un error.' }
     }
 } catch { Write-Error $_; exit 1 }
+

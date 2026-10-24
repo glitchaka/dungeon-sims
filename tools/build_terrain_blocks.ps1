@@ -1,6 +1,6 @@
 ﻿$ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
-$source=Join-Path $root 'native/assets/terrain-blocks-v3'
+$source=Join-Path $root 'native/assets/archive/terrain-blocks-v3'
 $catalog=Get-Content -LiteralPath (Join-Path $source 'manifest.json') -Raw | ConvertFrom-Json
 if($catalog.blocks.Count -ne 24){throw 'Expected 24 modular blocks'}
 Add-Type -AssemblyName System.Drawing
@@ -11,7 +11,7 @@ foreach($sheet in $catalog.sheets){
     }finally{$image.Dispose()}
 }
 $files=@(Get-ChildItem -LiteralPath $source -File -Recurse | Sort-Object FullName)
-$output=Join-Path $root 'native/assets/terrain-blocks-v3.pck'
+$output=Join-Path $root 'native/assets/archive/terrain-blocks-v3.pck'
 $stream=[IO.File]::Create($output)
 try{$writer=[IO.BinaryWriter]::new($stream);$writer.Write([Text.Encoding]::ASCII.GetBytes('IVBLK003'));$writer.Write([uint32]$files.Count)
     foreach($file in $files){$name=[Text.Encoding]::UTF8.GetBytes($file.FullName.Substring($source.Length+1).Replace('\','/'));$data=[IO.File]::ReadAllBytes($file.FullName);$writer.Write([uint32]$name.Length);$writer.Write($name);$writer.Write([uint32]$data.Length);$writer.Write($data)};$writer.Flush()
@@ -22,3 +22,4 @@ try{$reader=[IO.BinaryReader]::new($stream);if([Text.Encoding]::ASCII.GetString(
     if($stream.Position -ne $stream.Length){throw 'Trailing pack data'}
 }finally{$stream.Dispose()}
 Write-Output "Verified: 24 blocks, source rectangles, transparency and $count archive entries"
+

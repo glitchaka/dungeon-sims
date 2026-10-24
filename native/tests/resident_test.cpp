@@ -1,4 +1,4 @@
-#include "ResidentDecision.h"
+﻿#include "ResidentDecision.h"
 #include "ResidentRegistry.h"
 #include <iostream>
 #include <stdexcept>
@@ -135,3 +135,4 @@ int main() {
         return 1;
     }
 }
+

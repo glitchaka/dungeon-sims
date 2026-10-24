@@ -1,4 +1,4 @@
-﻿param([string]$Source='native/assets/terrain-geography-v2',[string]$Output='native/assets/terrain-geography-v2.pck')
+﻿param([string]$Source='native/assets/archive/terrain-geography-v2',[string]$Output='native/assets/archive/terrain-geography-v2.pck')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
 $sourcePath=Join-Path $root $Source
@@ -22,3 +22,4 @@ try{
     if($stream.Position -ne $stream.Length){throw 'Unexpected trailing bytes'}
 }finally{$stream.Dispose()}
 Write-Output "Geography pack verified: $count files"
+

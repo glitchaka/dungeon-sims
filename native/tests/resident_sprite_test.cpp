@@ -1,4 +1,4 @@
-#include "ResidentSprites.h"
+﻿#include "ResidentSprites.h"
 #include "World.h"
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -71,3 +71,4 @@ int main(int argc,char** argv) {
         return 1;
     }
 }
+

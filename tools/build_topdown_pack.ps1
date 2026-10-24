@@ -1,7 +1,7 @@
-param()
+﻿param()
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
-$folder=Join-Path $root 'native/assets/terrain-topdown-v4'
+$folder=Join-Path $root 'native/assets/archive/terrain-topdown-v4'
 Add-Type -AssemblyName System.Drawing
 $image=[Drawing.Image]::FromFile((Join-Path $folder 'regions.png'))
 try {$w=$image.Width;$h=$image.Height} finally {$image.Dispose()}
@@ -11,7 +11,7 @@ $manifest=[ordered]@{format='IslaViva Terrain Pack';version=4;magic='IVTPACK4';c
 $json=$manifest | ConvertTo-Json -Depth 8
 $json | Set-Content (Join-Path $folder 'manifest.json') -Encoding UTF8
 $meta=[Text.Encoding]::UTF8.GetBytes($json);$png=[IO.File]::ReadAllBytes((Join-Path $folder 'regions.png'))
-$out=Join-Path $root 'native/assets/terrain-topdown-v4.pck'
+$out=Join-Path $root 'native/assets/archive/terrain-topdown-v4.pck'
 $stream=[IO.File]::Create($out);$writer=[IO.BinaryWriter]::new($stream)
 try {$writer.Write([Text.Encoding]::ASCII.GetBytes('IVTPACK4'));$writer.Write([uint32]$meta.Length);$writer.Write([uint32]$png.Length);$writer.Write($meta);$writer.Write($png)} finally {$writer.Dispose()}
 $reader=[IO.BinaryReader]::new([IO.File]::OpenRead($out))
@@ -23,3 +23,4 @@ try {
  if($reader.BaseStream.Position -ne $reader.BaseStream.Length){throw 'Unexpected trailing data'}
 } finally {$reader.Dispose()}
 Write-Output "IVTPACK4: 9 regions; PNG hash verified; $out"
+
