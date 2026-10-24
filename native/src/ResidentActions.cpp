@@ -11,6 +11,18 @@ bool ResidentActions::begin(Resident& r,Task task,int goal){
     if(goal<0||goal>=mapWidth*mapHeight)return false;
     if(task!=Task::Rest&&r.insideHouse>=0&&!leaveShelter(r))return false;
     const int workTarget=goal;
+    if(task==Task::Hunt||task==Task::Tend||task==Task::Fetch||task==Task::Deposit){
+        // Work beside an animal or shared store instead of waiting forever to
+        // enter its occupied cell. Other residents can use another free side.
+        goal=world_.nearest(r,[&](int x,int y){
+            if(std::abs(x-workTarget%mapWidth)+std::abs(y-workTarget/mapWidth)>1)return false;
+            for(const auto& other:world_.residents)
+                if(&other!=&r&&other.alive&&other.insideHouse<0&&!other.inBoat&&!other.inDungeon&&!other.away&&position(other)==cellId(x,y))return false;
+            for(const auto& animal:world_.animals)
+                if(animal.alive&&static_cast<int>(animal.x)==x&&static_cast<int>(animal.y)==y)return false;
+            return true;
+        });
+    }
     if(task==Task::Sow||task==Task::Harvest||task==Task::Till) goal=world_.nearest(r,[&](int x,int y){return std::abs(x-workTarget%mapWidth)+std::abs(y-workTarget/mapWidth)==1;});
     if(goal<0)return false;
     auto path=world_.route(static_cast<int>(r.x),static_cast<int>(r.y),[=](int x,int y){return cellId(x,y)==goal;});if(path.empty())return false;

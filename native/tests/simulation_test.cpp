@@ -1,4 +1,5 @@
 #include "World.h"
+#include "ResidentActions.h"
 #include <algorithm>
 #include <filesystem>
 #include <iostream>
@@ -27,6 +28,26 @@ int main(){try{
     check(std::none_of(world->terrain.begin(),world->terrain.end(),[](isla::Terrain t){return t==isla::Terrain::Road||t==isla::Terrain::Bridge;}),"New islands must not contain predefined roads");
     for(const auto& r:world->residents){check(world->walkable(static_cast<int>(r.x),static_cast<int>(r.y)),"Invalid authored spawn");auto path=world->route(static_cast<int>(r.x),static_cast<int>(r.y),[&](int x,int y){return world->besideFreshWater(x,y);});check(!path.empty(),"Authored map has no route to fresh water");}
     for(const auto& p:world->props)check(!world->walkable(static_cast<int>(p.x),static_cast<int>(p.y)),"Visible object lacks collision");
+    fixture(*world);
+    // Livestock occupies its pasture cell: collect from a free neighbour,
+    // then eat, rather than endlessly attempting to enter the animal's cell.
+    for(std::size_t i=1;i<world->residents.size();++i)world->residents[i].alive=false;
+    auto& hungry=world->residents[0];hungry.hunger=1;
+    world->grain=0;world->livestockFood=3;
+    const int pasture=isla::cellId(6,5);world->pasture[pasture]=true;
+    world->animals.push_back({6.5f,5.5f,100000,0,0,true});
+    check(isla::ResidentActions(*world).begin(hungry,isla::Task::Tend,pasture),"No free approach to livestock");
+    advance(*world,150);
+    check(hungry.alive&&hungry.hunger>20&&world->metrics["eat"]>0,"Occupied pasture prevented a hungry resident from eating");
+    check(world->livestockFood==0&&hungry.eggs==2,"Livestock food was not conserved");
+    // A starving hunter must use stored food even when the preferred hunt
+    // has no prey. Occupation preferences must not override survival.
+    fixture(*world);
+    for(std::size_t i=1;i<world->residents.size();++i)world->residents[i].alive=false;
+    world->residents[0].trait="Cazadora";world->residents[0].hunger=1;
+    world->granary=isla::cellId(6,5);world->grain=3;
+    advance(*world,150);
+    check(world->residents[0].alive&&world->residents[0].hunger>20&&world->metrics["grain_eaten"]>0,"Starving hunter ignored available stored grain");
     fixture(*world);
     // Demand must produce actual worker jobs, and abandoned roads must be reclaimed.
     for(std::size_t i=1;i<world->residents.size();++i)world->residents[i].alive=false;

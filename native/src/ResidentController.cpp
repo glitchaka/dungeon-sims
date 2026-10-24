@@ -10,8 +10,9 @@ float dist(int a,int b) { return std::hypot(static_cast<float>(a%mapWidth-b%mapW
 }
 void ResidentController::feed(Resident& r){
     if(r.meat+r.grain+r.eggs+r.fish>0){world_.begin(r,Task::Eat,position(r));return;}
-    if(world_.livestockFood>0&&r.trait!="Cazadora"){int k=world_.nearest(r,[&](int x,int y){return world_.pasture[cellId(x,y)];});if(k>=0){world_.begin(r,Task::Tend,k);return;}}
-    if(world_.grain>0&&r.trait!="Cazadora"){world_.begin(r,Task::Fetch,world_.granary);return;}
+    // Urgent hunger takes priority over occupational preferences and livestock.
+    if(world_.grain>0&&(r.hunger<18||r.trait!="Cazadora")&&world_.begin(r,Task::Fetch,world_.granary))return;
+    if(world_.livestockFood>0&&r.trait!="Cazadora"){int k=world_.nearest(r,[&](int x,int y){return world_.pasture[cellId(x,y)];});if(k>=0&&world_.begin(r,Task::Tend,k))return;}
     float best=1e9f;int chosen=-1;
     for(std::size_t i=0;i<world_.animals.size();++i){const auto& a=world_.animals[i];const int k=cellId(static_cast<int>(a.x),static_cast<int>(a.y));if(!a.alive||a.kind!=4||world_.protectedLand[k])continue;bool reserved=false;for(const auto& other:world_.residents)if(&other!=&r&&other.task==Task::Hunt&&other.target==static_cast<int>(i))reserved=true;if(!reserved&&dist(position(r),k)<best){best=dist(position(r),k);chosen=static_cast<int>(i);}}
     if(chosen>=0){r.target=chosen;const auto& a=world_.animals[chosen];if(world_.begin(r,Task::Hunt,cellId(static_cast<int>(a.x),static_cast<int>(a.y))))return;}

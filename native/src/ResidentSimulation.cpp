@@ -75,10 +75,14 @@ bool ResidentSimulation::move(Resident& r, float dt) {
     if (occupied) {
         r.actionTimer += dt;
         if (r.actionTimer > 2) {
-            const Task prior = r.task;
-            const int goal = (prior==Task::Sow || prior==Task::Harvest || prior==Task::Till)
-                ? r.workCell : r.goal;
-            world_.begin(r, prior, goal);
+            // A blocked destination may never become free (livestock, a
+            // resting neighbour). Reassess needs and choose a usable approach.
+            // This also releases food-seeking residents in existing saves.
+            r.path.clear();
+            r.next=0;
+            r.actionTimer=0;
+            r.task=Task::Idle;
+            ResidentController(world_).plan(r);
         }
         return true;
     }
