@@ -30,7 +30,7 @@ void depart(isla::World& w,int who,const std::string& kind){
 void returnHome(isla::World& w,int who){for(int i=0;i<4000&&w.residents[who].away;++i){w.elapsed=100;w.tick(.1f);}check(!w.residents[who].away&&!w.residents[who].inBoat&&w.ships[0].state=="docked","Visitor did not physically sail home and disembark");}
 int main(){try{
     auto a=std::make_unique<isla::World>(),b=std::make_unique<isla::World>();clean(*a);clean(*b);check(a->worldId!=b->worldId,"Independent islands share an identity");
-    a->miracle("chosen",0);float birth=a->chosenBirthAt;check(birth==9*30*300,"Chosen gestation is not nine game months");
+    a->miracle("chosen",0);float birth=a->chosenBirthAt;check(birth==isla::LifeCalendar::gestationSeconds,"Chosen gestation does not use the biological calendar");
     a->elapsed=birth-.125f;a->updateDivinity(0);check(a->residents.size()==6,"Chosen was born early");
     check(a->save("divine-test.json"),"Cannot persist pregnancy");auto restored=std::make_unique<isla::World>();check(restored->load("divine-test.json")&&restored->chosenBirthAt==birth,"Pregnancy deadline was not preserved");
     restored->elapsed=birth;restored->updateDivinity(0);check(restored->residents.size()==7&&restored->residents.back().chosen&&restored->residents.back().ageDays==0,"Chosen did not arrive as a newborn at deadline");

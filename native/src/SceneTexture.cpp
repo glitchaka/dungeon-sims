@@ -8,7 +8,7 @@
 namespace isla {
 void SceneTexture::reset() {
     for(auto* texture:levels_) SDL_DestroyTexture(texture);
-    levels_.clear();width=height=0;
+    levels_.clear();width=height=0;columns_=rows_=0;
 }
 
 void SceneTexture::extract(SDL_Surface* source,int spriteCount) {
@@ -94,8 +94,27 @@ void SceneTexture::upload(SDL_Renderer* renderer,const unsigned char* rgba,int i
     SDL_DestroySurface(source);
 }
 
+void SceneTexture::loadGrid(SDL_Renderer* renderer,const std::string& path,int columns,int rows) {
+    if(columns<1||rows<1)throw std::invalid_argument("Invalid animation grid");
+    load(renderer,path);
+    if(width<columns||height<rows)throw std::runtime_error("Animation grid exceeds image dimensions: "+path);
+    columns_=columns;rows_=rows;
+}
+
+ra::Rect SceneTexture::gridFrame(int frame) const {
+    if(columns_<1||frame<0||frame>=columns_*rows_)throw std::out_of_range("Animation frame outside atlas grid");
+    const float w=static_cast<float>(width)/columns_,h=static_cast<float>(height)/rows_;
+    return {frame%columns_*w,frame/columns_*h,w,h};
+}
+
 void SceneTexture::draw(ra::Rect destination)const {
     draw({0,0,static_cast<float>(width),static_cast<float>(height)},destination);
+}
+
+void SceneTexture::drawGeometry(const std::vector<SDL_Vertex>& vertices,const std::vector<int>& indices,float minification) const {
+    if(levels_.empty()||vertices.empty()||indices.empty())return;
+    const int mip=std::clamp(static_cast<int>(std::floor(std::log2(std::max(1.0f,minification)))),0,static_cast<int>(levels_.size()-1));
+    SDL_RenderGeometry(renderer_,levels_[mip],vertices.data(),static_cast<int>(vertices.size()),indices.data(),static_cast<int>(indices.size()));
 }
 
 void SceneTexture::draw(ra::Rect source,ra::Rect destination)const {

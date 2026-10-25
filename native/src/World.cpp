@@ -1,4 +1,5 @@
 #include "World.h"
+#include "TerrainSurface.h"
 #include "Geography.h"
 #include <algorithm>
 #include <cmath>
@@ -17,7 +18,7 @@ bool World::walkable(int x,int y) const{return inside(x,y)&&terrainAt(x,y)!=Terr
 float World::heightAt(float x,float y) const{if(!procedural)return 0;x=std::clamp(x-.5f,0.0f,static_cast<float>(mapWidth-1));y=std::clamp(y-.5f,0.0f,static_cast<float>(mapHeight-1));int ix=static_cast<int>(x),iy=static_cast<int>(y);float fx=x-ix,fy=y-iy;auto h=[&](int xx,int yy){return elevation[cellId(std::min(xx,mapWidth-1),std::min(yy,mapHeight-1))];};return (h(ix,iy)*(1-fx)+h(ix+1,iy)*fx)*(1-fy)+(h(ix,iy+1)*(1-fx)+h(ix+1,iy+1)*fx)*fy;}
 bool World::canStep(int x,int y,int nx,int ny) const{if(!walkable(nx,ny))return false;if(!inside(x,y))return false;return std::abs(elevation[cellId(x,y)]-elevation[cellId(nx,ny)])<=.8f||terrainAt(x,y)==Terrain::Bridge||terrainAt(nx,ny)==Terrain::Bridge;}
 bool World::besideFreshWater(int x,int y) const{return terrainAt(x+1,y)==Terrain::FreshWater||terrainAt(x-1,y)==Terrain::FreshWater||terrainAt(x,y+1)==Terrain::FreshWater||terrainAt(x,y-1)==Terrain::FreshWater;}
-void World::rebuildNavigation(){blocked_.fill(false);for(const auto& gift:gifts)blocked_[gift.cell]=true;for(const auto& p:props)for(int y=static_cast<int>(std::floor(p.y-p.halfDepth));y<=static_cast<int>(std::floor(p.y+p.halfDepth));++y)for(int x=static_cast<int>(std::floor(p.x-p.halfWidth));x<=static_cast<int>(std::floor(p.x+p.halfWidth));++x)if(inside(x,y))blocked_[cellId(x,y)]=true;for(const auto& c:crops)if(c.stage>0)blocked_[c.cell]=true;}
+void World::rebuildNavigation(){blocked_.fill(false);for(int y=0;y<mapHeight;++y)for(int x=0;x<mapWidth;++x)if(terrainAt(x,y)!=Terrain::Bridge&&TerrainSurface::slope(*this,x,y)>TerrainSurface::maximumWalkSlope)blocked_[cellId(x,y)]=true;for(const auto& gift:gifts)blocked_[gift.cell]=true;for(const auto& p:props)for(int y=static_cast<int>(std::floor(p.y-p.halfDepth));y<=static_cast<int>(std::floor(p.y+p.halfDepth));++y)for(int x=static_cast<int>(std::floor(p.x-p.halfWidth));x<=static_cast<int>(std::floor(p.x+p.halfWidth));++x)if(inside(x,y))blocked_[cellId(x,y)]=true;for(const auto& c:crops)if(c.stage>0)blocked_[c.cell]=true;}
 void World::addProp(Prop p){props.push_back(std::move(p));rebuildNavigation();}
 World::World(){
     std::random_device entropy;const char* hex="0123456789abcdef";for(int i=0;i<32;++i)worldId+=hex[entropy()%16];

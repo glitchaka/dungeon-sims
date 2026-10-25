@@ -123,7 +123,7 @@ bool World::planCivicWork(){
     if((grain<reserve||voyageNeeded)&&!exists("dock")&&communityWood>=20&&treasury>=16)kind="dock";
     else if(social/adults<45&&!exists("altar")&&grain>=reserve&&communityWood>=12&&treasury>=14)kind="altar";
     else if((adults>=8||inspired)&&!exists("townhall")&&grain>=reserve&&communityWood>=28&&treasury>=29)kind="townhall";
-    else if(grain>=reserve+12&&communityWood>=16&&treasury>=24&&residents.size()<24){
+    else if(grain>=std::max(reserve,static_cast<int>(std::count_if(residents.begin(),residents.end(),[](const Resident& r){return r.alive&&!r.visitor;}))*2)+2&&communityWood>=12&&treasury>=23&&residents.size()<1000){
         bool vacant=false;for(const auto& p:props)if(!p.tree&&p.kind=="house"&&(p.owner<0||p.owner>=static_cast<int>(residents.size())||!residents[p.owner].alive))vacant=true;
         if(!vacant&&!std::any_of(jobs.begin(),jobs.end(),[](const Job& j){return j.kind=="house";}))kind="house";
     }

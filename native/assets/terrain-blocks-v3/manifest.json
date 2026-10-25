@@ -1,7 +1,7 @@
 ﻿{
     "format":  "IslaViva Modular Terrain Blocks",
     "version":  3,
-    "status":  "new_modular_art_set_not_integrated",
+    "status":  "runtime_composition_visual_review_pending",
     "camera":  {
                    "projection":  "oblique_three_quarter",
                    "elevation_degrees":  35,

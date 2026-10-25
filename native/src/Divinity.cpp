@@ -20,11 +20,12 @@ std::string World::miracle(const std::string& kind,int who,int cell){
     if(kind!="sustain"&&kind!="build"&&kind!="diplomacy"&&kind!="raid")return "Influencia desconocida";
     if(r.ageDays<World::adultAgeDays)return "El habitante todavia es un menor";
     r.inspiration=kind;r.inspirationUntil=elapsed+daySeconds*30;r.decisionTimer=0;
+    minds.influence(*this,who,kind);
     record(r.name+" recibio una inspiracion: "+kind);return "Influencia recibida; conserva sus necesidades y decisiones";
 }
 void World::updateDivinity(float dt){
     for(auto& r:residents)if(r.alive&&!r.away){
-        r.ageDays+=static_cast<double>(dt)/daySeconds;
+        r.ageDays+=static_cast<double>(dt)/LifeCalendar::daySeconds;
         for(const auto& p:props)if(p.kind=="altar"&&std::hypot(r.x-p.x,r.y-p.y)<4){r.social=std::min(100.0f,r.social+dt*.8f);r.fun=std::min(100.0f,r.fun+dt*.5f);}
         if(r.inspirationUntil<elapsed)r.inspiration.clear();
         if(r.ageDays<World::adultAgeDays&&!r.visitor){if(r.hunger<45&&grain>0){--grain;r.hunger=90;}if(r.thirst<45){

@@ -9,6 +9,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_program(POWERSHELL_EXECUTABLE NAMES powershell REQUIRED)
 set(CNC_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/../references/cnc-modding-support")
 set(CNC_GENERATED "${CMAKE_CURRENT_BINARY_DIR}/generated")
+include(cmake/TerrainBlockCatalog.cmake)
 file(GLOB_RECURSE CNC_INPUTS CONFIGURE_DEPENDS
     "${CNC_SOURCE}/Red Alert 3/Xml/BaseObjects/*.xml"
     "${CNC_SOURCE}/Red Alert 3/Xml/GlobalData/*.xml"
@@ -33,6 +34,15 @@ add_library(isla_sim STATIC src/World.cpp)
 target_link_libraries(isla_sim PUBLIC isla_resident_model)
 target_include_directories(isla_sim PUBLIC src "${CNC_GENERATED}")
 include(FetchContent)
+set(MSPA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(MSPA_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+set(MSPA_BUILD_FUZZ OFF CACHE BOOL "" FORCE)
+FetchContent_Declare(mspa
+    GIT_REPOSITORY https://github.com/glitchaka/MSPA-Lib.git
+    GIT_TAG 4532daf43a4ffa0a2b7abb8cace29ba53a9b8d89)
+FetchContent_MakeAvailable(mspa)
+target_link_libraries(isla_sim PRIVATE MSPA::mspa)
+target_sources(isla_sim PRIVATE src/ResidentMindSystem.cpp src/ResidentActionCatalog.cpp src/IslaVivaDomainPack.cpp)
 set(RA_BUILD_SANDBOX OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(red_alert_framework
     GIT_REPOSITORY https://github.com/glitchaka/CnC_Red_Alert_PVersion.git
@@ -45,7 +55,7 @@ add_custom_command(TARGET isla_viva_native POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_SOURCE}/LICENSE.md" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-license/LICENSE.md"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_SOURCE}/README.md" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-license/README.md"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CNC_GENERATED}/cnc-import.json" "$<TARGET_FILE_DIR:isla_viva_native>/cnc-import.json")
-add_library(isla_terrain_renderer STATIC src/TerrainRenderer.cpp src/TerrainProjection.cpp)
+add_library(isla_terrain_renderer STATIC src/TerrainRenderer.cpp src/TerrainProjection.cpp src/TerrainBlocks.cpp)
 target_link_libraries(isla_terrain_renderer PUBLIC isla_sim)
 target_link_libraries(isla_viva_native PRIVATE isla_terrain_renderer)
 add_executable(isla_geography_preview tools/geography_preview.cpp src/TerrainMaterials.cpp)
@@ -79,10 +89,19 @@ set(ISLA_RUNTIME_ASSETS
     terrain-materials-v5.png nature-reference-v5.png
     buildings-reference-v5.png civic-reference-v5.png
     ASSET-LICENSE.txt PROVENANCE.md REFERENCE-V5-PROMPTS.md RESIDENT-V6-PROMPTS.md)
+file(GLOB ISLA_V9_ANIMATIONS CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/assets" "${CMAKE_CURRENT_SOURCE_DIR}/assets/*-v9.png")
+file(GLOB ISLA_BLOCK_FILES CONFIGURE_DEPENDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/terrain-blocks-v3/*.png"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/terrain-blocks-v3/*.json"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/terrain-blocks-v3/*.txt"
+    "${CMAKE_CURRENT_SOURCE_DIR}/assets/terrain-blocks-v3/*.md")
+list(APPEND ISLA_RUNTIME_ASSETS ${ISLA_V9_ANIMATIONS} ${ISLA_BLOCK_FILES} ANIMATION-V9-PROMPTS.md animation-v9.json)
 add_custom_command(TARGET isla_viva_native POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:isla_viva_native>/assets")
 foreach(asset IN LISTS ISLA_RUNTIME_ASSETS)
+    get_filename_component(assetDirectory "${asset}" DIRECTORY)
     add_custom_command(TARGET isla_viva_native POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:isla_viva_native>/assets/${assetDirectory}"
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/assets/${asset}" "$<TARGET_FILE_DIR:isla_viva_native>/assets/${asset}")
 endforeach()
 target_sources(isla_sim PRIVATE src/Environment.cpp)
@@ -168,6 +187,9 @@ if(BUILD_TESTING)
 endif()
 
 target_sources(isla_sim PRIVATE src/Family.cpp)
+target_sources(isla_sim PRIVATE src/Population.cpp)
+target_sources(isla_sim PRIVATE src/TerrainSurface.cpp)
+target_sources(isla_sim PRIVATE src/BlockIslandGenerator.cpp "${CNC_GENERATED}/TerrainBlockData.h")
 
 target_sources(isla_sim PRIVATE
     src/SettlementLayout.cpp

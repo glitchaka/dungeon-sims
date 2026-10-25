@@ -24,7 +24,7 @@ std::string World::sendVisit(int who,const std::string& kind){
     record(r.name+" partio hacia otra isla: "+kind);return "El habitante camina al muelle para embarcar";
 }
 std::string World::receivePeer(const std::string& raw,const std::string& peer){try{
-    if(raw.size()>16384||peer.empty()||peer==worldId)return "Mensaje de red rechazado";
+    if(raw.size()>131072||peer.empty()||peer==worldId)return "Mensaje de red rechazado";
     auto m=json::parse(raw);if(m.at("protocol")!=1||m.at("from")!=peer||m.at("to")!=worldId)return "Destino de red incorrecto";
     const auto type=m.at("type").get<std::string>(),id=m.at("id").get<std::string>();if(id.empty()||id.size()>100)return "Identificador invalido";
     if(type=="chat"){
@@ -50,8 +50,12 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
         float health=m.at("health").get<float>();if(!std::isfinite(health)||health<=0||health>cnc::maxHealth)return "Estado de visitante invalido";
         float visitorAge=m.value("ageDays",World::adultAgeDays),visitorLifespan=m.value("naturalDeathAge",90*360.0f);if(!std::isfinite(visitorAge)||visitorAge<World::adultAgeDays||!std::isfinite(visitorLifespan)||visitorLifespan<World::adultAgeDays)return "Edad de visitante invalida";
         Resident guest;guest.ageDays=visitorAge;guest.naturalDeathAge=visitorLifespan;guest.female=m.value("female",false);guest.name=name;guest.trait="Visitante";guest.visitor=true;guest.seeds=guest.money=0;guest.chosen=m.value("chosen",false);guest.health=health;guest.home=guest.goal=spawn;guest.x=spawn%mapWidth+.5f;guest.y=spawn/mapWidth+.5f;
-        int index=static_cast<int>(residents.size());residents.add(guest);
-        visits.push_back({id,peer,kind,"arrived",index,m.at("who").get<int>(),0,true,peer});record(name+" llego desde otra isla: "+kind);return "Visitante recibido";
+        const int originResident=m.at("who").get<int>();if(originResident<0||originResident>=1000)return "Identidad de visitante invalida";
+        const int index=static_cast<int>(residents.size());if(index>=1000||visits.size()>=4096)return "Isla sin capacidad para visitas";
+        auto incomingMind=minds;
+        if(m.contains("psychology")&&!incomingMind.importAgent(*this,index,m.at("psychology").get<std::vector<std::uint8_t>>()))return "Estado psicologico de visitante invalido";
+        visits.reserve(visits.size()+1);residents.add(guest);minds=std::move(incomingMind);
+        visits.push_back({id,peer,kind,"arrived",index,originResident,0,true,peer});record(name+" llego desde otra isla: "+kind);return "Visitante recibido";
     }
     if(trip==visits.end()||trip->partner!=peer)return "Viaje desconocido";
     if(type=="result"&&!trip->incoming){
@@ -59,7 +63,10 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
         if(trip->origin!=worldId||trip->resident<0||trip->resident>=static_cast<int>(residents.size()))return "Retorno invalido";
         if(trip->state!="complete"&&trip->state!="returning"){
             int gold=m.at("gold").get<int>(),food=m.at("food").get<int>();float health=m.at("health").get<float>();if(gold<0||gold>12||food<0||food>8||!std::isfinite(health)||health<0||health>cnc::maxHealth)return "Resultado invalido";
+            auto returningMind=minds;
+            if(m.contains("psychology")&&!returningMind.importAgent(*this,trip->resident,m.at("psychology").get<std::vector<std::uint8_t>>(),true))return "Estado psicologico de retorno invalido";
             auto& r=residents[trip->resident];double returnedAge=m.value("ageDays",r.ageDays);if(!std::isfinite(returnedAge)||returnedAge<World::adultAgeDays)return "Edad de retorno invalida";r.ageDays=std::max(r.ageDays,returnedAge);
+            minds=std::move(returningMind);
             auto boat=std::find_if(ships.begin(),ships.end(),[&](const Ship& s){return s.passenger==trip->resident&&s.state=="visit_waiting";});
             if(boat!=ships.end()){
                 r.health=health;r.alive=health>0;r.money+=gold;r.grain+=food;trip->state="returning";outbox.erase(id);
@@ -86,7 +93,7 @@ std::string World::receivePeer(const std::string& raw,const std::string& peer){t
 void World::updateVisits(float dt){
     for(auto& trip:visits)if(!trip.incoming&&trip.state=="travel"&&!outbox.count(trip.id)){
         const auto& r=residents[trip.resident];
-        outbox[trip.id]=json{{"protocol",1},{"type","visit"},{"id",trip.id},{"from",worldId},{"to",trip.partner},{"who",trip.originResident},{"kind",trip.kind},{"name",r.name},{"trait",r.trait},{"health",r.health},{"chosen",r.chosen},{"ageDays",r.ageDays},{"female",r.female},{"naturalDeathAge",r.naturalDeathAge}}.dump();
+        outbox[trip.id]=json{{"protocol",1},{"psychology",minds.exportAgent(*this,trip.resident)},{"type","visit"},{"id",trip.id},{"from",worldId},{"to",trip.partner},{"who",trip.originResident},{"kind",trip.kind},{"name",r.name},{"trait",r.trait},{"health",r.health},{"chosen",r.chosen},{"ageDays",r.ageDays},{"female",r.female},{"naturalDeathAge",r.naturalDeathAge}}.dump();
     }
     for(auto& trip:visits)if(trip.incoming&&trip.state!="complete"){
         auto& r=residents[trip.resident];trip.clock+=dt;
@@ -98,7 +105,7 @@ void World::updateVisits(float dt){
             int defenders=0;for(const auto& p:residents)if(p.alive&&!p.away&&!p.visitor&&!p.inBoat&&!p.inDungeon&&p.health>cnc::maxHealth*.5f&&std::hypot(p.x-r.x,p.y-r.y)<12)++defenders;
             r.health=std::max(0.0f,r.health-defenders*25.0f);if(r.health>0){gold=std::min(12,treasury);food=std::min(8,grain);treasury-=gold;grain-=food;}relations[trip.origin]=std::max(-100,relations[trip.origin]-20);++metrics["raids"];alarm(r.x,r.y);record("Una incursion saqueo "+std::to_string(gold)+" monedas y "+std::to_string(food)+" de grano");
         }
-        outbox["result:"+trip.id]=json{{"protocol",1},{"type","result"},{"id",trip.id},{"from",worldId},{"to",trip.origin},{"gold",gold},{"food",food},{"health",r.health},{"ageDays",r.ageDays}}.dump();
+        outbox["result:"+trip.id]=json{{"protocol",1},{"psychology",minds.exportAgent(*this,trip.resident)},{"type","result"},{"id",trip.id},{"from",worldId},{"to",trip.origin},{"gold",gold},{"food",food},{"health",r.health},{"ageDays",r.ageDays}}.dump();
         trip.state="complete";r.away=true;r.alive=false;r.path.clear();r.next=0;
     }
     if(peerId.empty())return;

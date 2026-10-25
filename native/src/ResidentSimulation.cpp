@@ -2,6 +2,7 @@
 #include "ResidentController.h"
 #include "ResidentActions.h"
 #include "ResidentContext.h"
+#include "TerrainSurface.h"
 #include "World.h"
 #include <algorithm>
 #include <cmath>
@@ -14,12 +15,18 @@ int position(const Resident& r) {
 }
 
 void ResidentSimulation::update(float dt) {
+    TerrainSurface::repairResidents(world_);
     ResidentController controller(world_);
     ResidentActions actions(world_);
     for (auto& resident : world_.residents) {
         if (!resident.alive || resident.away || resident.inDungeon || resident.inBoat) continue;
         if (!updateNeeds(resident, dt)) continue;
         if (resident.familyCourtship > 0 || resident.familyMomentRemaining > 0) continue;
+        // The first partner to arrive waits for the rendezvous; ordinary Social
+        // would otherwise cancel after two seconds and send that partner away.
+        if(resident.familyPartner>=0&&resident.task==Task::Social&&resident.next>=resident.path.size()
+            &&position(resident)==resident.goal&&world_.elapsed<resident.familySeekAfter
+            &&resident.hunger>=18&&resident.thirst>=20&&!world_.night())continue;
         resident.decisionTimer -= dt;
 
         const bool centered = std::hypot(resident.x-std::floor(resident.x)-.5f,

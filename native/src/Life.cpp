@@ -12,9 +12,11 @@ void World::updateAnimals(float dt){for(auto& a:animals){if(!a.alive){a.respawn-
 void World::tick(float dt){
     if(dt<=0||dt>.25f||!std::isfinite(dt))throw std::invalid_argument("Invalid fixed simulation step");
     elapsed+=dt;harvestClock=std::fmod(harvestClock+dt,120.0f);alarmSeconds=std::max(0.0f,alarmSeconds-dt);
+    minds.advance(*this,dt);
     SeaLife::update(*this,dt);
     updateCrops(dt);updateAnimals(dt);updateRealm(dt);updateDungeons(dt);updateEcology(dt);updateFishing(dt);updateDivinity(dt);updateLifecycle(dt);updateFamilies(dt);updateVisits(dt);
     ResidentSimulation(*this).update(dt);
+    updatePopulation(dt);
 }
 bool World::begin(Resident& r,Task task,int goal) { return ResidentActions(*this).begin(r,task,goal); }
 void World::finish(Resident& r,const std::string& metric,const std::string& note) { ResidentActions(*this).finish(r,metric,note); }

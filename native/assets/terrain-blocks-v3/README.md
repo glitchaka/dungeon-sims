@@ -12,6 +12,6 @@ manifest.json define la huella de cada pieza en celdas logicas, altura relativa,
 
 Los ejemplos de layouts ofrecen cuatro patrones: isla redondeada, alargada, media luna y archipielago. tools/compose_island_blocks.ps1 combina piezas de distintos tamanos, comprueba cobertura y compatibilidad logica de las costas. Los layouts son datos de composicion, no capturas de una isla jugable ni una afirmacion de que las juntas graficas esten ya resueltas.
 
-El set esta separado del renderer actual. Las uniones visuales, mascaras fisicas y perspectiva necesitan comprobarse al integrarlo. Esto no sustituye silenciosamente la partida ni el mapa del juego.
+El renderer carga ahora este manifiesto y los cuatro atlas mediante loadTerrainBlocks. TerrainBlocks compone las piezas segun costas, alturas y agua del mundo: respeta sourceRect, huellas y orientaciones originales, sin rotar ni reflejar los PNG. Las coordenadas del catalogo se escalan a modulos de 12 celdas del mundo; las esquinas diagonales se subdividen en modulos menores. El campo fisico de alturas y las partidas existentes se conservan. Las juntas visuales y la coincidencia exacta entre la superficie pintada y la colision requieren revision dentro del juego; esta integracion no declara esas juntas aprobadas.
 
 Arte generado con la herramienta incorporada imagegen, usando la isla ilustrada solo como referencia de estilo. Prompts exactos en los archivos *-PROMPT.txt. Los originales PNG se conservan sin transformaciones.

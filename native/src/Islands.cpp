@@ -11,6 +11,10 @@ void World::generateIsland(std::uint32_t seed){
     auto generated=std::make_unique<World>();auto& fresh=*generated;fresh.playerName=playerName;fresh.islandSeed=seed;fresh.procedural=true;fresh.randomState_=seed;fresh.elapsed=93;
     fresh.props.clear();fresh.crops.clear();fresh.animals.clear();fresh.ships.clear();fresh.jobs.clear();fresh.gifts.clear();fresh.visits.clear();fresh.outbox.clear();fresh.forest.fill(false);fresh.pasture.fill(false);fresh.protectedLand.fill(false);fresh.fallow.fill(false);fresh.traffic.fill(0);
     IslandGeography::generate(fresh,seed);
+    // Preserve the connected ridges, valleys and drainage generated above.
+    // Rebuilding each module independently erased that geography and created
+    // discontinuous hills at every module boundary.
+    fresh.terrainModules.clear();
     fresh.rebuildNavigation();
     SettlementLayout::placeResidents(fresh,seed);
     IslandGeography::seedVegetation(fresh,seed);

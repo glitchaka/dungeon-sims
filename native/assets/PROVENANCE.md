@@ -1,4 +1,14 @@
-# Animaciones activas v7
+# Recursos activos del 2026-10-24
+
+Actualizacion 2026-10-25: se retiraron ResidentWalkRig y TerrainBlockView. Las descripciones siguientes de esas implementaciones son historicas, no el estado activo. La caminata de 12 frames y la composicion correcta de bloques siguen pendientes. Estado vigente: ../PENDIENTES-2026-10-25.md.
+
+El terreno reutiliza los PNG preparados sin modificarlos: sus superficies se muestrean mediante coordenadas UV sobre una malla de alturas compartida con el mundo. Los perimetros pintados de cada pieza no se usan como uniones internas. El esquema walk-cycle-pose-guide-v10.png es una guia de articulaciones, no arte activo del juego; las regeneraciones de caminata que repiten el mismo apoyo se descartan y no se activan.
+
+Los atlas de personajes y embarcaciones `*-v9.png` fueron generados con imagegen incorporada, usando como referencias los personajes y barcos existentes. Cada fila contiene seis celdas; esto no garantiza seis fases anatomicas correctas. Para caminar, `ResidentWalkRig` reutiliza la textura de la primera celda de cada direccion y articula dos mallas de piernas con seis poses: las fases 4-6 intercambian los destinos de ambas piernas. Los PNG no se han reemplazado con las regeneraciones fallidas. Este cambio necesita revision visual dentro del juego. `animation-v9.json` describe las cuadriculas y acciones. Los prompts originales y las correcciones de encuadre estan en `ANIMATION-V9-PROMPTS.md`. Los PNG conservan su transparencia RGBA. La nube conserva sus ocho frames de `family-cloud-v7.png`; el barco vacio estatico conserva `boats-empty-v7.png`.
+
+El arte activo del terreno procede de los cuatro atlas y manifiesto de `terrain-blocks-v3/`, ahora cargados por el renderer. Se conservan sourceRect y orientaciones sin girar o reflejar los originales. El campo fisico de alturas procede del generador geografico; las juntas graficas aun requieren revision visual. Vegetacion, edificios y menu conservan sus recursos anteriores.
+
+## Historial: animaciones v7
 
 Los atlas residents-work-women-v7.png, residents-work-men-v7.png, residents-pregnancy-v7.png, boats-women-v7.png y boats-men-v7.png y family-cloud-v7.png fueron generados con imagegen integrada el 2026-10-22. Prompts exactos en ANIMATION-V7-PROMPTS.md. Se usan durante acciones reales; las particulas y corazones se dibujan mediante ResidentEffects; la nube usa su atlas detallado. Los menores conservan su atlas separado.
 

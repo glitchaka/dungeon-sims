@@ -14,6 +14,7 @@ bool ResidentActions::begin(Resident& r,Task task,int goal){
     if(task==Task::Sow||task==Task::Harvest||task==Task::Till) goal=world_.nearest(r,[&](int x,int y){return std::abs(x-workTarget%mapWidth)+std::abs(y-workTarget/mapWidth)==1;});
     if(goal<0)return false;
     auto path=world_.route(static_cast<int>(r.x),static_cast<int>(r.y),[=](int x,int y){return cellId(x,y)==goal;});if(path.empty())return false;
+    if(r.task!=Task::Idle&&r.task!=task)world_.minds.complete(world_,world_.residents.indexOf(r),false,"interrupted");
     const int id=world_.residents.indexOf(r);for(auto& c:world_.crops)if(c.worker==id)c.worker=-1;
     for(auto& j:world_.jobs)if(j.worker==id&&task!=Task::Project)j.worker=-1;
     r.workCell=(task==Task::Sow||task==Task::Harvest||task==Task::Till)?workTarget:-1;r.task=task;r.path=std::move(path);r.next=0;r.goal=goal;r.actionTimer=0;r.decisionTimer=cnc::wanderInterval;
@@ -21,7 +22,7 @@ bool ResidentActions::begin(Resident& r,Task task,int goal){
     return true;
 }
 
-void ResidentActions::finish(Resident& r,const std::string& metric,const std::string& note){if(r.hasOrder&&r.task==r.orderedTask)r.hasOrder=false;r.workCell=-1;++world_.metrics[metric];world_.record(r.name+" "+note);for(auto& c:world_.crops)if(c.worker==world_.residents.indexOf(r))c.worker=-1;r.task=Task::Idle;r.path.clear();r.next=0;r.actionTimer=0;r.decisionTimer=0;}
+void ResidentActions::finish(Resident& r,const std::string& metric,const std::string& note){world_.minds.complete(world_,world_.residents.indexOf(r),metric!="idle",metric);if(r.hasOrder&&r.task==r.orderedTask)r.hasOrder=false;r.workCell=-1;++world_.metrics[metric];world_.record(r.name+" "+note);for(auto& c:world_.crops)if(c.worker==world_.residents.indexOf(r))c.worker=-1;r.task=Task::Idle;r.path.clear();r.next=0;r.actionTimer=0;r.decisionTimer=0;}
 
 bool ResidentActions::leaveShelter(Resident& r){
     if(r.insideHouse<0)return true;

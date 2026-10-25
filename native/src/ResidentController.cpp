@@ -44,6 +44,7 @@ bool ResidentController::farmTask(Resident& r){
 
 
 void ResidentController::plan(Resident& resident) {
+    if(world_.minds.plan(world_,resident))return;
     ResidentIntent previous = ResidentIntent::None;
     for (;;) {
         const auto context = residentDecisionContext(world_, resident);

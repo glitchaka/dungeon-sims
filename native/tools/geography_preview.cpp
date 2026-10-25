@@ -14,7 +14,7 @@ int main(int argc,char** argv) {
         auto world=std::make_unique<isla::World>();
         world->generateIsland(argc>2?static_cast<std::uint32_t>(std::stoul(argv[2])):1749u);
         isla::TerrainRenderer renderer;
-        isla::loadTerrainMaterials(renderer,(std::filesystem::absolute(argv[0]).parent_path()/"assets/terrain-materials-v5.png").string());
+        isla::loadTerrainBlocks(renderer,(std::filesystem::absolute(argv[0]).parent_path()/"assets/terrain-blocks-v3").string());
         auto pixels=renderer.render(*world);
         for(std::size_t i=0;i<pixels.size();i+=4) std::swap(pixels[i],pixels[i+2]);
         std::array<unsigned char,54> header{};

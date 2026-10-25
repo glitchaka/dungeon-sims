@@ -1,5 +1,7 @@
 #pragma once
 #include "ResidentRegistry.h"
+#include "entities/LifeCalendar.h"
+#include "ResidentMindSystem.h"
 #include "entities/WorldEntities.h"
 #include <array>
 #include <cstdint>
@@ -17,10 +19,11 @@ public:
     void generateIsland(std::uint32_t seed);std::string growIsland(int cell,int radius=3);
     std::vector<std::array<float,3>> riverCourse;
     std::vector<Landform> landforms;
+    std::vector<TerrainModule> terrainModules;
     std::uint32_t islandSeed{};bool procedural{};int terrainRevision{},roadPolicy{2};
     std::string playerName{"Deidad"},peerName;std::vector<std::string> chatLog,chatSeen;
     std::string sendChat(const std::string& text);
-    static constexpr float daySeconds=300,monthDays=30,gestationSeconds=9*monthDays*daySeconds,adultAgeDays=18*12*monthDays,childhoodDays=6*12*monthDays,elderAgeDays=65*12*monthDays;
+    static constexpr float daySeconds=300,monthDays=LifeCalendar::monthDays,gestationSeconds=LifeCalendar::gestationSeconds,adultAgeDays=LifeCalendar::adultAgeDays,childhoodDays=LifeCalendar::childhoodDays,elderAgeDays=LifeCalendar::elderAgeDays;
     std::string miracle(const std::string& kind,int who,int cell=-1);
     void updateLifecycle(float dt);static const char* lifeStageName(const Resident& resident);void updateFamilies(float dt);bool leaveShelter(Resident& resident);void updateDivinity(float dt);void updateVisits(float dt);
     std::string sendVisit(int who,const std::string& kind);
@@ -37,6 +40,9 @@ public:
     std::string orderUnit(int who,const std::string& command,int target);
     Prop* propAt(int cell); bool reserved(int cell) const; bool placeable(int cell,int ignoreSource=-1) const;
     void updateEcology(float dt); void seedEnvironment();
+    void updatePopulation(float dt);
+    std::array<int,3> familyOpportunity(const Resident&) const;
+    ResidentMindSystem minds;
     std::string startFishing(int who,int boat);void updateFishing(float dt);
     static bool fishingLoss(float roll){return roll<.25f;}
     std::string dispatch(int index);std::string requestExpedition(int index);
@@ -60,6 +66,7 @@ private:
     friend class ResidentController;
     friend class ResidentActions;
     friend class ResidentSimulation;
+    friend class ResidentMindSystem;
     std::array<bool,mapWidth*mapHeight> blocked_{};std::uint32_t randomState_{1749};
     std::uint32_t random();bool planCivicWork();bool seekFamily(Resident& resident);void addProp(Prop p);
     bool begin(Resident& r,Task task,int goal);void finish(Resident& r,const std::string& metric,const std::string& note);

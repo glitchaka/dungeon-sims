@@ -23,10 +23,10 @@ void PeerLink::poll(){auto& p=*impl_;
     if(p.socket==INVALID_SOCKET)return;
     if(p.connecting){fd_set writes,errors;FD_ZERO(&writes);FD_ZERO(&errors);FD_SET(p.socket,&writes);FD_SET(p.socket,&errors);timeval timeout{};if(select(0,nullptr,&writes,&errors,&timeout)>0){int error=0;int size=sizeof(error);getsockopt(p.socket,SOL_SOCKET,SO_ERROR,reinterpret_cast<char*>(&error),&size);if(error){p.disconnect();return;}p.connecting=false;p.ready=true;p.note="ISLA CONECTADA";}}
     if(!p.ready)return;
-    char buffer[4096];for(int n=0;n<16;++n){int count=recv(p.socket,buffer,sizeof(buffer),0);if(count==0){p.disconnect();return;}if(count<0){if(WSAGetLastError()!=WSAEWOULDBLOCK)p.disconnect();break;}p.input.append(buffer,count);if(p.input.size()>65536){p.disconnect();return;}std::size_t end;while((end=p.input.find('\n'))!=std::string::npos){if(p.inbox.size()>=128){p.disconnect();return;}p.inbox.push_back(p.input.substr(0,end));p.input.erase(0,end+1);}}
+    char buffer[4096];for(int n=0;n<16;++n){int count=recv(p.socket,buffer,sizeof(buffer),0);if(count==0){p.disconnect();return;}if(count<0){if(WSAGetLastError()!=WSAEWOULDBLOCK)p.disconnect();break;}p.input.append(buffer,count);if(p.input.size()>524288){p.disconnect();return;}std::size_t end;while((end=p.input.find('\n'))!=std::string::npos){if(p.inbox.size()>=128){p.disconnect();return;}p.inbox.push_back(p.input.substr(0,end));p.input.erase(0,end+1);}}
     if(!p.output.empty()){int count=::send(p.socket,p.output.data(),static_cast<int>(p.output.size()),0);if(count>0)p.output.erase(0,count);else if(count<0&&WSAGetLastError()!=WSAEWOULDBLOCK)p.disconnect();}
 }
-void PeerLink::send(const std::string& message){auto& p=*impl_;if(p.ready&&message.size()<16384&&p.output.size()+message.size()<65536)p.output+=message+'\n';}
+void PeerLink::send(const std::string& message){auto& p=*impl_;if(p.ready&&message.size()<131072&&p.output.size()+message.size()<524288)p.output+=message+'\n';}
 std::vector<std::string> PeerLink::receive(){auto result=std::move(impl_->inbox);impl_->inbox.clear();return result;}
 void PeerLink::stop(){impl_->close();impl_->note="ISLA CERRADA";}
 bool PeerLink::hosting() const{return impl_->listener!=INVALID_SOCKET;}

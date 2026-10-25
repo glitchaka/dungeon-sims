@@ -1,5 +1,7 @@
 # Revisión de MSPA para los habitantes de Isla Viva
 
+> Revision historica del commit indicado debajo. El 2026-10-24 se integro MSPA v1.0 del commit `4532daf43a4ffa0a2b7abb8cace29ba53a9b8d89`; este diagnostico no describe esa version. Estado actual en [INTEGRACION-MSPA.md](INTEGRACION-MSPA.md).
+
 Revisión del 22 de octubre de 2026. Snapshot examinado: [`decde8c10fa69de0b289521ee83ab416c4b68da4`](https://github.com/glitchaka/MSPA-Lib/tree/decde8c10fa69de0b289521ee83ab416c4b68da4). Se revisaron código, README, especificación 2.4, contrato de interacción 0.2, contrato de Domain Pack 0.1 y arquitectura 0.1.
 
 ## Conclusión

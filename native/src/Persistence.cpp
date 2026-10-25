@@ -1,5 +1,7 @@
 #include "SeaLife.h"
 #include "World.h"
+#include "TerrainSurface.h"
+#include "TerrainBlockData.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
 #include <fstream>
@@ -21,10 +23,14 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Job,id,cell,goal,worker,kind,source,phase,woo
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Ship,cell,voyages,remaining,passenger,seaHome,x,y,fishingClock,state,path,next,riskResolved)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Dungeon,name,state,entrance,level,room,runs,kills,party,x,y,enemies,opened,clock,cooldown,log)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Landform,kind,x,y,radiusX,radiusY,height,drawWidth,sprite)
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(TerrainModule,block,x,y,step)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Gift,cell,grain,wood)
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(Visit,id,origin,kind,state,resident,originResident,clock,incoming,partner)
 bool World::save(const std::string& filename) const{try{
     json data={{"version",9},{"seaFish",seaFish},{"mysteriousReadyAt",mysteriousReadyAt},{"mapWidth",mapWidth},{"mapHeight",mapHeight},{"market",market},{"granary",granary},{"playerName",playerName},{"chatLog",chatLog},{"chatSeen",chatSeen},{"procedural",procedural},{"islandSeed",islandSeed},{"terrainRevision",terrainRevision},{"elevation",elevation},{"landforms",landforms},{"riverCourse",riverCourse},{"roadPolicy",roadPolicy},{"worldId",worldId},{"relations",relations},{"raining",raining},{"chosenBirthAt",chosenBirthAt},{"chosenPatron",chosenPatron},{"gifts",gifts},{"visits",visits},{"outbox",outbox},{"terrain",terrain},{"forest",forest},{"pasture",pasture},{"protected",protectedLand},{"fallow",fallow},{"residents",residents},{"props",props},{"crops",crops},{"animals",animals},{"camps",camps},{"jobs",jobs},{"ships",ships},{"dungeons",dungeons},{"events",events},{"metrics",metrics},{"elapsed",elapsed},{"harvestClock",harvestClock},{"alarmSeconds",alarmSeconds},{"alarmX",alarmX},{"alarmY",alarmY},{"livestockClock",livestockClock},{"lastDispatch",lastDispatch},{"grain",grain},{"harvests",harvests},{"wood",communityWood},{"treasury",treasury},{"herbs",herbs},{"reserve",reserve},{"livestockFood",livestockFood},{"priority",priority},{"nextJob",nextJob},{"autoTrade",autoTrade},{"randomState",randomState_},{"ecologyClock",ecologyClock},{"townClock",townClock},{"populationClock",populationClock},{"nextProp",nextProp},{"traffic",traffic}};
+    data["psychology"]=json::parse(minds.save());
+    data["terrainModules"]=terrainModules;
+    data["lifeCalendarVersion"]=LifeCalendar::version;
     std::filesystem::path path(filename);if(path.has_parent_path())std::filesystem::create_directories(path.parent_path());auto temp=path;temp+=".tmp";{std::ofstream out(temp,std::ios::binary|std::ios::trunc);out<<data.dump();out.flush();if(!out)return false;}return MoveFileExW(temp.c_str(),path.c_str(),MOVEFILE_REPLACE_EXISTING|MOVEFILE_WRITE_THROUGH)!=0;
 }catch(...){return false;}}
 // Preserve the old 128x96 island at its original coordinates in the larger sea.
@@ -61,6 +67,8 @@ bool World::load(const std::string& filename){try{
         for(const auto& gift:next.gifts)if(gift.cell<0||gift.cell>=mapWidth*mapHeight||gift.grain<0||gift.wood<0)return false;
     }
     if(data.contains("riverCourse"))data.at("riverCourse").get_to(next.riverCourse);
+    if(data.contains("terrainModules")){data.at("terrainModules").get_to(next.terrainModules);if(next.terrainModules.size()>4096)return false;
+        for(const auto& module:next.terrainModules){if(module.x<0||module.y<0||module.x>=mapWidth||module.y>=mapHeight||module.step<1||module.step>32)return false;const auto definition=std::find_if(blockdata::definitions.begin(),blockdata::definitions.end(),[&](const blockdata::Definition& b){return module.block==b.id;});if(definition==blockdata::definitions.end())return false;for(int i=0;i<definition->count;++i)if(module.x+(definition->cells[i][0]+1)*module.step>mapWidth||module.y+(definition->cells[i][1]+1)*module.step>mapHeight)return false;}}
     if(data.contains("landforms")){data.at("landforms").get_to(next.landforms);for(const auto& f:next.landforms)if((f.sprite<0&&f.kind!="plateau")||f.sprite>=4||f.radiusX<=0||f.radiusY<=0||f.height<0||(f.drawWidth<=0&&f.kind!="plateau"))return false;}
     if(data.contains("elevation")){data.at("elevation").get_to(next.elevation);for(float h:next.elevation)if(!std::isfinite(h)||h<0||h>32)return false;}
     next.playerName=data.value("playerName",std::string("Deidad"));next.procedural=data.value("procedural",false);next.islandSeed=data.value("islandSeed",0u);next.terrainRevision=data.value("terrainRevision",0);next.roadPolicy=2;
@@ -70,6 +78,23 @@ bool World::load(const std::string& filename){try{
     next.mysteriousReadyAt=data.value("mysteriousReadyAt",0.0);if(!std::isfinite(next.mysteriousReadyAt)||next.mysteriousReadyAt<0)return false;
     if(data.contains("seaFish")){data.at("seaFish").get_to(next.seaFish);if(next.seaFish.size()>4096)return false;for(const auto& f:next.seaFish)if(!std::isfinite(f.x)||!std::isfinite(f.y)||!std::isfinite(f.heading)||!std::isfinite(f.timer)||f.x<0||f.y<0||f.x>=mapWidth||f.y>=mapHeight)return false;}else SeaLife::seed(next);
     next.elapsed=data.at("elapsed");next.harvestClock=data.at("harvestClock");next.alarmSeconds=data.at("alarmSeconds");next.alarmX=data.at("alarmX");next.alarmY=data.at("alarmY");next.livestockClock=data.at("livestockClock");next.lastDispatch=data.at("lastDispatch");next.grain=data.at("grain");next.harvests=data.at("harvests");next.communityWood=data.at("wood");next.treasury=data.at("treasury");next.herbs=data.at("herbs");next.reserve=data.at("reserve");next.livestockFood=data.at("livestockFood");next.priority=data.at("priority");next.nextJob=data.at("nextJob");next.autoTrade=data.at("autoTrade");next.randomState_=data.at("randomState");next.ecologyClock=data.at("ecologyClock");next.townClock=data.at("townClock");next.populationClock=data.at("populationClock");next.nextProp=data.at("nextProp");data.at("traffic").get_to(next.traffic);
+    const int lifeVersion=data.value("lifeCalendarVersion",1);
+    if(lifeVersion<1||lifeVersion>LifeCalendar::version)return false;
+    if(lifeVersion==1){
+        // Legacy deadlines were in seconds of the 300-second solar day.
+        // Preserve progress; ageDays and naturalDeathAge were already days.
+        constexpr double oldBiologicalDaySeconds=300;
+        const auto converted=[&](float deadline,double maximum){
+            if(!std::isfinite(deadline)||!std::isfinite(next.elapsed))throw std::runtime_error("Invalid legacy life deadline");
+            const double remaining=std::clamp((deadline-next.elapsed)/oldBiologicalDaySeconds,0.0,maximum);
+            return static_cast<float>(next.elapsed+remaining*LifeCalendar::daySeconds);
+        };
+        for(auto& resident:next.residents){
+            if(resident.pregnancyDue>=0)resident.pregnancyDue=converted(resident.pregnancyDue,LifeCalendar::gestationDays);
+            if(resident.postpartumUntil>next.elapsed)resident.postpartumUntil=converted(resident.postpartumUntil,LifeCalendar::monthDays);
+        }
+        if(next.chosenBirthAt>=0)next.chosenBirthAt=converted(next.chosenBirthAt,LifeCalendar::gestationDays);
+    }
     if(version<8){
         for(auto& t:next.terrain)if(t==Terrain::Road)t=Terrain::Ground;next.traffic.fill(0);
         next.jobs.erase(std::remove_if(next.jobs.begin(),next.jobs.end(),[&](const Job& j){bool obsolete=j.kind=="road"||j.kind=="remove_road"||j.kind=="move_road";if(obsolete){next.communityWood+=j.woodCost;next.treasury+=j.moneyCost;for(auto& r:next.residents)if(r.job==j.id){r.job=-1;r.hasOrder=false;r.task=Task::Idle;r.path.clear();r.next=0;}}return obsolete;}),next.jobs.end());
@@ -79,9 +104,11 @@ bool World::load(const std::string& filename){try{
     for(const auto& v:next.visits)if(v.resident<0||v.resident>=static_cast<int>(next.residents.size())||!std::isfinite(v.clock))return false;
     next.market=data.value("market",next.market);next.granary=data.value("granary",next.granary);
     for(const auto& r:next.residents){if(!std::isfinite(r.ageDays)||r.ageDays<0||!std::isfinite(r.naturalDeathAge)||r.naturalDeathAge<World::adultAgeDays||!std::isfinite(r.familySeekAfter)||!std::isfinite(r.familyMomentRemaining)||r.familyMomentRemaining<0||r.familyMomentRemaining>6.01f||!std::isfinite(r.familyCourtship)||r.familyCourtship<0||r.familyCourtship>8.1f||r.familyPartner>=static_cast<int>(next.residents.size())||!std::isfinite(r.pregnancyDue)||!std::isfinite(r.postpartumUntil)||r.mother>=static_cast<int>(next.residents.size())||r.father>=static_cast<int>(next.residents.size())||r.pregnancyFather>=static_cast<int>(next.residents.size()))return false;if(r.insideHouse>=0&&(!std::any_of(next.props.begin(),next.props.end(),[&](const Prop& p){return p.uid==r.insideHouse&&p.kind=="house";})||r.inBoat||r.away||r.inDungeon))return false;}
-    next.rebuildNavigation();for(const auto& r:next.residents){if(!std::isfinite(r.x)||!std::isfinite(r.y)||r.x<0||r.y<0||r.x>=mapWidth||r.y>=mapHeight||r.next>r.path.size()||r.mission<-1||r.mission>=3)return false;for(int k:r.path)if(k<0||k>=mapWidth*mapHeight)return false;if(r.alive&&!r.away&&!r.inDungeon&&!r.inBoat&&!next.walkable(static_cast<int>(r.x),static_cast<int>(r.y)))return false;}
+    next.rebuildNavigation();TerrainSurface::repairResidents(next);for(const auto& r:next.residents){if(!std::isfinite(r.x)||!std::isfinite(r.y)||r.x<0||r.y<0||r.x>=mapWidth||r.y>=mapHeight||r.next>r.path.size()||r.mission<-1||r.mission>=3)return false;for(int k:r.path)if(k<0||k>=mapWidth*mapHeight)return false;if(r.alive&&!r.away&&!r.inDungeon&&!r.inBoat&&!next.walkable(static_cast<int>(r.x),static_cast<int>(r.y)))return false;}
     for(const auto& d:next.dungeons){if(d.room<1||d.room>3||(!d.party.empty()&&d.party.size()!=2))return false;for(int who:d.party)if(who<0||who>=static_cast<int>(next.residents.size()))return false;}
     for(const auto& c:next.crops)if(c.cell<0||c.cell>=mapWidth*mapHeight||c.worker<-1||c.worker>=static_cast<int>(next.residents.size())||c.stage<0||c.stage>3)return false;
+    if(data.contains("psychology"))next.minds.load(data.at("psychology").dump());
+    next.minds.advance(next,0);
     *this=std::move(next);return true;
 }catch(...){return false;}}
 }

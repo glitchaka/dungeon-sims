@@ -70,7 +70,7 @@ void TerrainRenderer::setMaterials(std::vector<unsigned char> pixels,int materia
     materialHeight_=materialHeight;
 }
 
-std::vector<unsigned char> TerrainRenderer::render(const World& world) const {
+std::vector<unsigned char> TerrainRenderer::render(const World& world,bool composeBlocks) const {
     const auto material=[&](int tile,float x,float y,Color fallback) {
         if(materials_.empty()) return fallback;
         const int tileW=materialWidth_/3,tileH=materialHeight_/2;
@@ -187,7 +187,7 @@ std::vector<unsigned char> TerrainRenderer::render(const World& world) const {
             pixels[at+channel]=static_cast<unsigned char>(std::clamp(color[channel],0.0f,255.0f));
         pixels[at+3]=255;
     }
-    if(!world.procedural) return pixels;
+    if(!world.procedural){if(composeBlocks)blocks_.compose(world,pixels,scale);return pixels;}
     // Orthographic oblique heightfield scan conversion. Nearer (southern) strips
     // overwrite farther surfaces, exposing actual cliff faces and hiding back slopes.
     std::vector<unsigned char> projected(pixels.size(),255);
@@ -216,6 +216,7 @@ std::vector<unsigned char> TerrainRenderer::render(const World& world) const {
             previousY=projectedY;previousRow=sourceRow;
         }
     }
+    if(composeBlocks)blocks_.compose(world,projected,scale);
     return projected;
 }
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "Artifact.h"
 #include "Task.h"
+#include "LifeCalendar.h"
 #include "CncData.h"
 #include <cstddef>
 #include <string>
@@ -12,8 +13,8 @@ struct Resident {
     std::string name, trait;
     bool female{};
     bool alive{true};
-    double ageDays{6480};
-    float naturalDeathAge{90*360.0f};
+    double ageDays{LifeCalendar::adultAgeDays};
+    float naturalDeathAge{LifeCalendar::defaultDeathAgeDays};
 
     float x{}, y{}, speed{};
     int home{};

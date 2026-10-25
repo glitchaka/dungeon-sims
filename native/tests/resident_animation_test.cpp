@@ -15,21 +15,21 @@ int main(){try{
         walkFrames|=1<<ResidentAnimation::select(walker,simulationTime,visualClock.seconds()).frame;
         workFrames|=1<<ResidentAnimation::select(r,simulationTime,visualClock.seconds()).frame;
     }
-    check(walkFrames==((1<<1)|(1<<5))&&workFrames==3,"Animation aliases to a frozen frame at accelerated simulation speed");
+    check(walkFrames==63&&workFrames==63,"Animation does not visit all six phases at accelerated simulation speed");
     const auto pausedTime=visualClock.seconds();visualClock.advance(.2f,true);
     check(visualClock.seconds()==pausedTime,"Presentation continues while paused");
     check(ResidentAnimation::select(r,100).pose==ResidentPose::Till,"Working resident lacks hoe pose");
-    r.actionTimer=.4f;check(ResidentAnimation::select(r,100).frame==1,"Hoe does not swing");
+    r.actionTimer=.4f;check(ResidentAnimation::select(r,100).frame==2,"Hoe does not advance through six phases");
     r.path={cellId(11,10)};check(ResidentAnimation::select(r,100).pose==ResidentPose::Walk,"Tool swings while walking to work");
     r.path.clear();r.task=Task::Gather;check(ResidentAnimation::select(r,100).pose==ResidentPose::Chop,"Chopping lacks axe pose");
     r.ageDays=World::adultAgeDays-1;r.familyCourtship=2;r.female=true;r.pregnancyDue=200;
-    check(ResidentAnimation::select(r,100).pose==ResidentPose::Walk,"Minor received adult action pose");
+    check(ResidentAnimation::select(r,100).pose==ResidentPose::Idle,"Minor received adult action pose");
     r.ageDays=World::adultAgeDays;check(ResidentAnimation::select(r,100).pose==ResidentPose::Courtship,"Adult courtship invisible");
-    r.familyCourtship=5;check(ResidentAnimation::select(r,100).frame==7,"Surprise never resolves into reciprocal greeting");
+    r.familyCourtship=5;check(ResidentAnimation::select(r,100).pose==ResidentPose::Courtship,"Reciprocal greeting is missing");
     r.familyCourtship=0;r.task=Task::Idle;r.pregnancyDue=100+World::gestationSeconds*.5f;
-    check(ResidentAnimation::select(r,100).pose==ResidentPose::Pregnant&&ResidentAnimation::select(r,100).frame==0,"Mid pregnancy missing");
-    r.pregnancyDue=100+World::gestationSeconds*.1f;check(ResidentAnimation::select(r,100).frame==4,"Late pregnancy does not change silhouette");
-    r.pregnancyDue=-1;check(ResidentAnimation::select(r,100).pose==ResidentPose::Walk,"Pregnancy pose survives birth");
+    check(ResidentAnimation::select(r,100).pregnancyStage==1,"Mid pregnancy missing");
+    r.pregnancyDue=100+World::gestationSeconds*.1f;check(ResidentAnimation::select(r,100).pregnancyStage==2,"Late pregnancy does not change silhouette");
+    r.pregnancyDue=-1;check(ResidentAnimation::select(r,100).pregnancyStage==0,"Pregnancy pose survives birth");
     auto w=std::make_unique<World>(),saved=std::make_unique<World>();
     PresentationMotion motion;const auto originalX=w->residents[0].x;
     motion.capture(*w);w->residents[0].x+=.1f;

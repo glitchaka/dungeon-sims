@@ -58,6 +58,7 @@ public:
         if(!loaded&&!smoke_&&!fresh_){auto old=std::filesystem::path(savePath()).parent_path()/(profile_=="default"?"world-v7.json":profile_+"-v7.json");loaded=world_.load(old.string());if(!loaded&&profile_=="default")loaded=world_.load((old.parent_path()/"world-v6.json").string());}
         if(!loaded){if(!smoke_&&std::filesystem::exists(savePath()))std::filesystem::copy_file(savePath(),savePath()+".bak",std::filesystem::copy_options::overwrite_existing);world_.generateIsland(seed_?seed_:static_cast<unsigned>(SDL_GetTicksNS()));}
         world_.playerName=name_;engine.setWindowTitle("Isla Viva | "+world_.playerName+" | "+profile_);
+        isla::loadTerrainBlocks(terrainPack_,(assetRoot_/"terrain-blocks-v3").string());
         isla::loadTerrainMaterials(terrainPack_,(assetRoot_/"terrain-materials-v5.png").string());
         message_=loaded?"Partida recuperada; caminos heredados migrados":"Nueva isla aleatoria generada";
         if(hostOnStart_)network_.host(port_);else if(!joinIp_.empty())network_.join(joinIp_,port_);
@@ -103,6 +104,7 @@ public:
             layout(engine);
         }
         if(overMap && engine.mousePressed(ra::MouseButton::Middle)) {
+            following_=false;
             dragging_=true;lastMouseX_=engine.mouseX();lastMouseY_=engine.mouseY();
         }
         if(!engine.mouseDown(ra::MouseButton::Middle)) dragging_=false;
@@ -112,11 +114,12 @@ public:
             lastMouseX_=engine.mouseX();lastMouseY_=engine.mouseY();
         }
         const float panStep=std::clamp(delta,0.0f,.1f)*400/unit_;
+        if(engine.keyDown(ra::Key::A)||engine.keyDown(ra::Key::D)||engine.keyDown(ra::Key::W)||engine.keyDown(ra::Key::S))following_=false;
         if(engine.keyDown(ra::Key::A)) centerX_-=panStep;
         if(engine.keyDown(ra::Key::D)) centerX_+=panStep;
         if(engine.keyDown(ra::Key::W)) centerY_-=panStep;
         if(engine.keyDown(ra::Key::S)) centerY_+=panStep;
-        if(engine.keyPressed(ra::Key::Enter)) {zoom_=1;centerX_=isla::mapWidth*.5f;centerY_=isla::mapHeight*.5f;}
+        if(engine.keyPressed(ra::Key::Enter)) {following_=false;zoom_=1;centerX_=isla::mapWidth*.5f;centerY_=isla::mapHeight*.5f;}
         layout(engine);
         const auto mysteryPoint=groundPoint(engine.mouseX(),engine.mouseY());
         const isla::MysteryPointer mysteryPointer{engine.mousePressed(ra::MouseButton::Left),engine.mouseDown(ra::MouseButton::Left),overMap,engine.mouseX(),engine.mouseY(),mysteryPoint.first,mysteryPoint.second};
@@ -125,6 +128,8 @@ public:
         }
         if(engine.mousePressed(ra::MouseButton::Left) && !overMap) for(const auto& control:controls_) if(engine.mouseX()>=control.rect.x && engine.mouseX()<control.rect.x+control.rect.w && engine.mouseY()>=control.rect.y && engine.mouseY()<control.rect.y+control.rect.h){activate(engine,control.id);break;}
         if (overMap && engine.mousePressed(ra::MouseButton::Left)) {
+            const int picked=tool_.empty()?residentSprites_.pick(engine.mouseX(),engine.mouseY()):-1;
+            if(picked>=0){selected_=static_cast<std::size_t>(picked);selectedProp_=-1;}
             const auto point=groundPoint(engine.mouseX(),engine.mouseY());const float x=point.first,y=point.second;
             if(x>=0&&y>=0&&x<isla::mapWidth&&y<isla::mapHeight) {
                 const int cell=isla::cellId(static_cast<int>(x),static_cast<int>(y));
@@ -134,7 +139,7 @@ public:
                         auto before=world_.jobs.size();message_=world_.designate(tool_,cell);
                         if(world_.jobs.size()>before){world_.orderUnit(static_cast<int>(selected_),"job",world_.jobs.back().id);tool_.clear();}
                     }else message_=world_.miracle(tool_,static_cast<int>(selected_),cell);
-                } else {
+                } else if(picked<0) {
                     float nearest=2;selectedProp_=-1;
                     for(std::size_t i=0;i<world_.residents.size();++i){const auto& person=world_.residents[i];if(!person.alive||person.insideHouse>=0||person.away||person.inDungeon||person.inBoat)continue;float distance=std::hypot(x-person.x,y-person.y);if(distance<nearest){nearest=distance;selected_=i;}}
                     if(auto* object=world_.propAt(cell)){selectedProp_=object->uid;if(object->kind=="house"&&object->owner>=0&&object->owner<static_cast<int>(world_.residents.size()))selected_=object->owner;}
@@ -144,8 +149,11 @@ public:
         updateNetwork(delta);
         if(!smoke_){autosaveClock_+=delta;if(autosaveClock_>=45){autosaveClock_=0;if(!world_.save(savePath()))message_="No se pudo guardar la partida";}}
         advanceSimulation(engine,delta);
+        if(cycleSelection_){cycleSelection_=false;for(std::size_t n=1;n<=world_.residents.size();++n){const auto i=(selected_+n)%world_.residents.size();if(world_.residents[i].alive){selected_=i;selectedProp_=-1;focusRequested_=true;break;}}}
+        if(focusRequested_){focusRequested_=false;following_=true;zoom_=std::max(zoom_,8.0f);}
     }
     void onRender(ra::Engine& engine) override {
+        if(following_)focusSelected();
         layout(engine);
         engine.clear({14,25,31,255});
         const SDL_Rect mapClip{20,20,std::max(1,engine.windowWidth()-372),std::max(1,engine.windowHeight()-40)};
@@ -203,8 +211,8 @@ public:
         text("E: VELOCIDAD  Q: LLUVIA",white);
         text("RUEDA: ZOOM "+std::to_string(static_cast<int>(std::round(zoom_*100)))+"%",white);
         text("CENTRAL / WASD: MOVER",white);
-        text("ENTER: VER ISLA ENTERA",white);
-        text("CLIC: INSPECCIONAR",white);
+        text("TAB: SIGUIENTE / ENTER: ISLA",white);
+        text("CLIC: ELEGIR / F: SEGUIR",white);
         text("LOS HABITANTES DECIDEN SUS TAREAS",white);
         y+=10;
         const auto& r=world_.residents[selected_];
@@ -222,14 +230,14 @@ public:
         text("SOCIAL "+std::to_string(static_cast<int>(r.social))+"  DIVERSION "+std::to_string(static_cast<int>(r.fun)),white);
         text("HIGIENE "+std::to_string(static_cast<int>(r.hygiene)),white);
         text("SALUD "+std::to_string(static_cast<int>(r.health))+" / "+std::to_string(static_cast<int>(isla::cnc::maxHealth)),white);
-        if(r.pregnancyDue>=0)text("EMBARAZO: "+std::to_string(static_cast<int>(std::ceil((r.pregnancyDue-world_.elapsed)/isla::World::daySeconds)))+" DIAS",gold);
+        if(r.pregnancyDue>=0)text("EMBARAZO: "+std::to_string(static_cast<int>(std::ceil(std::max(0.0,r.pregnancyDue-world_.elapsed))))+" S SIMULADOS",gold);
         text("GRANO "+std::to_string(world_.grain),gold);
         y+=10;
         text("LA ALDEA",gold);
         text(std::to_string(std::count_if(world_.residents.begin(),world_.residents.end(),[](const isla::Resident& p){return p.alive;}))+" HABITANTES VIVOS",white);
         text("MADERA "+std::to_string(world_.communityWood)+" MONEDAS "+std::to_string(world_.treasury),white);
         text("PESCADO "+std::to_string(r.fish),white);
-        text(world_.chosenBirthAt>=0?"ELEGIDO EN "+std::to_string(static_cast<int>(std::ceil((world_.chosenBirthAt-world_.elapsed)/isla::World::daySeconds)))+" DIAS":network_.status().substr(0,34),white);
+        text(world_.chosenBirthAt>=0?"ELEGIDO EN "+std::to_string(static_cast<int>(std::ceil(std::max(0.0,world_.chosenBirthAt-world_.elapsed))))+" S SIMULADOS":network_.status().substr(0,34),white);
         text(world_.raining ? "ESTA LLOVIENDO" : "CIELO DESPEJADO",white);
 
         controls_.clear();float buttonY=y+8;int column=0;
@@ -239,7 +247,8 @@ public:
             engine.drawText(rectangle.x+5,rectangle.y+8,title,white);controls_.push_back({rectangle,id});
             if(++column==2){column=0;buttonY+=25;}
         };
-        button("select","INSPECCIONAR");button("rain","ENVIAR LLUVIA");
+        button("select","INSPECCIONAR");button("follow",following_?"SIGUIENDO":"SEGUIR / F");
+        button("next","SIGUIENTE / TAB");button("rain","ENVIAR LLUVIA");
         button("gift","DEJAR REGALO");button("heal","MILAGRO: SANAR");
         button("sustain","INSP. SUSTENTO");button("build","INSP. EDIFICAR");
         button("diplomacy","INSP. DIPLOMACIA");button("raid","INSP. SAQUEO");
@@ -285,6 +294,8 @@ private:
         return ((local?std::filesystem::path(local):assetRoot_.parent_path())/"IslaVivaNative"/(profile_=="default"?"world-v9.json":profile_+"-v9.json")).string();
     }
     void activate(ra::Engine& engine,const std::string& id) {
+        if(id=="follow"){focusRequested_=true;return;}
+        if(id=="next"){cycleSelection_=true;return;}
         if(id=="select"){tool_.clear();relocateSource_=-1;message_="Modo inspeccion";}
         else if(id=="host"){if(network_.hosting()){network_.stop();message_="Tu isla esta cerrada a nuevas visitas";}else message_=network_.host(port_)?"Tu direccion: "+isla::localIPv4()+":"+std::to_string(port_):network_.status();}
         else if(id=="join"){if(chooseConnection(engine,joinIp_,port_))message_=network_.join(joinIp_,port_)?"Conectando con la otra isla":network_.status();}
@@ -316,7 +327,7 @@ private:
         for(const auto& pending:world_.outbox){auto m=nlohmann::json::parse(pending.second);if(m.at("to")==world_.peerId){network_.send(pending.second);if(m.at("type")=="confirmed"||m.at("type")=="chat_ack")acknowledged.push_back(pending.first);}}
         for(const auto& id:acknowledged)world_.outbox.erase(id);
     }
-    static bool SDLCALL textEvents(void* context,SDL_Event* event){auto& self=*static_cast<IslaVivaGame*>(context);if(!self.chatOpen_)return true;
+    static bool SDLCALL textEvents(void* context,SDL_Event* event){auto& self=*static_cast<IslaVivaGame*>(context);if(!self.chatOpen_){if(event->type==SDL_EVENT_KEY_DOWN&&!event->key.repeat){if(event->key.key==SDLK_F)self.focusRequested_=true;if(event->key.key==SDLK_TAB)self.cycleSelection_=true;}if(event->type==SDL_EVENT_MOUSE_BUTTON_DOWN&&event->button.button==SDL_BUTTON_LEFT&&event->button.clicks==2&&event->button.x<self.viewportCenterX_*2-20)self.focusRequested_=true;return true;}
         if(event->type==SDL_EVENT_TEXT_INPUT){std::string text=event->text.text;if(self.chatText_.size()+text.size()<=256)self.chatText_+=text;}
         if(event->type==SDL_EVENT_KEY_DOWN){if(event->key.key==SDLK_BACKSPACE&&!self.chatText_.empty()){do{unsigned char c=static_cast<unsigned char>(self.chatText_.back());self.chatText_.pop_back();if((c&0xc0)!=0x80)break;}while(!self.chatText_.empty());}if(event->key.key==SDLK_RETURN)self.chatSubmit_=true;}
         return true;
@@ -391,6 +402,8 @@ private:
     }
     void drawTerrain(ra::Engine& engine) {
         generatedTerrain_.draw({mapX_,mapY_,isla::mapWidth*unit_,isla::mapHeight*unit_});
+        // The physical heightfield remains authoritative. The experimental
+        // block UV overlay stretched painted illustrations into repeating slabs.
         auto road=[&](int x,int y){auto t=world_.terrainAt(x,y);return t==isla::Terrain::Road||t==isla::Terrain::Bridge;};
         const int left=std::max(0,static_cast<int>(std::floor((20-mapX_)/unit_))),right=std::min(isla::mapWidth,static_cast<int>(std::ceil((engine.windowWidth()-352-mapX_)/unit_)));
         const int top=std::max(0,static_cast<int>(std::floor((20-mapY_)/unit_))),bottom=std::min(isla::mapHeight,static_cast<int>(std::ceil((engine.windowHeight()-20-mapY_)/unit_)));
@@ -399,6 +412,14 @@ private:
     }
     void box(ra::Engine& engine,float x,float y,float w,float h,ra::Color c) const {
         engine.fillRect({mapX_+x*unit_,mapY_+y*unit_,w*unit_,h*unit_},c);
+    }
+    void focusSelected(){
+        if(selected_>=world_.residents.size())return;
+        const auto& r=world_.residents[selected_];if(!r.alive||r.away){following_=false;message_="El habitante no esta presente en esta isla";return;}
+        float x=r.x,y=r.y;
+        if(r.inBoat)for(const auto& boat:world_.ships)if(boat.passenger==static_cast<int>(selected_)){x=boat.x;y=boat.y;break;}
+        if(r.insideHouse>=0)for(const auto& house:world_.props)if(house.uid==r.insideHouse){x=house.x;y=house.y;break;}
+        centerX_=x;centerY_=y-elevationView(x,y);
     }
     void layout(ra::Engine& engine) {
         const float viewportWidth=std::max(1.0f,static_cast<float>(engine.windowWidth())-372);
@@ -412,7 +433,7 @@ private:
     }
     void updateTerrain(ra::Engine& engine) {
         if(!generatedTerrain_||drawnRevision_!=world_.terrainRevision){
-            auto pixels=terrainPack_.render(world_);generatedTerrain_.upload(renderer_,pixels.data(),isla::TerrainRenderer::width,isla::TerrainRenderer::height);drawnRevision_=world_.terrainRevision;
+            auto pixels=terrainPack_.render(world_,false);generatedTerrain_.upload(renderer_,pixels.data(),isla::TerrainRenderer::width,isla::TerrainRenderer::height);drawnRevision_=world_.terrainRevision;
         }
         phase_=static_cast<int>(std::fmod(world_.elapsed,300.0f)/75);
         (void)engine;
@@ -435,6 +456,7 @@ private:
     SDL_Renderer* renderer_{};
     float zoom_{1},centerX_{isla::mapWidth*.5f},centerY_{isla::mapHeight*.5f},viewportCenterX_{},viewportCenterY_{},lastMouseX_{},lastMouseY_{};
     bool dragging_{};
+    bool following_{},focusRequested_{},cycleSelection_{};
     float mapX_{20},mapY_{20},unit_{8},accumulator_{};
     bool paused_{},raining_{},smoke_{},nightPreview_{};
 };

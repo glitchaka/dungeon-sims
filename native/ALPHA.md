@@ -1,10 +1,12 @@
 # Probar la alpha
 
+Actualizacion 2026-10-24: clic sobre el personaje lo selecciona; F/SEGUIR centra y sigue, Tab/SIGUIENTE cambia de habitante y Enter muestra la isla. MSPA v1.0 esta integrado en decisiones, percepcion, resultados y guardado. Las islas nuevas usan generacion fisica por bloques. La inmigracion depende de vivienda libre, comida y dinero; los encuentros familiares ya esperan al segundo participante y liberan reservas caducadas. Detalles y limites de verificacion en INTEGRACION-MSPA.md.
+
 Abre **Jugar.exe** con doble clic, en el proyecto o en el ZIP extraido. Es un lanzador grafico y el juego usa el subsistema Windows: no mantiene una consola CMD. Jugar.bat y Jugar-Alpha.bat solo delegan en ese lanzador y terminan. Jugar.vbs es otro acceso sin consola. Para desarrollo se conserva tools/run_native.ps1, que compila; Jugar.bat ya no compila al abrir una partida.
 
 La primera pantalla pide tu nombre y permite continuar o crear una isla. Opciones de isla contiene perfil y semilla. Durante la partida puedes ABRIR MI ISLA / CERRAR MI ISLA o CONECTAR ISLA. No son modos de juego.
 
-`Jugar-Alpha.bat` selecciona el perfil nuevo `geografia-v5` para mostrar la geografía actual. Las partidas anteriores se conservan en sus perfiles y se pueden abrir desde Opciones de isla. TERRENO.md describe el relieve proyectado, los materiales v5 y la referencia vigente del usuario.
+`Jugar-Alpha.bat` selecciona el perfil `geografia-v5`. Las partidas anteriores se conservan en sus perfiles y se pueden abrir desde Opciones de isla. TERRENO.md describe el relieve fisico y la composicion visual con los bloques preparados en terrain-blocks-v3.
 
 ## Jugador y habitantes
 
@@ -44,8 +46,8 @@ La vivienda se entrega primero a un adulto sin casa. Si todos tienen vivienda, q
 
 Familias y ciclo de vida implementados: detalles en FAMILIAS.md. Descanso nocturno dentro de viviendas, con salida por necesidades urgentes.
 
-Los habitantes usan los sprites detallados v6, con cuatro direcciones, dos pasos adultos y arte separado para menores. Se aplican tambien al cargar partidas existentes, sin migrar ni reiniciar el perfil.
+Los habitantes usan los atlas v9: seis fases por accion, cuatro direcciones para caminar y remar, atlas separados para adultos, menores y etapas del embarazo. Hay secuencias de labranza, tala, siembra, cosecha, construccion, caza, comida, bebida, descanso, aseo, conversacion, transporte, abastecimiento, comercio, cuidado de animales, campamento, botadura, remo y pesca. Se aplican tambien a partidas existentes. El catalogo de filas esta en assets/animation-v9.json.
 
-Animaciones v7: labranza con azadon, tala con hacha, botadura de tres segundos y remo segun rumbo. Cortejo adulto de ocho segundos (sorpresa inicial y saludo reciproco), nube opaca con corazones durante seis segundos y embarazo visible desde el segundo trimestre, con otra silueta en el tercero. Tras el parto se recupera el sprite normal. Cortejo y botadura se guardan; partidas v9 anteriores reciben valores por defecto. Capturas reproducibles: --capture ruta.png --seed 1749 --actions-preview 0 (herramientas levantadas/cortejo), 1 (golpe/aceptacion), 2 (nube). Esos escenarios solo funcionan en captura y no guardan partidas.
+El cortejo adulto conserva ocho segundos (sorpresa inicial y saludo reciproco), la nube opaca con corazones dura seis segundos y conserva ocho frames. El embarazo es visible desde el segundo trimestre y cambia la silueta en el tercero. Tras el parto se recupera el sprite normal. Cortejo y botadura se guardan; partidas v9 anteriores reciben valores por defecto.
 
 Zoom ampliado: rueda hasta 3200% (antes 800%). El zoom conserva el punto bajo el cursor. Los pasos, remos y efectos usan un reloj visual independiente de 1x/4x/12x, y las posiciones se interpolan entre pasos de simulacion de 100 ms. La pausa detiene tambien las animaciones. Los objetos fuera de la vista se descartan antes de comprobar su ocultacion por el relieve.

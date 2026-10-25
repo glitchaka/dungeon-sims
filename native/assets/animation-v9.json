@@ -1,0 +1,160 @@
+{
+  "version": 9,
+  "framesPerAction": 6,
+  "layout": "row-major; one action/direction per row, six successive phases per row",
+  "files": [
+    {
+      "file": "residents-men-walk-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "residents-men-work-v9.png",
+      "columns": 6,
+      "rows": 6
+    },
+    {
+      "file": "residents-men-errands-v9.png",
+      "columns": 6,
+      "rows": 6
+    },
+    {
+      "file": "residents-women-walk-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "residents-women-work-v9.png",
+      "columns": 6,
+      "rows": 6
+    },
+    {
+      "file": "residents-women-errands-v9.png",
+      "columns": 6,
+      "rows": 6
+    },
+    {
+      "file": "residents-pregnancy-walk-v9.png",
+      "columns": 6,
+      "rows": 8
+    },
+    {
+      "file": "boats-men-row-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "boats-women-row-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "residents-children-life-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "residents-pregnancy-life-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "residents-girl-walk-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "residents-boy-walk-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "boats-men-fish-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "boats-women-fish-v9.png",
+      "columns": 6,
+      "rows": 4
+    },
+    {
+      "file": "residents-men-needs-v9.png",
+      "columns": 6,
+      "rows": 3
+    },
+    {
+      "file": "residents-men-rest-social-v9.png",
+      "columns": 6,
+      "rows": 3
+    },
+    {
+      "file": "residents-women-needs-v9.png",
+      "columns": 6,
+      "rows": 3
+    },
+    {
+      "file": "residents-women-rest-social-v9.png",
+      "columns": 6,
+      "rows": 3
+    }
+  ],
+  "workRows": [
+    "till",
+    "chop",
+    "sow",
+    "harvest",
+    "build",
+    "hunt"
+  ],
+  "errandsRows": [
+    "carry/deposit",
+    "fetch",
+    "trade/sell_loot",
+    "tend",
+    "camp",
+    "push_boat"
+  ],
+  "walkDirections": [
+    "south",
+    "east",
+    "north",
+    "west"
+  ],
+  "childrenLifeRows": [
+    "girl_idle",
+    "girl_rest",
+    "boy_idle",
+    "boy_rest"
+  ],
+  "pregnancyWalkRows": [
+    "middle_south",
+    "middle_east",
+    "middle_north",
+    "middle_west",
+    "late_south",
+    "late_east",
+    "late_north",
+    "late_west"
+  ],
+  "pregnancyLifeRows": [
+    "middle_idle",
+    "late_idle",
+    "middle_rest",
+    "late_rest"
+  ],
+  "familyEffect": {
+    "file": "family-cloud-v7.png",
+    "frames": 8
+  },
+  "needsRows": [
+    "idle",
+    "eat",
+    "drink"
+  ],
+  "restSocialRows": [
+    "rest",
+    "bathe",
+    "social/courtship"
+  ]
+}

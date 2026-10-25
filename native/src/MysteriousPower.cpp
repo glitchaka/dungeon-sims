@@ -1,6 +1,7 @@
 #include "MysteriousPower.h"
 #include "World.h"
 #include "SeaLife.h"
+#include "TerrainSurface.h"
 #include <algorithm>
 #include <cmath>
 
@@ -14,6 +15,7 @@ bool touches(const Prop& p,int k){return k%mapWidth>=std::floor(p.x-p.halfWidth)
 const Prop* prop(const World& w,int uid){for(const auto& p:w.props)if(p.uid==uid)return &p;return nullptr;}
 bool openLand(const World& w,int k,int resident=-1,int animal=-1,int propUid=-1,int crop=-1,int gift=-1) {
     if(!valid(k)||water(w.terrain[k])||w.terrain[k]==Terrain::Mountain||w.reserved(k))return false;
+    if(w.terrain[k]!=Terrain::Bridge&&TerrainSurface::slope(w,k%mapWidth,k/mapWidth)>TerrainSurface::maximumWalkSlope)return false;
     for(const auto& p:w.props)if(p.uid!=propUid&&touches(p,k))return false;
     for(const auto& c:w.crops)if(c.cell==k&&c.cell!=crop)return false;
     for(const auto& g:w.gifts)if(g.cell==k&&g.cell!=gift)return false;

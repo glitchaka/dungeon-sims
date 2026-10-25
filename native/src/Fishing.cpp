@@ -66,17 +66,11 @@ void World::updateFishing(float dt){
         if(s.state=="outbound"||s.state=="returning"){
             if(s.next<s.path.size()){int k=s.path[s.next];float tx=k%mapWidth+.5f,ty=k/mapWidth+.5f,len=std::hypot(tx-s.x,ty-s.y),step=std::min(len,1.25f*dt);if(len>.0001f){s.x+=(tx-s.x)/len*step;s.y+=(ty-s.y)/len*step;}if(len<=step+.0001f){s.x=tx;s.y=ty;++s.next;}continue;}
             if(s.state=="outbound"){s.state="fishing";s.fishingClock=0;}
-            else {int fish=4+static_cast<int>(random()%5);r.fish+=fish;r.inBoat=false;r.hasOrder=false;r.x=s.cell%mapWidth+.5f;r.y=s.cell/mapWidth+.5f;r.task=Task::Idle;r.path.clear();r.next=0;++s.voyages;++metrics["fishing_returns"];record(r.name+" regreso con "+std::to_string(fish)+" pescados");s.state="docked";s.passenger=-1;}
+            else {int fish=4+static_cast<int>(random()%5);r.fish+=fish;r.inBoat=false;r.hasOrder=false;r.x=s.cell%mapWidth+.5f;r.y=s.cell/mapWidth+.5f;r.task=Task::Idle;r.path.clear();r.next=0;++s.voyages;++metrics["fishing_returns"];minds.complete(*this,residents.indexOf(r),true,"catch");record(r.name+" regreso con "+std::to_string(fish)+" pescados");s.state="docked";s.passenger=-1;}
         }
-        if(s.state=="fishing"){s.fishingClock+=dt;if(s.fishingClock<30)continue;if(!s.riskResolved){s.riskResolved=true;const float roll=static_cast<float>(random()>>8)/16777216.0f;if(fishingLoss(roll)){r.alive=false;r.health=0;r.inBoat=false;r.hasOrder=false;r.task=Task::Idle;s.state="lost";s.passenger=-1;++metrics["lost_at_sea"];record(r.name+" y su barco se perdieron en alta mar");continue;}}
+        if(s.state=="fishing"){s.fishingClock+=dt;if(s.fishingClock<30)continue;if(!s.riskResolved){s.riskResolved=true;const float roll=static_cast<float>(random()>>8)/16777216.0f;if(fishingLoss(roll)){minds.complete(*this,residents.indexOf(r),false,"lost_at_sea");r.alive=false;r.health=0;r.inBoat=false;r.hasOrder=false;r.task=Task::Idle;s.state="lost";s.passenger=-1;++metrics["lost_at_sea"];record(r.name+" y su barco se perdieron en alta mar");continue;}}
             const int now=cellId(static_cast<int>(s.x),static_cast<int>(s.y)),home=s.seaHome;s.path=seaRoute(*this,now,[=](int k){return k==home;});s.next=0;s.state="returning";}
     }
-    populationClock+=dt;if(populationClock<180)return;populationClock-=180;
-    int alive=static_cast<int>(std::count_if(residents.begin(),residents.end(),[](const Resident& r){return r.alive&&!r.visitor;}));if(alive>=24||grain<reserve+8||treasury<8)return;
-    auto house=std::find_if(props.begin(),props.end(),[&](const Prop& p){return !p.tree&&p.kind=="house"&&(p.owner<0||p.owner>=static_cast<int>(residents.size())||!residents[p.owner].alive);});if(house==props.end())return;
-    int home=cellId(static_cast<int>(house->x),static_cast<int>(house->y+1));if(!walkable(home%mapWidth,home/mapWidth))return;
-    bool occupied=false;for(const auto& r:residents)if(r.alive&&!r.inBoat&&!r.inDungeon&&!r.away&&at(r)==home)occupied=true;if(occupied)return;
-    Resident newcomer;newcomer.female=random()%2==0;newcomer.name="Habitante "+std::to_string(residents.size()+1);newcomer.trait=alive%2?"Trabajador":"Agricultora";newcomer.home=home;newcomer.goal=home;newcomer.x=home%mapWidth+.5f;newcomer.y=home/mapWidth+.5f;newcomer.grain=2;house->owner=static_cast<int>(residents.size());grain-=2;treasury-=8;residents.add(std::move(newcomer));++metrics["arrivals"];record("Llego un nuevo habitante: hay vivienda y provisiones");
 }
 }
 
